@@ -17,7 +17,7 @@ func Radio(parentID, name string) Input {
 			Minimum: 1,
 		},
 	}
-	r.Base.InitBase(parentID+"."+name, name, "radio")
+	r.Base.InitBase(parentID, name, "radio")
 	return r
 }
 

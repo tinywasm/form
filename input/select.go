@@ -18,7 +18,7 @@ func Select(parentID, name string) Input {
 			Minimum: 1,
 		},
 	}
-	s.Base.InitBase(parentID+"."+name, name, "select", "role", "tipo")
+	s.Base.InitBase(parentID, name, "select", "role", "tipo")
 	return s
 }
 

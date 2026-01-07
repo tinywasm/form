@@ -18,7 +18,7 @@ func Text(parentID, name string) Input {
 		},
 	}
 	// htmlName: "text", aliases: "name", "fullname", "username"
-	t.Base.InitBase(parentID+"."+name, name, "text", "name", "fullname", "username")
+	t.Base.InitBase(parentID, name, "text", "name", "fullname", "username")
 	return t
 }
 

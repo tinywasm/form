@@ -22,9 +22,13 @@ type Base struct {
 	Attributes     []fmt.KeyValue
 }
 
-// InitBase initializes the base fields.
-func (b *Base) InitBase(id, name, htmlName string, aliases ...string) {
-	b.id = id
+// InitBase initializes the base fields and constructs the unique ID.
+func (b *Base) InitBase(parentID, name, htmlName string, aliases ...string) {
+	if parentID != "" {
+		b.id = parentID + "." + name
+	} else {
+		b.id = name
+	}
 	b.name = name
 	b.htmlName = htmlName
 	b.aliases = aliases

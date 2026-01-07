@@ -18,7 +18,7 @@ func Email(parentID, name string) Input {
 		},
 	}
 	// htmlName: "email", aliases: "mail", "correo"
-	e.Base.InitBase(parentID+"."+name, name, "email", "mail", "correo")
+	e.Base.InitBase(parentID, name, "email", "mail", "correo")
 	return e
 }
 

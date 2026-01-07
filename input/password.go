@@ -19,7 +19,7 @@ func Password(parentID, name string) Input {
 		},
 	}
 	// htmlName: "password", aliases: "pass", "clave", "pwd"
-	p.Base.InitBase(parentID+"."+name, name, "password", "pass", "clave", "pwd")
+	p.Base.InitBase(parentID, name, "password", "pass", "clave", "pwd")
 	return p
 }
 
