@@ -4,27 +4,22 @@ import (
 	"github.com/tinywasm/fmt"
 )
 
-// Attribute key-value pair for HTML attributes.
-type Attribute struct {
-	Key   string
-	Value string
-}
-
 // Base contains common logic and fields (State) for all inputs.
 // It is intended to be embedded in concrete input structs.
 type Base struct {
-	id          string
-	name        string
-	htmlName    string         // The HTML type (e.g., "text", "email")
-	aliases     []string       // Field name aliases for matching
-	Values      []string       // Multiple values support (for select/checkbox/etc)
-	Options     []fmt.KeyValue // Multiple options for select/checkbox/etc
-	Placeholder string
-	Title       string
-	Required    bool // HTML required attribute
-	Disabled    bool // HTML disabled attribute
-	Readonly    bool // HTML readonly attribute
-	Attributes  []Attribute
+	id             string
+	name           string
+	htmlName       string         // The HTML type (e.g., "text", "email")
+	aliases        []string       // Field name aliases for matching
+	Values         []string       // Multiple values support (for select/checkbox/etc)
+	Options        []fmt.KeyValue // Multiple options for select/checkbox/etc
+	Placeholder    string
+	Title          string
+	Required       bool // HTML required attribute
+	Disabled       bool // HTML disabled attribute
+	Readonly       bool // HTML readonly attribute
+	SkipValidation bool // Whether to skip validation for this input
+	Attributes     []fmt.KeyValue
 }
 
 // InitBase initializes the base fields.
@@ -33,6 +28,10 @@ func (b *Base) InitBase(id, name, htmlName string, aliases ...string) {
 	b.name = name
 	b.htmlName = htmlName
 	b.aliases = aliases
+
+	// Auto-defaults
+	b.Placeholder = "Enter " + name
+	b.Title = name + " field"
 }
 
 // SetValues sets the input values.
@@ -53,9 +52,44 @@ func (b *Base) GetValues() []string {
 	return b.Values
 }
 
+// SetPlaceholder sets the input placeholder.
+func (b *Base) SetPlaceholder(ph string) {
+	b.Placeholder = ph
+}
+
+// GetPlaceholder returns the input placeholder.
+func (b *Base) GetPlaceholder() string {
+	return b.Placeholder
+}
+
+// SetTitle sets the input title (tooltip).
+func (b *Base) SetTitle(title string) {
+	b.Title = title
+}
+
+// GetTitle returns the input title.
+func (b *Base) GetTitle() string {
+	return b.Title
+}
+
+// SetSkipValidation sets whether to skip validation for this input.
+func (b *Base) SetSkipValidation(skip bool) {
+	b.SkipValidation = skip
+}
+
+// GetSkipValidation returns whether to skip validation.
+func (b *Base) GetSkipValidation() bool {
+	return b.SkipValidation
+}
+
 // SetOptions sets multiple options (for select/checkbox/etc).
 func (b *Base) SetOptions(opts ...fmt.KeyValue) {
 	b.Options = opts
+}
+
+// SetAliases sets the field name aliases for matching.
+func (b *Base) SetAliases(aliases ...string) {
+	b.aliases = aliases
 }
 
 // GetOptions returns all options.
@@ -73,20 +107,20 @@ func (b *Base) ID() string {
 	return b.id
 }
 
-// Name returns the field name (without parent prefix).
-func (b *Base) Name() string {
+// FieldName returns the struct field name (without parent prefix).
+func (b *Base) FieldName() string {
 	return b.name
 }
 
-// HtmlName returns the HTML input type.
-func (b *Base) GetHtmlName() string {
+// HTMLName returns the HTML input type.
+func (b *Base) HTMLName() string {
 	return b.htmlName
 }
 
-// Matches checks if the given field name matches this input's htmlName or aliases.
+// Matches checks if the given field name matches this input's htmlName, name or aliases.
 func (b *Base) Matches(fieldName string) bool {
 	name := fmt.Convert(fieldName).ToLower().String()
-	if b.htmlName == name {
+	if b.htmlName == name || b.name == name {
 		return true
 	}
 	for _, alias := range b.aliases {
@@ -99,7 +133,7 @@ func (b *Base) Matches(fieldName string) bool {
 
 // AddAttribute adds a custom attribute to the input.
 func (b *Base) AddAttribute(key, value string) {
-	b.Attributes = append(b.Attributes, Attribute{Key: key, Value: value})
+	b.Attributes = append(b.Attributes, fmt.KeyValue{Key: key, Value: value})
 }
 
 // RenderInput generates the standard HTML tag for the input.

@@ -14,7 +14,7 @@ type Permitted struct {
 	TextNotAllowed  []string // text not allowed eg: "hola" not allowed
 	Characters      []rune   // other special characters eg: '\','/','@'
 	Minimum         int      // min characters eg 2 "lo" ok default 0 no defined
-	Maximum         int      // max characters eg 1 "l" ok default 0 no defined}
+	Maximum         int      // max characters eg 1 "l" ok default 0 no defined
 	ExtraValidation func(string) error
 	StartWith       *Permitted // characters allowed at the beginning
 }
@@ -66,77 +66,50 @@ func (h Permitted) Validate(text string) (err error) {
 	}
 
 	for _, char := range text {
-		if char == tabulation && h.Tabulation {
-			continue
+		isValid := false
+
+		if (char == tabulation && h.Tabulation) ||
+			(char == white_space && h.WhiteSpaces) ||
+			(char == break_line && h.BreakLine) {
+			isValid = true
 		}
 
-		if char == white_space && h.WhiteSpaces {
-			continue
+		if !isValid && h.Letters && valid_letters[char] {
+			isValid = true
 		}
 
-		if char == break_line && h.BreakLine {
-			continue
+		if !isValid && h.Tilde && valid_tilde[char] {
+			isValid = true
 		}
 
-		if h.Letters {
-			if !valid_letters[char] {
-				return fmt.Err(string(char), fmt.D.Not, fmt.D.Letters)
-			} else {
-				err = nil
-				continue
-			}
+		if !isValid && h.Numbers && valid_number[char] {
+			isValid = true
 		}
 
-		if h.Tilde {
-			if !valid_tilde[char] {
-				return fmt.Err(string(char), "TildeNotAllowed")
-			} else {
-				err = nil
-				continue
-			}
-		}
-
-		if h.Numbers {
-			if !valid_number[char] {
-				if char == ' ' {
-					return fmt.Err(fmt.D.Space, fmt.D.Not, fmt.D.Allowed)
-				} else {
-					return fmt.Err(string(char), fmt.D.Not, fmt.D.Number)
-				}
-			} else {
-				err = nil
-				continue
-			}
-		}
-
-		if len(h.Characters) != 0 {
-			var found bool
+		if !isValid && len(h.Characters) != 0 {
 			for _, c := range h.Characters {
 				if c == char {
-					found = true
+					isValid = true
 					break
 				}
 			}
-
-			if found {
-				err = nil
-				continue
-			} else {
-				if char == white_space {
-					return fmt.Err(fmt.D.Space, fmt.D.Not, fmt.D.Allowed)
-				} else if valid_tilde[char] {
-					return fmt.Err(string(char), "TildeNotAllowed")
-				} else if char == tabulation {
-					return fmt.Err(fmt.D.Tab, fmt.D.Text, fmt.D.Not, fmt.D.Allowed)
-				} else if char == break_line {
-					return fmt.Err("Newline", fmt.D.Not, fmt.D.Allowed)
-				}
-				return fmt.Err(fmt.D.Character, string(char), fmt.D.Not, fmt.D.Allowed)
-			}
 		}
 
-		if err != nil {
-			return err
+		if !isValid {
+			if char == white_space {
+				return fmt.Err(fmt.D.Space, fmt.D.Not, fmt.D.Allowed)
+			} else if valid_tilde[char] {
+				return fmt.Err(string(char), "TildeNotAllowed")
+			} else if char == tabulation {
+				return fmt.Err(fmt.D.Tab, fmt.D.Text, fmt.D.Not, fmt.D.Allowed)
+			} else if char == break_line {
+				return fmt.Err("Newline", fmt.D.Not, fmt.D.Allowed)
+			} else if valid_letters[char] {
+				return fmt.Err(string(char), fmt.D.Letters, fmt.D.Not, fmt.D.Allowed)
+			} else if valid_number[char] {
+				return fmt.Err(string(char), fmt.D.Number, fmt.D.Not, fmt.D.Allowed)
+			}
+			return fmt.Err(fmt.D.Character, string(char), fmt.D.Not, fmt.D.Allowed)
 		}
 	}
 

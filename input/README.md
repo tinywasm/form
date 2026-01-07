@@ -10,31 +10,28 @@ This package contains all input implementations for `tinywasm/form`.
 | `Email` | `<input type="email">` | `mail`, `correo` | Letters, Numbers, `@._-`, Min: 5, Max: 100 |
 | `Password` | `<input type="password">` | `pass`, `clave`, `pwd` | All chars, Min: 5, Max: 50 |
 
-## Creating Custom Inputs
+## Composition Pattern
 
-Implement the `Input` interface:
+Reuse base inputs to create semantic ones:
 
 ```go
-type Input interface {
-    dom.Component // ID(), RenderHTML()
-    HtmlName() string
-    ValidateField(value string) error
+func Gender(parentID, name string) input.Input {
+    g := input.Radio(parentID, name).(*radio)
+    g.Base.SetOptions(fmt.KeyValue{Key: "m", Value: "Male"}, ...)
+    return g
 }
 ```
 
-Embed `Base` and call `InitBase(id, name, htmlName, ...aliases)`:
+## Matching Logic
+
+The form engine matches fields in this order:
+1. `LowerCase(FieldName)` vs `htmlName` or `aliases`
+2. `LowerCase(StructName.FieldName)` vs `aliases`
+
+## Registering Custom Inputs
+
+If you create a new input type, register it to make it available:
 
 ```go
-type myInput struct {
-    input.Base
-    input.Permitted
-}
-
-func MyInput(parentID, name string) input.Input {
-    m := &myInput{...}
-    m.Base.InitBase(parentID+"."+name, name, "text", "myalias")
-    return m
-}
+form.RegisterInput(MyCustomInput("", ""))
 ```
-
-Register with `form.RegisterInput(MyInput("", ""))`.

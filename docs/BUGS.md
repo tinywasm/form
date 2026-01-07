@@ -1,3 +1,6 @@
-func New(id string, structPtr any) (*Form, error) {
+# Known Issues
 
-    no es id es parentID padre el id del formulario se crea de forma interna y se monta en base al id del padre
+No known critical bugs. 
+
+## Resolved
+- **parentID fix**: `New()` now correctly takes `parentID` (mount point) and generates the form `id` internally.

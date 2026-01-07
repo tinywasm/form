@@ -23,9 +23,9 @@ func Password(parentID, name string) Input {
 	return p
 }
 
-// HtmlName returns "password".
-func (p *password) HtmlName() string {
-	return p.Base.GetHtmlName()
+// HTMLName returns "password".
+func (p *password) HTMLName() string {
+	return p.Base.HTMLName()
 }
 
 // ValidateField validates the value against Permitted rules.

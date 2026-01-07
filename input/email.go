@@ -22,9 +22,9 @@ func Email(parentID, name string) Input {
 	return e
 }
 
-// HtmlName returns "email".
-func (e *email) HtmlName() string {
-	return e.Base.GetHtmlName()
+// HTMLName returns "email".
+func (e *email) HTMLName() string {
+	return e.Base.HTMLName()
 }
 
 // ValidateField validates the value against Permitted rules.

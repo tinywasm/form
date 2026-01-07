@@ -1,42 +1,30 @@
 # Interactivity and Mounting Strategy
 
 ## Overview
-Forms use a **Centralized Event Listener** at the Form level. One listener captures all input events and delegates to the correct Input based on `event.target.id`.
+Forms use a **Centralized Event Listener** at the Form root level. One listener captures all events (`input`, `change`, `submit`) and delegates to the correct Input based on `event.target.id`.
 
 ## Why Centralized?
-*   **Memory Efficient**: One closure per form (not N closures).
-*   **Smaller Binary**: Fewer closures = less WASM code.
-*   **Control**: All event logic lives in `Form.OnMount`.
+*   **Memory Efficient**: One closure/listener per form instead of N.
+*   **Smaller Binary**: Fewer closures reduce WASM code size.
+*   **Deterministic State**: All synchronization logic is in one place.
 
-## Implementation
+## Implementation Details
+The actual implementation resides in [mount.go](../mount.go).
 
-### Form.OnMount
-```go
-func (f *Form) OnMount() {
-    formEl, _ := dom.Get(f.ID)
-    
-    formEl.AddEventListener("input", func(e dom.Event) {
-        targetID := e.TargetID()
-        for _, input := range f.Inputs {
-            if input.ID() == targetID {
-                err := input.ValidateField(e.TargetValue())
-                // Handle error UI feedback here
-                break
-            }
-        }
-    })
-}
-```
+### Key steps in `OnMount()`:
+1.  **Event Delegation**: Captures `input` and `change` events.
+2.  **Live Binding**: Matches `event.target.id` against `f.Inputs` and calls `SetValues()`.
+3.  **Automatic Validation**: Triggers `ValidateField()` immediately on change.
+4.  **Submission Control**: Prevents default browser submit, calls `SyncValues()` to update the source struct, and triggers the `OnSubmit` callback.
 
-### Input Role
-Inputs provide:
-*   `ID()` for identification.
-*   `ValidateField(value)` for validation logic.
-
-Inputs do **not** attach their own listeners (unless they are special cases like RichText editors).
+## Data Synchronization
+State flows both ways:
+1.  **Mounting**: Struct values are copied to Inputs.
+2.  **Interaction**: User input updates Input state.
+3.  **Sync/Submit**: `SyncValues()` reflects all Input states back into the original struct.
 
 ## Mounting Flow
 1.  User calls `dom.Mount("root", myForm)`.
 2.  DOM injects `myForm.RenderHTML()`.
-3.  DOM calls `myForm.OnMount()`.
-4.  Form attaches centralized listener.
+3.  DOM calls `myForm.OnMount()` (if component implements `dom.Mountable`).
+4.  Form attaches centralized listeners.

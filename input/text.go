@@ -22,9 +22,9 @@ func Text(parentID, name string) Input {
 	return t
 }
 
-// HtmlName returns "text".
-func (t *text) HtmlName() string {
-	return t.Base.GetHtmlName()
+// HTMLName returns "text".
+func (t *text) HTMLName() string {
+	return t.Base.HTMLName()
 }
 
 // ValidateField validates the value against Permitted rules.

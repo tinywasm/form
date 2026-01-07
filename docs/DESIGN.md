@@ -2,41 +2,34 @@
 
 ## Philosophy
 - **Minimalism**: Small binary size > Feature completeness.
-- **TinyGo Optimized**: No maps, minimal allocations.
-- **Convention over Configuration**: Field names drive behavior.
+- **TinyGo Optimized**: Flat slices, minimal allocations, zero-allocation lookups.
+- **Convention over Configuration**: Struct field names and [Tags](TAGS.md) drive behavior.
 
-## Global Registry
-Forms and inputs are registered globally using slices.
-- `forms []*Form`: All form instances.
-- `registeredInputs []input.Input`: Input templates for field matching.
+## Core Layers
 
-## Input Matching
-When `New()` processes a struct field:
-1. Iterates `registeredInputs`.
-2. Calls `input.Matches(fieldName)` which checks `htmlName` and `aliases`.
-3. If match found, calls `input.Clone(parentID, fieldName)`.
-4. If no match, returns error.
+### 1. Global Registry (`registry.go`)
+Manages `registeredInputs` and `forms`. 
+- **Matching**: `New()` searches for a match using:
+  1. `FieldName` vs `htmlName` or `aliases`.
+  2. `StructName.FieldName` vs `aliases` (allows field-specific specialized inputs).
+- **Extensibility**: Anyone can `RegisterInput()` a component that implements the [Input Interface](API.md).
 
-## Clone Pattern
-Each Input implements `Clone(parentID, name string) Input`.
-This eliminates switch cases and allows new inputs without modifying form.go.
+### 2. State & Binding Layer
+- **Storage**: `input.Base` holds the state (`Values`, `Options`).
+- **One-Way Binding (Creation)**: `New()` copies struct values to inputs.
+- **Two-Way Sync (Interaction)**: `SyncValues()` reflects input changes back into the original struct.
 
-```go
-func (t *text) Clone(parentID, name string) Input {
-    return Text(parentID, name)
-}
-```
+### 3. Clone Pattern
+Each Input implements `Clone(parentID, name string) Input`. This allows dynamic instantiation without huge switch-case blocks in the orchestrator.
 
-## Event Handling
-**Centralized listener** at Form level. One listener catches all input events and routes to the correct input via ID lookup.
+### 4. Interactivity Strategy
+Uses **event delegation** to minimize memory overhead. 
+One listener at the Form root delegates to individual inputs. 
+See [mount.go](../mount.go) and [Interactivity Strategy](INTERACTIVITY_AND_MOUNTING.md).
 
-See [INTERACTIVITY_AND_MOUNTING.md](INTERACTIVITY_AND_MOUNTING.md).
-
-## Validation
-Uses `Permitted` struct for whitelist-based validation:
-- `Letters`, `Numbers`, `Tilde`: Character sets.
-- `Characters []rune`: Specific allowed chars.
-- `Min/Max`: Length constraints.
-- `ExtraValidation`: Custom function.
-
-See [input/permitted.go](../input/permitted.go).
+### 5. Validation Engine
+Whitelist-based validation using the `Permitted` struct. 
+- Fast character set checks.
+- Length constraints.
+- Custom logic via `ExtraValidation`.
+- See [input/permitted.go](../input/permitted.go).

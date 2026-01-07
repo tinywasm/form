@@ -9,13 +9,66 @@ import (
 
 // Form represents a form instance.
 type Form struct {
-	ID      string
-	Value   any
-	Inputs  []input.Input
-	class   string // CSS class(es)
-	method  string // HTTP method (default POST)
-	action  string // Form action URL (default: struct name)
-	ssrMode bool   // Per-form SSR mode (default false)
+	id       string
+	parentID string // Parent element ID where the form is mounted
+	Value    any
+	Inputs   []input.Input
+	class    string          // CSS class(es)
+	method   string          // HTTP method (default POST)
+	action   string          // Form action URL (default: struct name)
+	ssrMode  bool            // Per-form SSR mode (default false)
+	onSubmit func(any) error // WASM submit callback
+}
+
+// ID returns the form's unique identifier.
+func (f *Form) ID() string {
+	return f.id
+}
+
+// ParentID returns the ID of the parent element.
+func (f *Form) ParentID() string {
+	return f.parentID
+}
+
+// OnSubmit sets the callback for form submission in WASM mode.
+func (f *Form) OnSubmit(fn func(any) error) *Form {
+	f.onSubmit = fn
+	return f
+}
+
+// SyncValues synchronizes all input values back to the source struct.
+func (f *Form) SyncValues() error {
+	v := reflect.ValueOf(f.Value)
+	if v.Kind() == reflect.Pointer {
+		v = v.Elem()
+	}
+
+	for _, inp := range f.Inputs {
+		fieldName := inp.FieldName()
+		field := v.FieldByName(fieldName)
+		if !field.IsValid() || !field.CanSet() {
+			continue
+		}
+
+		var values []string
+		if getter, ok := inp.(interface{ GetValues() []string }); ok {
+			values = getter.GetValues()
+		}
+		if len(values) == 0 {
+			field.Set(reflect.Zero(field.Type()))
+			continue
+		}
+
+		switch field.Kind() {
+		case reflect.String:
+			field.SetString(values[0])
+		case reflect.Slice:
+			if field.Type().Elem().Kind() == reflect.String {
+				field.Set(reflect.ValueOf(values))
+			}
+		}
+	}
+	return nil
 }
 
 // New creates a new Form from a struct pointer.
@@ -33,13 +86,14 @@ func New(parentID string, structPtr any) (*Form, error) {
 	formID := parentID + "." + structName
 
 	f := &Form{
-		ID:      formID,
-		Value:   structPtr,
-		Inputs:  make([]input.Input, 0),
-		class:   globalClass,
-		method:  "POST",
-		action:  "/" + structName,
-		ssrMode: false,
+		id:       formID,
+		parentID: parentID,
+		Value:    structPtr,
+		Inputs:   make([]input.Input, 0),
+		class:    globalClass,
+		method:   "POST",
+		action:   "/" + structName,
+		ssrMode:  false,
 	}
 
 	for i := 0; i < t.NumField(); i++ {
@@ -50,38 +104,64 @@ func New(parentID string, structPtr any) (*Form, error) {
 			continue
 		}
 
-		template := findInputForField(fieldName)
+		template := findInputForField(fieldName, structName)
 		if template == nil {
 			return nil, fmt.Err("field", fieldName, "no matching input registered")
 		}
-
 		inp := template.Clone(formID, fieldName)
 
-		// Parse options tag: `options:"key1:text1,key2:text2"`
-		if opts, ok := GetTagOptions(string(field.Tag)); ok && len(opts) > 0 {
-			inp.SetOptions(opts...)
+		// Get struct tags
+		tag := string(field.Tag)
+		conv := fmt.Convert(tag)
+
+		// 1. Check for validate:"false"
+		if valTag, _ := conv.TagValue("validate"); valTag == "false" {
+			if b, ok := inp.(interface{ SetSkipValidation(bool) }); ok {
+				b.SetSkipValidation(true)
+			}
+		}
+
+		// 2. Custom Placeholder
+		if ph, _ := conv.TagValue("placeholder"); ph != "" {
+			if b, ok := inp.(interface{ SetPlaceholder(string) }); ok {
+				b.SetPlaceholder(ph)
+			}
+		}
+
+		// 3. Custom Title
+		if title, _ := conv.TagValue("title"); title != "" {
+			if b, ok := inp.(interface{ SetTitle(string) }); ok {
+				b.SetTitle(title)
+			}
+		}
+
+		// 4. Parse options tag: `options:"key1:text1,key2:text2"`
+		if opts := conv.TagPairs("options"); len(opts) > 0 {
+			if setter, ok := inp.(interface{ SetOptions(...fmt.KeyValue) }); ok {
+				setter.SetOptions(opts...)
+			}
 		}
 
 		// Bind struct field value to input
 		fieldValue := v.Field(i)
-		switch fieldValue.Kind() {
-		case reflect.String:
-			inp.SetValues(fieldValue.String())
-		case reflect.Slice:
-			if fieldValue.Type().Elem().Kind() == reflect.String {
-				slice := fieldValue.Interface().([]string)
-				inp.SetValues(slice...)
-			} else {
-				// Convert other slice types to string slice
-				slice := make([]string, fieldValue.Len())
-				for j := 0; j < fieldValue.Len(); j++ {
-					slice[j] = fmt.Convert(fieldValue.Index(j).Interface()).String()
+		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+			switch fieldValue.Kind() {
+			case reflect.String:
+				setter.SetValues(fieldValue.String())
+			case reflect.Slice:
+				if fieldValue.Type().Elem().Kind() == reflect.String {
+					slice := fieldValue.Interface().([]string)
+					setter.SetValues(slice...)
+				} else {
+					slice := make([]string, fieldValue.Len())
+					for j := 0; j < fieldValue.Len(); j++ {
+						slice[j] = fmt.Convert(fieldValue.Index(j).Interface()).String()
+					}
+					setter.SetValues(slice...)
 				}
-				inp.SetValues(slice...)
+			default:
+				setter.SetValues(fmt.Convert(fieldValue.Interface()).String())
 			}
-		default:
-			// Convert other types to string using fmt
-			inp.SetValues(fmt.Convert(fieldValue.Interface()).String())
 		}
 
 		f.Inputs = append(f.Inputs, inp)
@@ -94,10 +174,8 @@ func New(parentID string, structPtr any) (*Form, error) {
 // Input returns the input with the given field name, or nil if not found.
 func (f *Form) Input(fieldName string) input.Input {
 	for _, inp := range f.Inputs {
-		if namer, ok := inp.(interface{ Name() string }); ok {
-			if namer.Name() == fieldName {
-				return inp
-			}
+		if inp.FieldName() == fieldName {
+			return inp
 		}
 	}
 	return nil
@@ -107,7 +185,9 @@ func (f *Form) Input(fieldName string) input.Input {
 func (f *Form) SetOptions(fieldName string, opts ...fmt.KeyValue) *Form {
 	inp := f.Input(fieldName)
 	if inp != nil {
-		inp.SetOptions(opts...)
+		if setter, ok := inp.(interface{ SetOptions(...fmt.KeyValue) }); ok {
+			setter.SetOptions(opts...)
+		}
 	}
 	return f
 }
@@ -116,7 +196,9 @@ func (f *Form) SetOptions(fieldName string, opts ...fmt.KeyValue) *Form {
 func (f *Form) SetValues(fieldName string, values ...string) *Form {
 	inp := f.Input(fieldName)
 	if inp != nil {
-		inp.SetValues(values...)
+		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+			setter.SetValues(values...)
+		}
 	}
 	return f
 }
