@@ -9,71 +9,114 @@ import (
 
 // Form represents a form instance.
 type Form struct {
-	ID        string
-	Value     any // The struct instance
-	Inputs    []input.Input
-	class     string // Default CSS class for inputs
-	method    string // HTTP method (POST/GET)
-	targetURI string // Action URL
-}
-
-// Global storage for forms to keep them alive (private)
-var forms = make([]*Form, 0)
-
-// SetGlobalClass sets a default CSS class for all subsequently created forms/inputs.
-// This is a placeholder for global configuration.
-func SetGlobalClass(class string) {
-	// Implementation TODO: Store this in a package-level config variable
+	ID      string
+	Value   any
+	Inputs  []input.Input
+	class   string // CSS class(es)
+	method  string // HTTP method (default POST)
+	action  string // Form action URL (default: struct name)
+	ssrMode bool   // Per-form SSR mode (default false)
 }
 
 // New creates a new Form from a struct pointer.
-// It uses reflection to discover fields and automatically create corresponding Inputs.
-func New(id string, structPtr any) *Form {
-	f := &Form{
-		ID:     id,
-		Value:  structPtr,
-		Inputs: make([]input.Input, 0),
-	}
-
+// parentID: ID of the parent DOM element where the form will be mounted.
+// Returns an error if any exported field has no matching registered input.
+func New(parentID string, structPtr any) (*Form, error) {
 	v := reflect.ValueOf(structPtr)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
-
 	t := v.Type()
+	structName := fmt.Convert(t.Name()).ToLower().String()
+
+	// Generate form ID from parent and struct name
+	formID := parentID + "." + structName
+
+	f := &Form{
+		ID:      formID,
+		Value:   structPtr,
+		Inputs:  make([]input.Input, 0),
+		class:   globalClass,
+		method:  "POST",
+		action:  "/" + structName,
+		ssrMode: false,
+	}
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		fieldName := field.Name
 
-		// Skip unexported fields
 		if !fmt.HasUpperPrefix(fieldName) {
 			continue
 		}
 
-		// Field Discovery Logic
-		// 1. Check if type implements Input (not yet supported directly on struct fields)
-		// 2. Map standard Go types to Form Inputs
+		template := findInputForField(fieldName)
+		if template == nil {
+			return nil, fmt.Err("field", fieldName, "no matching input registered")
+		}
 
-		// TODO: Add more sophisticated type mapping (Email, RUT, etc.) based on name/type
-		// For now, default everything to Text input
-		inp := input.Text(id, fieldName)
+		inp := template.Clone(formID, fieldName)
+
+		// Parse options tag: `options:"key1:text1,key2:text2"`
+		if opts, ok := GetTagOptions(string(field.Tag)); ok && len(opts) > 0 {
+			inp.SetOptions(opts...)
+		}
+
+		// Bind struct field value to input
+		fieldValue := v.Field(i)
+		switch fieldValue.Kind() {
+		case reflect.String:
+			inp.SetValues(fieldValue.String())
+		case reflect.Slice:
+			if fieldValue.Type().Elem().Kind() == reflect.String {
+				slice := fieldValue.Interface().([]string)
+				inp.SetValues(slice...)
+			} else {
+				// Convert other slice types to string slice
+				slice := make([]string, fieldValue.Len())
+				for j := 0; j < fieldValue.Len(); j++ {
+					slice[j] = fmt.Convert(fieldValue.Index(j).Interface()).String()
+				}
+				inp.SetValues(slice...)
+			}
+		default:
+			// Convert other types to string using fmt
+			inp.SetValues(fmt.Convert(fieldValue.Interface()).String())
+		}
+
 		f.Inputs = append(f.Inputs, inp)
 	}
 
-	// Register in global scope
 	forms = append(forms, f)
+	return f, nil
+}
 
+// Input returns the input with the given field name, or nil if not found.
+func (f *Form) Input(fieldName string) input.Input {
+	for _, inp := range f.Inputs {
+		if namer, ok := inp.(interface{ Name() string }); ok {
+			if namer.Name() == fieldName {
+				return inp
+			}
+		}
+	}
+	return nil
+}
+
+// SetOptions sets options for the input matching the given field name.
+func (f *Form) SetOptions(fieldName string, opts ...fmt.KeyValue) *Form {
+	inp := f.Input(fieldName)
+	if inp != nil {
+		inp.SetOptions(opts...)
+	}
 	return f
 }
 
-// RenderHTML renders the entire form.
-func (f *Form) RenderHTML() string {
-	out := fmt.GetConv()
-	out.Write(`<form id="`).Write(f.ID).Write(`">`)
-	for _, inp := range f.Inputs {
-		out.Write(inp.RenderHTML())
+// SetValues sets values for the input matching the given field name.
+func (f *Form) SetValues(fieldName string, values ...string) *Form {
+	inp := f.Input(fieldName)
+	if inp != nil {
+		inp.SetValues(values...)
 	}
-	out.Write("</form>")
-	return out.String()
+	return f
 }

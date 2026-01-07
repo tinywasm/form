@@ -1,63 +1,74 @@
 # API Specification
 
-This document defines the public API for the `tinywasm/form` library.
+Public API for `tinywasm/form`.
 
 ## Global Functions
 
-## Global Functions
+### `New(id string, structPtr any) (*Form, error)`
+Creates a form from a struct. Returns error if any exported field has no matching input.
+- **action**: Defaults to `/structname` (lowercase struct name).
+- **method**: Defaults to `POST`.
 
-### `New[T any](structInstance T) *Form`
-Creates a new form instance from a struct and registers it in the internal global handler.
-*   **Params**: A struct instance (value or pointer).
-*   **Returns**: A pointer to the created `Form`.
-*   **Side Effect**: Registers the form globally.
-*   **Example**:
-    ```go
-    type Login struct {
-        User     string
-        Password string
-    }
-    f := form.New(Login{})
-    ```
+```go
+type Login struct {
+    Username string
+    Password string
+}
+f, err := form.New("login-form", &Login{})
+```
+
+### `RegisterInput(inputs ...input.Input)`
+Registers input types. Uses `HtmlName()` and aliases for field matching.
+
+```go
+form.RegisterInput(
+    input.Text("", ""),
+    input.Email("", ""),
+    input.Password("", ""),
+)
+```
 
 ### `SetGlobalClass(classes ...string)`
-Configures the default CSS classes applied to all form elements globally.
-*   **Semantics**: Appends/Updates the global class configuration.
-*   **Example**: `form.SetGlobalClass("my-input-class", "mb-3")`
+Sets default CSS classes for all forms.
 
-### `SetType(name string, config InputConfig)` (Proposed)
-Registers or overrides a "Smart Type" definition.
-*   **Example**: 
-    ```go
-    form.SetType("ZipCode", InputConfig{
-        Type: "number",
-        Validation: func(v string) error { ... }
-    })
-    ```
+### `SetModeSSR(enabled bool)`
+Toggles Server-Side Rendering mode.
+- **false (default)**: Minimal HTML for WASM/fetch usage.
+- **true**: Full HTML with `method`, `action`, submit button for standard forms.
 
 ## Types
 
 ### `Form`
-Represents a form instance.
 ```go
 type Form struct {
-    // Hidden internal state
+    ID     string
+    Inputs []input.Input
 }
 ```
 
-#### `(*Form) Render() string`
-Generates the HTML string for the form.
+**Methods:**
+- `RenderHTML() string` - Generates HTML (respects SSR mode).
+- `Validate() error` - Validates all inputs.
+- `OnMount()` - Binds centralized event listener (WASM only).
 
-#### `(*Form) Bind()`
-Binds the form to the DOM (attaches event listeners).
-
-### `InputConfig`
-Configuration for an input type.
+### `input.Input` Interface
 ```go
-type InputConfig struct {
-    Type            string // "text", "password", "email", etc.
-    Class           string // CSS class
-    Placeholder     string // Default placeholder
-    Validation      func(string) error
+type Input interface {
+    dom.Component
+    HtmlName() string
+    ValidateField(value string) error
+    Clone(parentID, name string) Input
+}
+```
+
+### `input.Base` Fields
+```go
+type Base struct {
+    Value       string
+    Placeholder string
+    Title       string
+    Required    bool
+    Disabled    bool
+    Readonly    bool
 }
 ```

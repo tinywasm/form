@@ -2,7 +2,7 @@ package input
 
 // text represents a standard text input.
 type text struct {
-	Base      // Embed generic state and logic
+	Base
 	Permitted Permitted
 }
 
@@ -17,14 +17,14 @@ func Text(parentID, name string) Input {
 			Maximum:    100,
 		},
 	}
-	// Initialize Base fields using the method from Base
-	t.Base.InitBase(parentID+"."+name, name)
+	// htmlName: "text", aliases: "name", "fullname", "username"
+	t.Base.InitBase(parentID+"."+name, name, "text", "name", "fullname", "username")
 	return t
 }
 
 // HtmlName returns "text".
 func (t *text) HtmlName() string {
-	return "text"
+	return t.Base.GetHtmlName()
 }
 
 // ValidateField validates the value against Permitted rules.
@@ -32,7 +32,12 @@ func (t *text) ValidateField(value string) error {
 	return t.Permitted.Validate(value)
 }
 
-// RenderHTML delegates to Base.RenderInput to reuse logic.
+// RenderHTML delegates to Base.RenderInput.
 func (t *text) RenderHTML() string {
-	return t.Base.RenderInput("text")
+	return t.Base.RenderInput()
+}
+
+// Clone creates a new Text input with the given parentID and name.
+func (t *text) Clone(parentID, name string) Input {
+	return Text(parentID, name)
 }
