@@ -106,8 +106,8 @@ func (b *Base) GetSelectedValue() string {
 	return b.GetValue()
 }
 
-// ID returns the component's unique identifier.
-func (b *Base) ID() string {
+// HandlerName returns the component's unique identifier.
+func (b *Base) HandlerName() string {
 	return b.id
 }
 

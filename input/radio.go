@@ -37,7 +37,7 @@ func (r *radio) RenderHTML() string {
 	values := r.Base.GetValues()
 
 	for _, opt := range r.Base.GetOptions() {
-		optID := r.Base.ID() + "." + opt.Key
+		optID := r.Base.HandlerName() + "." + opt.Key
 		selected := false
 		for _, v := range values {
 			if v == opt.Key {

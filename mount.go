@@ -20,7 +20,7 @@ func (f *Form) OnMount() {
 
 		// Find input by ID
 		for _, inp := range f.Inputs {
-			if inp.ID() == id {
+			if inp.HandlerName() == id {
 				val := e.TargetValue()
 				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
 					setter.SetValues(val)

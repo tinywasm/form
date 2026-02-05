@@ -37,7 +37,7 @@ func (s *select_) RenderHTML() string {
 	out := fmt.GetConv()
 	values := s.Base.GetValues()
 
-	out.Write(`<select id="`).Write(s.Base.ID()).Write(`"`)
+	out.Write(`<select id="`).Write(s.Base.HandlerName()).Write(`"`)
 	out.Write(` name="`).Write(s.Base.FieldName()).Write(`"`)
 	if s.Base.Required {
 		out.Write(` required`)
