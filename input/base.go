@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 )
 
@@ -106,7 +107,28 @@ func (b *Base) GetSelectedValue() string {
 	return b.GetValue()
 }
 
+// GetID returns the component's unique identifier.
+func (b *Base) GetID() string {
+	return b.id
+}
+
+// SetID sets the component's unique identifier.
+func (b *Base) SetID(id string) {
+	b.id = id
+}
+
+// RenderHTML renders the input to HTML.
+func (b *Base) RenderHTML() string {
+	return b.RenderInput()
+}
+
+// Children returns empty slice (inputs are leaf nodes).
+func (b *Base) Children() []dom.Component {
+	return nil
+}
+
 // HandlerName returns the component's unique identifier.
+// Deprecated: use GetID instead.
 func (b *Base) HandlerName() string {
 	return b.id
 }
