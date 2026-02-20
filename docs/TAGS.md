@@ -1,34 +1,36 @@
 # Struct Tags
 
-The `tinywasm/form` library uses struct tags to configure inputs declaratively.
+Tags configure inputs declaratively on struct fields.
 
-## `options` Tag
+## Supported Tags
 
-Defines options for multi-value inputs (select, radio, checkbox).
+| Tag | Format | Implemented |
+|-----|--------|-------------|
+| `options` | `"key1:text1,key2:text2"` | ✅ |
+| `placeholder` | `"string"` | ✅ |
+| `title` | `"string"` | ✅ |
+| `validate` | `"false"` | ✅ (skips validation) |
+| `label` | `"string"` | 🔲 reserved |
 
-**Format**: `options:"key1:text1,key2:text2"`
+## Example
 
-### Example
 ```go
-type User struct {
-    Role string `options:"admin:Administrador,user:Usuario"`
+type Product struct {
+    Name     string `placeholder:"Product name" title:"Enter product name"`
+    Category string `options:"food:Food,tech:Technology,other:Other"`
+    Internal string `validate:"false"`
 }
 ```
 
-### Parsing
+## Options Format
 
-Options are parsed using `fmt.Convert().TagPairs()` from the `tinywasm/fmt` library.
+- Pairs separated by `,`
+- Key and display text separated by `:`
+- If no `:`, key and text are the same value
 
-- Each pair is separated by `,`.
-- Key and text are separated by `:`.
-- If no `:` is found, key and text are the same.
+```
+"admin:Administrator,user:Regular User,guest:Guest"
+→ [{Key:"admin", Value:"Administrator"}, {Key:"user", Value:"Regular User"}, {Key:"guest", Value:"Guest"}]
+```
 
-See [tags.go](../tags.go) for the implementation.
-
-## Other Attributes
-Metadata tags like `placeholder`, `title`, etc., are automatically extracted if present.
-
-## Future Tags
-Reserved for future use:
-- `validate`: Custom validation rules.
-- `label`: Custom display label.
+Parsed with `fmt.Convert(tag).TagPairs("options")` from `tinywasm/fmt`.
