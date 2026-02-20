@@ -109,6 +109,7 @@ dom.Mount("root", myForm)
 ```
 
 ## Documentation Index
+- [**SKILL.md** — LLM compact reference (start here)](docs/SKILL.md)
 - [Input Types & Base API](input/README.md)
 - [API Reference](docs/API.md)
 - [Design & Architecture](docs/DESIGN.md)
