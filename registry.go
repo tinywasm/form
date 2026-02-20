@@ -20,6 +20,16 @@ func init() {
 		input.Select("", ""),
 		input.Radio("", ""),
 		input.Address("", ""),
+		input.Checkbox("", ""),
+		input.Datalist("", ""),
+		input.Date("", ""),
+		input.Filepath("", ""),
+		input.Hour("", ""),
+		input.IP("", ""),
+		input.Number("", ""),
+		input.Phone("", ""),
+		input.Rut("", ""),
+		input.Textarea("", ""),
 	)
 }
 
