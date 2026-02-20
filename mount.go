@@ -9,7 +9,7 @@ import (
 // OnMount implements dom.Mountable.
 // It sets up event delegation for all inputs within the form.
 func (f *Form) OnMount() {
-	el, ok := dom.Get(f.ID())
+	el, ok := dom.Get(f.GetID())
 	if !ok {
 		return
 	}
@@ -20,7 +20,7 @@ func (f *Form) OnMount() {
 
 		// Find input by ID
 		for _, inp := range f.Inputs {
-			if inp.HandlerName() == id {
+			if inp.GetID() == id {
 				val := e.TargetValue()
 				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
 					setter.SetValues(val)

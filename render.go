@@ -12,7 +12,7 @@ func (f *Form) SetSSR(enabled bool) *Form {
 func (f *Form) RenderHTML() string {
 	out := fmt.GetConv()
 
-	out.Write(`<form id="`).Write(f.ID()).Write(`"`)
+	out.Write(`<form id="`).Write(f.GetID()).Write(`"`)
 
 	if f.class != "" {
 		out.Write(` class="`).Write(f.class).Write(`"`)

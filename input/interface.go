@@ -7,7 +7,7 @@ import (
 // Input interface defines the behavior for all form input types.
 // It embeds dom.Component to ensure compatibility with the tinywasm/dom ecosystem.
 type Input interface {
-	dom.Component // Includes ID() and RenderHTML()
+	dom.Component // Includes GetID(), SetID(), RenderHTML(), Children()
 
 	HTMLName() string                  // Standard HTML5 type (e.g., "text", "email")
 	FieldName() string                 // Struct field name (without parent prefix)

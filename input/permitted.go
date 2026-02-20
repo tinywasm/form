@@ -47,20 +47,20 @@ func (h Permitted) Validate(text string) (err error) {
 
 	if h.Minimum != 0 {
 		if len(text) < h.Minimum {
-			return fmt.Err("MinSize", h.Minimum, fmt.D.Chars)
+			return fmt.Err("minimum", h.Minimum, "chars")
 		}
 	}
 
 	if h.Maximum != 0 {
 		if len(text) > h.Maximum {
-			return fmt.Err(fmt.D.Maximum, h.Maximum, fmt.D.Chars)
+			return fmt.Err("maximum", h.Maximum, "chars")
 		}
 	}
 
 	if len(h.TextNotAllowed) != 0 {
 		for _, notAllowed := range h.TextNotAllowed {
 			if fmt.Contains(text, notAllowed) {
-				return fmt.Err(fmt.D.Not, fmt.D.Allowed, ':', h.TextNotAllowed)
+				return fmt.Err("text", "not allowed", ':', h.TextNotAllowed)
 			}
 		}
 	}
@@ -97,19 +97,19 @@ func (h Permitted) Validate(text string) (err error) {
 
 		if !isValid {
 			if char == white_space {
-				return fmt.Err(fmt.D.Space, fmt.D.Not, fmt.D.Allowed)
+				return fmt.Err("space", "not allowed")
 			} else if valid_tilde[char] {
-				return fmt.Err(string(char), "TildeNotAllowed")
+				return fmt.Err(string(char), "tilde", "not allowed")
 			} else if char == tabulation {
-				return fmt.Err(fmt.D.Tab, fmt.D.Text, fmt.D.Not, fmt.D.Allowed)
+				return fmt.Err("tab", "not allowed")
 			} else if char == break_line {
-				return fmt.Err("Newline", fmt.D.Not, fmt.D.Allowed)
+				return fmt.Err("newline", "not allowed")
 			} else if valid_letters[char] {
-				return fmt.Err(string(char), fmt.D.Letters, fmt.D.Not, fmt.D.Allowed)
+				return fmt.Err(string(char), "letters", "not allowed")
 			} else if valid_number[char] {
-				return fmt.Err(string(char), fmt.D.Number, fmt.D.Not, fmt.D.Allowed)
+				return fmt.Err(string(char), "number", "not allowed")
 			}
-			return fmt.Err(fmt.D.Character, string(char), fmt.D.Not, fmt.D.Allowed)
+			return fmt.Err("character", string(char), "not allowed")
 		}
 	}
 

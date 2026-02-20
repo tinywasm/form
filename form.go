@@ -20,9 +20,14 @@ type Form struct {
 	onSubmit func(any) error // WASM submit callback
 }
 
-// ID returns the form's unique identifier.
-func (f *Form) ID() string {
+// GetID returns the html id that group the form
+func (f *Form) GetID() string {
 	return f.id
+}
+
+// SetID sets the html id that group the form
+func (f *Form) SetID(id string) {
+	f.id = id
 }
 
 // ParentID returns the ID of the parent element.
