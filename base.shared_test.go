@@ -62,18 +62,18 @@ func TestForm_RenderHTML_SSR_Shared(t *testing.T) {
 func TestForm_AutoDefaults_Shared(t *testing.T) {
 	f := createTestForm()
 
-	// Check Name placeholder (auto-generated)
+	// Placeholder and title default to the translated field name via fmt.Translate.
+	// Without a registered translation for "Name", it passes through as-is.
 	nameInp := f.Input("Name")
 	if p, ok := nameInp.(interface{ GetPlaceholder() string }); ok {
-		if p.GetPlaceholder() != "Enter Name" {
-			t.Errorf("Expected 'Enter Name', got '%s'", p.GetPlaceholder())
+		if p.GetPlaceholder() != "Name" {
+			t.Errorf("Expected 'Name', got '%s'", p.GetPlaceholder())
 		}
 	}
 
-	// Check Name title (auto-generated)
 	if p, ok := nameInp.(interface{ GetTitle() string }); ok {
-		if p.GetTitle() != "Name field" {
-			t.Errorf("Expected 'Name field', got '%s'", p.GetTitle())
+		if p.GetTitle() != "Name" {
+			t.Errorf("Expected 'Name', got '%s'", p.GetTitle())
 		}
 	}
 }
@@ -126,6 +126,38 @@ func TestForm_CustomInput_Shared(t *testing.T) {
 	}
 }
 
+func TestForm_ValidateData_Shared(t *testing.T) {
+	f := createTestForm()
+
+	// Valid struct: all fields filled with valid values — should pass
+	valid := &User{
+		Name:     "John Doe",
+		Email:    "john@example.com",
+		Password: "secret123",
+		Gender:   "m",
+		Role:     "admin",
+		Address:  "123 Main St",
+	}
+	if err := f.ValidateData('c', valid); err != nil {
+		t.Errorf("Expected valid data to pass, got error: %v", err)
+	}
+
+	// Invalid email — should fail
+	invalid := &User{
+		Name:     "John",
+		Email:    "not-an-email",
+		Password: "secret123",
+	}
+	if err := f.ValidateData('c', invalid); err == nil {
+		t.Error("Expected invalid email to fail ValidateData, got nil")
+	}
+
+	// No data — should return nil
+	if err := f.ValidateData('c'); err != nil {
+		t.Errorf("Expected no-data call to return nil, got: %v", err)
+	}
+}
+
 // runSharedTests executes all test cases common to both WASM and Standard Lib.
 func runSharedTests(t *testing.T) {
 	t.Run("NewAndBinding", TestForm_NewAndBinding_Shared)
@@ -133,4 +165,5 @@ func runSharedTests(t *testing.T) {
 	t.Run("CustomInput", TestForm_CustomInput_Shared)
 	t.Run("RenderHTML_SSR", TestForm_RenderHTML_SSR_Shared)
 	t.Run("Validate", TestForm_Validate_Shared)
+	t.Run("ValidateData", TestForm_ValidateData_Shared)
 }

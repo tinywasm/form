@@ -32,7 +32,7 @@ func (f *Form) RenderHTML() string {
 
 	// SSR mode: render submit button
 	if f.ssrMode {
-		out.Write(`<button type="submit">Submit</button>`)
+		out.Write(`<button type="submit">`).Write(fmt.Translate("Submit").String()).Write(`</button>`)
 	}
 
 	out.Write("</form>")

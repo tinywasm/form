@@ -6,7 +6,7 @@ import (
 
 // User is a sample struct for testing data binding.
 type User struct {
-	Name     string // Auto: Text, validates, placeholder="Enter Name"
+	Name     string // Auto: Text, validates, placeholder="Name" (via fmt.Translate)
 	Email    string // Auto: Email, validates
 	Password string // Auto: Password, validates
 	Gender   string // Auto: Gender (m/f defaults)

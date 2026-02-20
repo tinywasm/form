@@ -35,9 +35,10 @@ func (b *Base) InitBase(parentID, name, htmlName string, aliases ...string) {
 	b.htmlName = htmlName
 	b.aliases = aliases
 
-	// Auto-defaults
-	b.Placeholder = "Enter " + name
-	b.Title = name + " field"
+	// Auto-defaults: fmt.Translate looks up the field name in the registered dictionary.
+	// Falls back to the field name itself if no translation is found (pass-through).
+	b.Placeholder = fmt.Translate(name).String()
+	b.Title = fmt.Translate(name).String()
 }
 
 // SetValues sets the input values.

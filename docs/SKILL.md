@@ -35,12 +35,25 @@ Order per field:
 1. `lowercase(FieldName)` vs Input's `htmlName` + `aliases`
 2. `lowercase(StructName.FieldName)` vs Input's `aliases`
 
+## Auto-translation
+
+`placeholder` and `title` default to `fmt.Translate(fieldName).String()`:
+- Field name found in dictionary → translated (e.g. `"Email"` → `"Correo electrónico"` in ES)
+- Field name NOT in dictionary → field name as-is (safe pass-through)
+
+Register domain words in your package `init()`:
+```go
+fmt.RegisterWords([]fmt.DictEntry{{EN: "Name", ES: "Nombre", FR: "Nom"}})
+```
+
 ## Struct Tags
+
+Tags are **optional** for `placeholder`/`title` — auto-translation handles common names.
 
 | Tag | Example | Effect |
 |-----|---------|--------|
-| `placeholder` | `placeholder:"Enter name"` | Sets HTML placeholder |
-| `title` | `title:"Tooltip text"` | Sets HTML title (tooltip) |
+| `placeholder` | `placeholder:"Custom hint"` | Overrides auto-translated placeholder |
+| `title` | `title:"Tooltip text"` | Overrides auto-translated title |
 | `options` | `options:"k1:Label1,k2:Label2"` | Sets options for select/radio/datalist |
 | `validate` | `validate:"false"` | Skips `ValidateField` for this field |
 
@@ -98,11 +111,14 @@ type Input interface {
 ```go
 package input
 
-import "github.com/tinywasm/fmt"
+import (
+    "github.com/tinywasm/fmt"
+   . "github.com/tinywasm/form/input"
+)
 
 type myInput struct {
     Base
-    Permitted Permitted
+    Permitted
 }
 
 func MyInput(parentID, name string) Input {
@@ -164,6 +180,8 @@ dom.Mount("root", f)
 | `registry.go` | `registeredInputs`, `RegisterInput`, `findInputForField`, `SetGlobalClass` |
 | `render.go` | `RenderHTML`, `SetSSR` |
 | `validate.go` | `Validate` |
+| `validate_struct.go` | `ValidateData` (crudp.DataValidator, backend/isomorphic) |
+| `words.go` | `init()` — registers form UI words ("Submit", "Optional") into fmt dictionary |
 | `mount.go` | `OnMount`, `OnUnmount` (wasm only) |
 | `input/base.go` | `Base` struct |
 | `input/permitted.go` | `Permitted` validation engine |

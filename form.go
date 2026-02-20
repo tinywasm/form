@@ -9,15 +9,16 @@ import (
 
 // Form represents a form instance.
 type Form struct {
-	id       string
-	parentID string // Parent element ID where the form is mounted
-	Value    any
-	Inputs   []input.Input
-	class    string          // CSS class(es)
-	method   string          // HTTP method (default POST)
-	action   string          // Form action URL (default: struct name)
-	ssrMode  bool            // Per-form SSR mode (default false)
-	onSubmit func(any) error // WASM submit callback
+	id           string
+	parentID     string // Parent element ID where the form is mounted
+	Value        any
+	Inputs       []input.Input
+	fieldIndices []int           // Pre-computed struct field index per Input (-1 if not found)
+	class        string          // CSS class(es)
+	method       string          // HTTP method (default POST)
+	action       string          // Form action URL (default: struct name)
+	ssrMode      bool            // Per-form SSR mode (default false)
+	onSubmit     func(any) error // WASM submit callback
 }
 
 // GetID returns the html id that group the form
@@ -170,6 +171,17 @@ func New(parentID string, structPtr any) (*Form, error) {
 		}
 
 		f.Inputs = append(f.Inputs, inp)
+	}
+
+	// Pre-compute struct field indices for each input.
+	// Stored as []int so ValidateData can use v.Field(idx) — O(1) access, no per-call FieldByName search.
+	f.fieldIndices = make([]int, len(f.Inputs))
+	for i, inp := range f.Inputs {
+		if sf, ok := t.FieldByName(inp.FieldName()); ok {
+			f.fieldIndices[i] = sf.Index[0]
+		} else {
+			f.fieldIndices[i] = -1
+		}
 	}
 
 	forms = append(forms, f)
