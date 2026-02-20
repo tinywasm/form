@@ -1,44 +1,20 @@
 package input
 
 // password represents a password input.
-type password struct {
-	Base
-	Permitted Permitted
-}
+type password struct{ Base }
 
 // Password creates a new Password input instance.
 func Password(parentID, name string) Input {
-	p := &password{
-		Permitted: Permitted{
-			Letters:    true,
-			Numbers:    true,
-			Tilde:      true,
-			Characters: []rune{'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+'},
-			Minimum:    5,
-			Maximum:    50,
-		},
-	}
-	// htmlName: "password", aliases: "pass", "clave", "pwd"
-	p.Base.InitBase(parentID, name, "password", "pass", "clave", "pwd")
+	p := &password{}
+	p.Letters = true
+	p.Numbers = true
+	p.Tilde = true
+	p.Characters = []rune{'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+'}
+	p.Minimum = 5
+	p.Maximum = 50
+	p.InitBase(parentID, name, "password", "pass", "clave", "pwd")
 	return p
 }
 
-// HTMLName returns "password".
-func (p *password) HTMLName() string {
-	return p.Base.HTMLName()
-}
-
-// ValidateField validates the value against Permitted rules.
-func (p *password) ValidateField(value string) error {
-	return p.Permitted.Validate(value)
-}
-
-// RenderHTML delegates to Base.RenderInput.
-func (p *password) RenderHTML() string {
-	return p.Base.RenderInput()
-}
-
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Clone(parentID, name string) Input {
-	return Password(parentID, name)
-}
+func (p *password) Clone(parentID, name string) Input { return Password(parentID, name) }

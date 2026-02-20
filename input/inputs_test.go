@@ -1,3 +1,9 @@
+// Package input tests.
+// This file contains the shared registry and helpers used by all test files.
+// To add a new input:
+//  1. Add a case in buildInput()
+//  2. Add validation cases in validation_test.go
+//  3. Add render cases in render_test.go (if it has custom RenderHTML)
 package input
 
 import (
@@ -7,128 +13,101 @@ import (
 	_ "github.com/tinywasm/fmt/dictionary"
 )
 
-type testStruct struct {
-	fieldType string // Name of the input struct instantiation
-	name      string // Test case description
-	inputData string // Input data for the test case
-	expected  string // Expected substring in error message (case-insensitive)
-	opts      []fmt.KeyValue
+// tc is a compact validation test case.
+type tc struct {
+	t    string // input type name (must match a case in buildInput)
+	name string // subtest name
+	val  string // input value
+	err  string // expected error substring (empty = no error expected)
+	opts []fmt.KeyValue
 }
 
-func Test_MigratedInputs(t *testing.T) {
-	tests := []testStruct{
-		// DataList tests
-		{"Datalist", "Credencial válida (1)", "1", "", []fmt.KeyValue{{Key: "1", Value: "Admin"}, {Key: "3", Value: "Editor"}}},
-		{"Datalist", "Credencial válida (3)", "3", "", []fmt.KeyValue{{Key: "1", Value: "Admin"}, {Key: "3", Value: "Editor"}}},
-		{"Datalist", "Valor 0 no permitido", "0", "datalist_field", []fmt.KeyValue{{Key: "1", Value: "Admin"}, {Key: "3", Value: "Editor"}}},
+// rc is a compact render test case.
+type rc struct {
+	t       string // input type name
+	name    string // subtest name
+	values  []string
+	opts    []fmt.KeyValue
+	contain string // expected substring in HTML output
+}
 
-		// Date tests
-		{"Date", "Formato correcto", "2002-12-03", "", nil},
-		{"Date", "Año bisiesto", "2020-02-29", "", nil},
-		{"Date", "Año no bisiesto", "2023-02-29", "invalid", nil},
-		{"Date", "Junio 31", "2023-06-31", "invalid", nil},
-		{"Date", "Formato incorrecto", "21/12/1998", "not allowed", nil},
-		{"Date", "Sin datos", "", "chars", nil},
+// Shared option sets used across test files.
+var opts12 = []fmt.KeyValue{{Key: "1", Value: "Admin"}, {Key: "2", Value: "Editor"}}
+var optsGender = []fmt.KeyValue{{Key: "m", Value: "Male"}, {Key: "f", Value: "Female"}}
 
-		// FilePath tests
-		{"Filepath", "Ruta correcta", ".\\files\\1234\\", "", nil},
-		{"Filepath", "Ruta relativa con slash", "./files/1234/", "", nil},
-		{"Filepath", "Número como ruta", "5", "", nil},
-		{"Filepath", "Ruta sin punto inicial", "\\files\\1234\\", "\\", nil},
-		{"Filepath", "Espacios en blanco", ".\\path with white space\\", "space", nil},
-
-		// IP tests
-		{"IP", "IPv4 válida", "192.168.1.1", "", nil},
-		{"IP", "IPv6 válida", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", "", nil},
-		{"IP", "Dirección 0.0.0.0", "0.0.0.0", "invalid", nil},
-		{"IP", "Sin datos", "", "chars", nil},
-
-		// Number tests
-		{"Number", "Número correcto", "100", "", nil},
-		{"Number", "Número negativo", "-100", "not allowed", nil},
-		{"Number", "Texto en número", "lOO", "not allowed", nil},
-
-		// Password tests
-		{"Password", "Números y letras", "c0ntra3", "", nil},
-		{"Password", "Sin datos", "", "chars", nil},
-		{"Password", "Menos de 5 chars", "1", "chars", nil},
-
-		// Rut tests
-		{"Rut", "Sin guión", "15890022k", "hyphen", nil},
-		{"Rut", "Sin guión (num)", "177344788", "hyphen", nil},
-		{"Rut", "Correcto", "7863697-1", "", nil},
-		{"Rut", "K mayúscula", "20373221-K", "", nil},
-		{"Rut", "k minúscula", "20373221-k", "", nil},
-
-		// Textarea tests
-		{"Textarea", "Texto largo válido", "IRRITACION EN PIEL DE ROSTRO. ALERGIAS NO.", "", nil},
-		{"Textarea", "Sin datos", "", "chars", nil},
-		{"Textarea", "Solo espacio", " ", "chars", nil},
-
-		// Checkbox tests
-		{"Checkbox", "True value", "true", "", nil},
-		{"Checkbox", "False value", "false", "", nil},
-		{"Checkbox", "Valor vacío (no required)", "", "", nil},
-		{"Checkbox", "Valor inválido", "hola", "invalid", nil},
-
-		// Hour tests
-		{"Hour", "Formato hh:mm", "12:30", "", nil},
-		{"Hour", "Las 24 no existe", "24:00", "invalid", nil},
+// buildInput creates a fresh input instance by kind. Add new inputs here.
+func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
+	t.Helper()
+	id, name := "tid", "tfield"
+	switch kind {
+	case "Address":
+		return Address(id, name)
+	case "Checkbox":
+		return Checkbox(id, name)
+	case "Datalist":
+		dl := Datalist(id, "datalist_field")
+		if len(opts) > 0 {
+			dl.(*datalist).SetOptions(opts...)
+		}
+		return dl
+	case "Date":
+		return Date(id, name)
+	case "Email":
+		return Email(id, name)
+	case "Filepath":
+		return Filepath(id, name)
+	case "Gender":
+		g := Radio(id, name).(*radio)
+		g.SetOptions(optsGender...)
+		return g
+	case "Hour":
+		return Hour(id, name)
+	case "IP":
+		return IP(id, name)
+	case "Number":
+		return Number(id, name)
+	case "Password":
+		return Password(id, name)
+	case "Phone":
+		return Phone(id, name)
+	case "Radio":
+		r := Radio(id, name).(*radio)
+		r.SetOptions(optsGender...)
+		return r
+	case "Rut":
+		return Rut(id, name)
+	case "Select":
+		s := Select(id, name)
+		if len(opts) > 0 {
+			s.(*select_).SetOptions(opts...)
+		}
+		return s
+	case "Text":
+		return Text(id, name)
+	case "Textarea":
+		return Textarea(id, name)
+	default:
+		t.Fatalf("unknown input type: %q — add it to buildInput()", kind)
+		return nil
 	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.fieldType+"-"+tt.name, func(t *testing.T) {
-			var inp Input
-			id := "test_id"
-			name := "test_name"
-
-			switch tt.fieldType {
-			case "Datalist":
-				dl := Datalist(id, "datalist_field")
-				if setter, ok := dl.(interface{ SetOptions(...fmt.KeyValue) }); ok && len(tt.opts) > 0 {
-					setter.SetOptions(tt.opts...)
-				}
-				inp = dl
-			case "Date":
-				inp = Date(id, name)
-			case "Filepath":
-				inp = Filepath(id, name)
-			case "IP":
-				inp = IP(id, name)
-			case "Number":
-				inp = Number(id, name)
-			case "Password":
-				inp = Password(id, name)
-			case "Rut":
-				inp = Rut(id, name)
-			case "Textarea":
-				inp = Textarea(id, name)
-			case "Checkbox":
-				inp = Checkbox(id, name)
-			case "Hour":
-				inp = Hour(id, name)
-			default:
-				t.Fatalf("Unknown input type: %s", tt.fieldType)
-			}
-
-			err := inp.ValidateField(tt.inputData)
-			var got string
-			if err != nil {
-				got = err.Error()
-			}
-
-			// We use lowecase Contains or direct match since exact translations might differ
-			if tt.expected != "" {
-				gotLower := fmt.Convert(got).ToLower().String()
-				expLower := fmt.Convert(tt.expected).ToLower().String()
-				if err == nil {
-					t.Errorf("expected error containing %q, got nil", tt.expected)
-				} else if !fmt.Contains(gotLower, expLower) {
-					t.Errorf("expected error containing %q, got %q", tt.expected, got)
-				}
-			} else if err != nil {
-				t.Errorf("expected no error, got %q", got)
-			}
-		})
+// checkErr asserts the error matches the expected substring (case-insensitive).
+func checkErr(t *testing.T, err error, expected string) {
+	t.Helper()
+	if expected == "" {
+		if err != nil {
+			t.Errorf("expected no error, got %q", err.Error())
+		}
+		return
+	}
+	if err == nil {
+		t.Errorf("expected error containing %q, got nil", expected)
+		return
+	}
+	got := fmt.Convert(err.Error()).ToLower().String()
+	exp := fmt.Convert(expected).ToLower().String()
+	if !fmt.Contains(got, exp) {
+		t.Errorf("expected error containing %q, got %q", expected, err.Error())
 	}
 }

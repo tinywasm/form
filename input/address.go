@@ -1,19 +1,15 @@
 package input
 
-// Address creates a new Address input instance.
-// It is a semantic wrapper around Text.
+// Address creates a new Address input instance (semantic wrapper around text).
 func Address(parentID, name string) Input {
-	a := Text(parentID, name).(*text)
-
-	// Add specific aliases for address
-	a.Base.aliases = append(a.Base.aliases, "address", "direccion", "dir", "location")
-
-	// Pre-configure validation and placeholder
-	a.Base.SetPlaceholder("Enter Address")
-	a.Permitted.Minimum = 5
-	a.Permitted.Maximum = 200
-	a.Permitted.WhiteSpaces = true
-	a.Permitted.Characters = []rune{' ', '.', ',', '#', '-', '/', '(', ')'}
-
+	a := &text{}
+	a.Letters = true
+	a.Numbers = true
+	a.WhiteSpaces = true
+	a.Characters = []rune{' ', '.', ',', '#', '-', '/', '(', ')'}
+	a.Minimum = 5
+	a.Maximum = 200
+	a.InitBase(parentID, name, "text", "address", "addr", "direccion", "dir", "location")
+	a.SetPlaceholder("Enter Address")
 	return a
 }

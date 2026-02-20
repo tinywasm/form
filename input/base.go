@@ -21,6 +21,7 @@ type Base struct {
 	Readonly       bool // HTML readonly attribute
 	SkipValidation bool // Whether to skip validation for this input
 	Attributes     []fmt.KeyValue
+	Permitted      // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
 
 // InitBase initializes the base fields and constructs the unique ID.
@@ -120,6 +121,12 @@ func (b *Base) SetID(id string) {
 // RenderHTML renders the input to HTML.
 func (b *Base) RenderHTML() string {
 	return b.RenderInput()
+}
+
+// ValidateField validates the input value using the embedded Permitted rules.
+// Override this method in specific input structs for custom validation.
+func (b *Base) ValidateField(value string) error {
+	return b.Permitted.Validate(value)
 }
 
 // Children returns empty slice (inputs are leaf nodes).

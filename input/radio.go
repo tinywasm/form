@@ -3,39 +3,22 @@ package input
 import "github.com/tinywasm/fmt"
 
 // radio represents a standard radio button input.
-type radio struct {
-	Base
-	Permitted Permitted
-}
+type radio struct{ Base }
 
 // Radio creates a new Radio input instance.
 func Radio(parentID, name string) Input {
-	r := &radio{
-		Permitted: Permitted{
-			Letters: true,
-			Numbers: true,
-			Minimum: 1,
-		},
-	}
-	r.Base.InitBase(parentID, name, "radio")
+	r := &radio{}
+	r.Letters = true
+	r.Numbers = true
+	r.Minimum = 1
+	r.InitBase(parentID, name, "radio")
 	return r
 }
 
-// HTMLName returns "radio".
-func (r *radio) HTMLName() string {
-	return "radio"
-}
-
-// ValidateField validates the value against Permitted rules.
-func (r *radio) ValidateField(value string) error {
-	return r.Permitted.Validate(value)
-}
-
-// RenderHTML renders radio buttons.
+// RenderHTML renders radio buttons as label+input pairs.
 func (r *radio) RenderHTML() string {
 	out := fmt.GetConv()
 	values := r.Base.GetValues()
-
 	for _, opt := range r.Base.GetOptions() {
 		optID := r.Base.HandlerName() + "." + opt.Key
 		selected := false
@@ -45,7 +28,6 @@ func (r *radio) RenderHTML() string {
 				break
 			}
 		}
-
 		out.Write(`<label>`)
 		out.Write(`<input type="radio" id="`).Write(optID).Write(`"`)
 		out.Write(` name="`).Write(r.Base.FieldName()).Write(`"`)
@@ -61,6 +43,4 @@ func (r *radio) RenderHTML() string {
 }
 
 // Clone creates a new Radio input.
-func (r *radio) Clone(parentID, name string) Input {
-	return Radio(parentID, name)
-}
+func (r *radio) Clone(parentID, name string) Input { return Radio(parentID, name) }

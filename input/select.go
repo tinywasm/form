@@ -1,35 +1,18 @@
 package input
 
-import (
-	"github.com/tinywasm/fmt"
-)
+import "github.com/tinywasm/fmt"
 
 // select_ represents a dropdown selection.
-type select_ struct {
-	Base
-	Permitted Permitted
-}
+type select_ struct{ Base }
 
 // Select creates a new Select input instance.
 func Select(parentID, name string) Input {
-	s := &select_{
-		Permitted: Permitted{
-			Letters: true,
-			Minimum: 1,
-		},
-	}
-	s.Base.InitBase(parentID, name, "select", "role", "tipo")
+	s := &select_{}
+	s.Letters = true
+	s.Numbers = true
+	s.Minimum = 1
+	s.InitBase(parentID, name, "select", "role", "tipo")
 	return s
-}
-
-// HTMLName returns "select".
-func (s *select_) HTMLName() string {
-	return "select"
-}
-
-// ValidateField validates the value.
-func (s *select_) ValidateField(value string) error {
-	return s.Permitted.Validate(value)
 }
 
 // RenderHTML renders a select element with options.
@@ -52,7 +35,6 @@ func (s *select_) RenderHTML() string {
 				break
 			}
 		}
-
 		out.Write(`<option value="`).Write(opt.Key).Write(`"`)
 		if selected {
 			out.Write(` selected`)
@@ -67,6 +49,4 @@ func (s *select_) RenderHTML() string {
 }
 
 // Clone creates a new Select input.
-func (s *select_) Clone(parentID, name string) Input {
-	return Select(parentID, name)
-}
+func (s *select_) Clone(parentID, name string) Input { return Select(parentID, name) }
