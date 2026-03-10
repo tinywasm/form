@@ -1,9 +1,9 @@
 # Design & Architecture
 
 ## Philosophy
-- **TinyGo first**: No `reflect` on hot paths, flat slices over maps, minimal allocations.
-- **Convention over configuration**: Field name → input type via aliases. Tags for fine-tuning.
-- **Dual mode**: Same struct renders via WASM event delegation or full SSR.
+- **TinyGo first**: Zero `reflect`, flat slices over maps, minimal allocations.
+- **Convention over configuration**: Field name → input type via aliases. `ormc` generated schema for fine-tuning.
+- **Interface-driven**: Decoupled from concrete structs via `fmt.Fielder`.
 
 ## Core Layers
 
@@ -11,26 +11,20 @@
 Global `registeredInputs []input.Input` slice. `New()` iterates it to find a match per field:
 1. `lowercase(FieldName)` matches `input.HTMLName()` or any alias
 2. `lowercase(StructName.FieldName)` matches any alias
+3. Explicit override via `fmt.Field.Input`
 
-`Clone(parentID, name)` is called on the matched template to produce a unique instance.
+### 2. State & Binding (`form.go`, `sync.go`)
+- **Fielder-based**: `New()` uses `data.Schema()` and `data.Values()`.
+- **Pointer-based sync**: `SyncValues(data)` uses `data.Pointers()` to write back values without reflection.
 
-### 2. State & Binding (`form.go`)
-- **One-way on creation**: `New()` copies struct values → inputs via `SetValues()`
-- **Two-way on submit**: `SyncValues()` copies input values → struct fields
-
-Supports: `string`, `[]string`, any type via `fmt.Convert(...).String()`.
-
-### 3. Validation (`validate.go`)
-`Form.Validate()` iterates `f.Inputs`, calls each `inp.ValidateField(GetSelectedValue())`.
-Fields tagged `validate:"false"` are skipped.
-
-`input.Permitted` provides whitelist validation (letters, numbers, special chars, min/max length).
-Each input embeds `Permitted` and may add custom logic in `ValidateField`.
+### 3. Validation (`validate.go`, `validate_struct.go`)
+- `Form.Validate()` iterates `f.Inputs`, calls each `inp.ValidateField(GetSelectedValue())`.
+- `ValidateData(action, data)` provides server-side or isomorphic validation.
 
 ### 4. Rendering (`render.go`)
 `RenderHTML()` builds: `<form id="..."> [method action if SSR] inputs [submit if SSR] </form>`
 
 ### 5. WASM Interactivity (`mount.go`)
-`OnMount()` (build tag: `wasm`) attaches **one** delegated listener at the `<form>` element:
-- `input`/`change` → `SetValues()` + `ValidateField()` per matching input
-- `submit` → `PreventDefault()` → `SyncValues()` → `Validate()` → `OnSubmit` callback
+`OnMount()` attaches delegated listeners:
+- `input`/`change` → Live sync and validation.
+- `submit` → `SyncValues(f.data)` → `Validate()` → `OnSubmit(f.data)`.

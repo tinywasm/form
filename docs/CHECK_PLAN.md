@@ -368,7 +368,7 @@ gotest
 
 ### 4.1 Remove runtime tag parsing from `New()`
 
-Delete the tag parsing block (lines ~119-149 in current `form.go`) that reads `placeholder`, `title`, `options`, `validate` tags via reflect. These are now handled differently:
+Delete the tag parsing block (lines ~119-149 in old `form.go`) that reads `placeholder`, `title`, `options`, `validate` tags via reflect. These are now handled differently:
 
 - **`form:` tag** (input type override) → already in `Field.Input`, read in Stage 1's rewritten `New()`.
 - **`placeholder`, `title`, `options`** → applied by the user in their code via existing setters: `f.Input("Email").SetPlaceholder(...)`. These are pure UI concerns, not schema metadata.
@@ -391,7 +391,15 @@ func findInputByType(htmlType string) input.Input {
 }
 ```
 
-### 4.3 Verify no reflect imports
+### 4.3 Remove `fieldIndices` pre-computation from `New()`
+
+The old code pre-computed reflect-based field indices in a second pass (lines 176-185). The new code stores indices directly during the `Schema()` iteration loop — verify the second pass is gone.
+
+### 4.4 Update `OnMount()` / `OnUnmount()`
+
+Check WASM lifecycle methods (`mount.go`) for any use of `f.Value` and migrate to `f.data` (which was introduced in Stage 1).
+
+### 4.5 Verify no reflect imports
 
 Run:
 ```bash
@@ -399,18 +407,6 @@ grep -r "\"reflect\"" *.go
 ```
 
 Must return **zero results** in non-test files. Test files may use reflect for deep comparison — that is acceptable.
-
-### 4.4 Remove `Value any` from `Form` struct
-
-Replace with `data fmt.Fielder`. Update `OnSubmit` callback signature:
-
-```go
-onSubmit func(fmt.Fielder) error
-```
-
-### 4.5 Update `OnMount()` / `OnUnmount()` if they reference `Value`
-
-Check WASM lifecycle methods for any use of `f.Value` and migrate to `f.data`.
 
 ### 4.6 Tests
 
@@ -428,40 +424,6 @@ gotest
 ## Stage 5: Documentation and Publish
 
 ← [Stage 4](#stage-4-remove-struct-tag-parsing-and-cleanup) | None →
-
-### 5.1 Verify no reflect imports
-
-Run:
-```bash
-grep -r "\"reflect\"" *.go
-```
-
-Must return **zero results** in non-test files. Test files may use reflect for deep comparison — that is acceptable.
-
-### 5.2 Remove `fieldIndices` pre-computation from `New()`
-
-The old code pre-computed reflect-based field indices in a second pass (lines 176-185). The new code stores indices directly during the `Schema()` iteration loop — verify the second pass is gone.
-
-### 5.3 Remove `Value any` from `Form` struct
-
-Replace with `data fmt.Fielder`. Update `OnSubmit` callback signature:
-
-```go
-onSubmit func(fmt.Fielder) error
-```
-
-### 5.4 Update `OnMount()` / `OnUnmount()` if they reference `Value`
-
-Check WASM lifecycle methods for any use of `f.Value` and migrate to `f.data`.
-
-### 5.5 Run full test suite
-
-```bash
-gotest
-```
-
----
-
 
 ### 5.1 Update `docs/API.md`
 

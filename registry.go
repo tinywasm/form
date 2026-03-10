@@ -38,6 +38,17 @@ func RegisterInput(inputs ...input.Input) {
 	registeredInputs = append(registeredInputs, inputs...)
 }
 
+// findInputByType finds a registered input template by its HTMLName.
+// Returns nil if no match found.
+func findInputByType(htmlType string) input.Input {
+	for _, tmpl := range registeredInputs {
+		if tmpl.HTMLName() == htmlType {
+			return tmpl
+		}
+	}
+	return nil
+}
+
 // findInputForField searches for a registered input that matches the field name.
 func findInputForField(fieldName, structName string) input.Input {
 	name := fmt.Convert(fieldName).ToLower().String()
