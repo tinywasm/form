@@ -36,7 +36,7 @@ func (f *Form) OnMount() {
 		e.PreventDefault()
 
 		// Sync all values to struct
-		f.SyncValues()
+		f.SyncValues(f.data)
 
 		// Validate all (final check)
 		if err := f.Validate(); err != nil {
@@ -46,7 +46,7 @@ func (f *Form) OnMount() {
 
 		// Call OnSubmit callback
 		if f.onSubmit != nil {
-			f.onSubmit(f.Value)
+			f.onSubmit(f.data)
 		}
 	}
 

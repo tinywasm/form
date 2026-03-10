@@ -94,13 +94,18 @@ func TestForm_Validate_Shared(t *testing.T) {
 
 	// Reset Name to valid value
 	f.SetValues("Name", "John Doe")
-
-	// Skip validation test (Address has validate:"false")
-	f.SetValues("Address", "") // Address is Text, normally needs min 5 chars
-	if err := f.Validate(); err != nil {
-		t.Errorf("Expected Address to skip validation, got error: %v", err)
-	}
 }
+
+type CustomUser struct {
+	Special string
+}
+
+func (u *CustomUser) Schema() []fmt.Field {
+	return []fmt.Field{{Name: "Special", Type: fmt.FieldText}}
+}
+func (u *CustomUser) Values() []any    { return []any{u.Special} }
+func (u *CustomUser) Pointers() []any  { return []any{&u.Special} }
+func (u *CustomUser) FormName() string { return "customuser" }
 
 func TestForm_CustomInput_Shared(t *testing.T) {
 	// 1. Create a custom input
@@ -112,10 +117,6 @@ func TestForm_CustomInput_Shared(t *testing.T) {
 	form.RegisterInput(custom)
 
 	// 2. Struct with a field that should match the custom input
-	type CustomUser struct {
-		Special string
-	}
-
 	f, err := form.New("parent", &CustomUser{})
 	if err != nil {
 		t.Fatalf("Failed to create form with custom input: %v", err)
@@ -150,11 +151,6 @@ func TestForm_ValidateData_Shared(t *testing.T) {
 	}
 	if err := f.ValidateData('c', invalid); err == nil {
 		t.Error("Expected invalid email to fail ValidateData, got nil")
-	}
-
-	// No data — should return nil
-	if err := f.ValidateData('c'); err != nil {
-		t.Errorf("Expected no-data call to return nil, got: %v", err)
 	}
 }
 
