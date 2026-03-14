@@ -7,7 +7,7 @@ import (
 // ValidateData validates a Fielder instance using this form's input rules.
 // Satisfies the updated crudp.DataValidator interface (with fmt.Fielder).
 func (f *Form) ValidateData(action byte, data fmt.Fielder) error {
-	values := data.Values()
+	values := fmt.ReadValues(data.Schema(), data.Pointers())
 	for i, inp := range f.Inputs {
 		idx := f.fieldIndices[i]
 		if idx < 0 || idx >= len(values) {

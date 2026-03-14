@@ -58,7 +58,7 @@ func resolveStructName(data fmt.Fielder) string {
 // Returns an error if any exported field has no matching registered input.
 func New(parentID string, data fmt.Fielder) (*Form, error) {
 	schema := data.Schema()
-	values := data.Values()
+	values := fmt.ReadValues(schema, data.Pointers())
 
 	structName := resolveStructName(data)
 	formID := parentID + "." + structName
