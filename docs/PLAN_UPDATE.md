@@ -17,7 +17,7 @@
 Update `go.mod` to the new `tinywasm/fmt` version (Fielder v2, without `Values()`):
 
 ```bash
-go get github.com/tinywasm/fmt@latest
+go get github.com/tinywasm/fmt@v0.19.0
 ```
 
 ## Context
