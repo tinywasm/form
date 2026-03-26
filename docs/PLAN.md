@@ -1,6 +1,6 @@
-# PLAN: Form v3 — Field v3 Migration + Unified Validation (tinywasm/form)
+# PLAN: form — Field v3 Migration + ValidateData con action byte
 
-← [README](../README.md) | Depends on: [fmt PLAN.md](../../fmt/docs/PLAN.md), [orm PLAN.md](../../orm/docs/PLAN.md)
+← [README](../README.md) | Depende de: [fmt PLAN.md](../../fmt/docs/PLAN.md)
 
 ## Development Rules
 
@@ -10,58 +10,46 @@
 - **Flat hierarchy.** No subdirectories for library code.
 - **TinyGo Compatible:** No `fmt`, `strings`, `strconv`, `errors` from stdlib. Use `tinywasm/fmt`.
 - **Documentation First:** Update docs before coding.
-- **Publishing:** Use `gopush 'message'` after tests pass and docs are updated.
+
 
 ## Prerequisite
 
-Update `go.mod` to the new `tinywasm/fmt` version (Field v3):
-
 ```bash
-go get github.com/tinywasm/fmt@v0.19.0
+go get github.com/tinywasm/fmt@latest  # versión con ValidateFields(action, f)
 ```
 
-## Context
+## Contexto
 
-With Field v3:
-- `Field.Input` is removed → form resolves input type **only** by field name heuristic.
-- `Field` embeds `fmt.Permitted` → validation rules live in the schema.
-- `Field.Validate(value)` is a method on Field — validates using embedded Permitted.
-- `fmt.ValidateFielder(data)` is the generic validation function.
-- `input.Permitted` is deleted → replaced by `fmt.Permitted` (no maps, ASCII ranges).
-
-### Current validation flow (v2):
-```
-form.ValidateData() → for each input → input.ValidateField(stringValue)
-                                         └→ input.Permitted.Validate(value)  (form/input/permitted.go, uses maps)
-```
-Each input has its own `Permitted` config with map-based character validation.
-
-### New validation flow (v3):
-```
-form.ValidateData() → fmt.ValidateFielder(data)
-                        └→ for each field → field.Validate(value)
-                                             └→ field.Permitted.Validate(field.Name, value)  (fmt/permitted.go, ASCII ranges)
-
-input.ValidateField() → field.Permitted.Validate(field.Name, value)  (client-side UX only)
-```
-
-Validation is driven by the **schema** (Field embeds Permitted), not by input instances.
-Form inputs keep `ValidateField()` for client-side WASM UX feedback only.
+Con Field v3:
+- `Field.Input` ya no existe → form resuelve input type solo por heurística de nombre.
+- `input.Permitted` se reemplaza por `fmt.Permitted` (sin maps, ASCII ranges).
+- `ValidateData(action, data)` actualmente ignora `action` y valida per-input.
+  Con `fmt.ValidateFields(action, data)` la validación es unificada y action-aware.
 
 ---
 
-## Stage 1: Remove `Field.Input` usage from `form.go`
+## Stage 1: `form.go` — Eliminar uso de `Field.Input`
 
 **File:** `form.go`
 
-### 1.1 Remove explicit Input type override
+### 1.1 Eliminar skip por `Field.Input`
 
 ```go
-// BEFORE (lines 84-99):
+// ANTES (línea 84):
 if field.Input == "-" {
     continue
 }
-// ...
+
+// DESPUÉS: eliminar este bloque. Solo skip PK:
+if field.PK {
+    continue
+}
+```
+
+### 1.2 Eliminar override explícito por `Field.Input`
+
+```go
+// ANTES (líneas 93-96):
 var template input.Input
 if field.Input != "" {
     template = findInputByType(field.Input)
@@ -70,113 +58,101 @@ if template == nil {
     template = findInputForField(fieldName, structName)
 }
 
-// AFTER:
-var template input.Input
-template = findInputForField(fieldName, structName)
+// DESPUÉS:
+template := findInputForField(fieldName, structName)
 ```
 
-### 1.2 Handle fields with no matching input
-
-Default to Text input for unmatched fields:
+### 1.3 Fallback a text cuando no hay match
 
 ```go
+// ANTES (líneas 100-101):
 if template == nil {
-    template = findInputByType("text") // fallback to text input
+    return nil, fmt.Err("field", fieldName, "no matching input registered")
+}
+
+// DESPUÉS:
+if template == nil {
+    template = findInputByType("text")
 }
 ```
 
-### 1.3 Skip mechanism without `Input: "-"`
+### 1.4 Cambiar skip de PK
 
 ```go
-// BEFORE:
+// ANTES (líneas 78-81):
 if field.PK && field.AutoInc {
     continue
 }
-if field.Input == "-" {
+
+// DESPUÉS:
+if field.PK {
     continue
 }
-
-// AFTER:
-if field.PK {
-    continue // PKs are never editable in forms
-}
 ```
-
-**Note:** If a dev needs a PK in a form (rare), they use `ormc:formonly` struct without PK flag.
 
 ---
 
-## Stage 2: Delete `input/permitted.go` — replaced by `fmt.Permitted`
+## Stage 2: `input/permitted.go` — Eliminar, reemplazar con `fmt.Permitted`
 
-### 2.1 Delete the file
+### 2.1 Eliminar `input/permitted.go`
 
-`form/input/permitted.go` is completely replaced by `fmt/permitted.go`.
-Delete it.
+El archivo `form/input/permitted.go` se elimina completo.
+Toda la lógica de validación vive ahora en `fmt.Permitted`.
 
-### 2.2 Update `input/base.go` — change embed
+### 2.2 Actualizar `input/base.go` — embed `fmt.Permitted`
 
 ```go
-// BEFORE (line 24):
-Permitted      // anonymous embed: promotes Letters, Numbers, Validate(), etc.
+// ANTES (línea 24):
+Permitted      // anonymous embed
 
-// AFTER:
-fmt.Permitted  // anonymous embed: promotes Letters, Numbers, Validate(), etc.
+// DESPUÉS:
+fmt.Permitted  // anonymous embed
 ```
 
-### 2.3 Update `Base.ValidateField` signature
+### 2.3 Actualizar `Base.ValidateField`
 
-`fmt.Permitted.Validate` now takes `(field, text string)` instead of just `(text string)`:
+`fmt.Permitted.Validate` toma `(field, text string)`:
 
 ```go
-// BEFORE (base.go:128-130):
+// ANTES (línea 129-131):
 func (b *Base) ValidateField(value string) error {
     return b.Permitted.Validate(value)
 }
 
-// AFTER:
+// DESPUÉS:
 func (b *Base) ValidateField(value string) error {
     return b.Permitted.Validate(b.FieldName(), value)
 }
 ```
 
-### 2.4 Update all inputs that call `Permitted.Validate`
+### 2.4 Actualizar inputs que llaman `Permitted.Validate` directamente
 
 **Files:** `hour.go`, `ip.go`, `rut.go`, `date.go`, `filepath.go`
 
-All follow the same pattern — add field name as first arg:
-
+Patrón para cada uno:
 ```go
-// BEFORE:
+// ANTES:
 if err := x.Permitted.Validate(value); err != nil {
 
-// AFTER:
+// DESPUÉS:
 if err := x.Permitted.Validate(x.FieldName(), value); err != nil {
 ```
 
-### 2.5 Update input constructors
+### 2.5 Actualizar constructores de inputs
 
-Each input constructor configures a `Permitted` struct. Change type:
+Cambiar `Permitted{...}` → `fmt.Permitted{...}` en todos los constructores.
 
-```go
-// BEFORE:
-return &EmailInput{Base: Base{Permitted: Permitted{Letters: true, ...}}}
-
-// AFTER:
-return &EmailInput{Base: Base{Permitted: fmt.Permitted{Letters: true, ...}}}
-```
-
-**Note:** With Field v3, input Permitted configs should match what ormc generates in the schema.
-The constructors still exist for standalone form usage (without ormc), but for ormc-generated
-models the Permitted config comes from the schema, not the input.
+**Files:** `email.go`, `phone.go`, `rut.go`, `ip.go`, `date.go`, `hour.go`,
+`filepath.go`, `address.go`, `text.go`, `number.go`, `textarea.go`, etc.
 
 ---
 
-## Stage 3: Update `ValidateData` to use `fmt.ValidateFielder`
+## Stage 3: `validate_struct.go` — Delegar a `fmt.ValidateFields(action, data)`
 
 **File:** `validate_struct.go`
 
 ```go
-// BEFORE:
+// ANTES:
 func (f *Form) ValidateData(action byte, data fmt.Fielder) error {
     values := fmt.ReadValues(data.Schema(), data.Pointers())
     for i, inp := range f.Inputs {
@@ -195,72 +171,30 @@ func (f *Form) ValidateData(action byte, data fmt.Fielder) error {
     return nil
 }
 
-// AFTER:
+// DESPUÉS:
 func (f *Form) ValidateData(action byte, data fmt.Fielder) error {
-    return fmt.ValidateFielder(data)
+    return fmt.ValidateFields(action, data)
 }
 ```
-
-**Impact:** Validation is now driven by the schema (Field.Validate), not by form inputs.
-Same rules apply whether data comes from form, JSON, or API.
 
 ---
 
-## Stage 4: Clean up registry
+## Stage 4: Actualizar tests
 
-**File:** `registry.go`
+### 4.1 Actualizar Field literals en tests
 
-### 4.1 Simplify text fallback
+Eliminar `Input:` de todos los `fmt.Field` en tests. Agregar `Permitted: fmt.Permitted{...}` donde corresponda.
 
-`findInputByType` is now only used for the text fallback. Inline it:
+### 4.2 Actualizar tests de `ValidateData`
 
-```go
-var textFallback = input.Text("", "")
+Verificar comportamiento action-aware:
+- `'c'` create: NotNull requerido, PK+AutoInc omitido, PK sin AutoInc requerido
+- `'u'` update: PK requerido, NotNull requerido
+- `'d'` delete: solo PK requerido
 
-// In form.go:
-if template == nil {
-    template = textFallback
-}
-```
+### 4.3 Actualizar tests de inputs
 
-### 4.2 Optionally remove `findInputByType`
-
-If no other code calls it, delete the function.
-
----
-
-## Stage 5: Update tests
-
-### 5.1 Update test Field literals
-
-Remove `Input:` from all test `fmt.Field` structs:
-
-```go
-// BEFORE:
-{Name: "email", Type: fmt.FieldText, Input: "email"}
-
-// AFTER:
-{Name: "email", Type: fmt.FieldText, Permitted: fmt.Permitted{Letters: true, Numbers: true}}
-```
-
-### 5.2 Update `ValidateData` tests
-
-Tests should verify `ValidateData` calls `fmt.ValidateFielder` (schema-driven).
-
-### 5.3 Add test: form with no matching input → falls back to text
-
-```go
-func TestUnmatchedFieldFallsBackToText(t *testing.T) {
-    // Field named "custom_xyz" matches no registered input
-    // Should get Text input instead of error
-}
-```
-
-### 5.4 Add test: Permitted from fmt works in inputs
-
-Verify that `input.Base` with `fmt.Permitted` validates correctly.
-
-### 5.5 Run tests
+Verificar que `ValidateField` funciona con `fmt.Permitted` embebido en `Base`.
 
 ```bash
 gotest
@@ -268,50 +202,59 @@ gotest
 
 ---
 
-## Stage 6: Update documentation
+## Stage 5: Actualizar documentación
 
-### 6.1 Update `docs/SKILL.md`
+### 5.1 `docs/SKILL.md`
 
-- Remove `Field.Input` references.
-- Document that form resolves inputs by field name only.
-- Document the text fallback for unmatched fields.
-- Document new validation flow: `ValidateData` → `fmt.ValidateFielder` → `Field.Validate`.
+- Eliminar referencia a `Field.Input` en sección "Field Matching" (línea 29: punto 3)
+- Actualizar `ValidateData` descripción: "delega a `fmt.ValidateFields(action, data)`"
+- Eliminar mención de `input.Permitted` — ahora es `fmt.Permitted`
 
-### 6.2 Update `docs/DESIGN.md`
+### 5.2 `docs/DESIGN.md`
 
-- Update architecture diagram showing validation flow.
-- Remove `Input` from Field diagram.
-- Show `fmt.Permitted` embedded in Field and in input.Base.
+- Eliminar punto 3 del "Registry" (línea 13): "Explicit override via `fmt.Field.Input`"
+- Actualizar sección "Validation" (línea 21-22):
+
+```
+// ANTES:
+- `ValidateData(action, data)` provides server-side or isomorphic validation.
+
+// DESPUÉS:
+- `ValidateData(action, data)` delegates to `fmt.ValidateFields(action, data)` — unified, action-aware validation.
+```
+
+### 5.3 `input/README.md`
+
+Si referencia `Permitted` local, actualizar a `fmt.Permitted`.
+
+---
+
+## Stage 6: Limpiar planes obsoletos
+
+Eliminar archivos que ya no aplican:
+- `docs/CHECK_PLAN.md` — plan v3 original, reemplazado por este
+- `docs/PLAN_UPDATE.md` — Fielder v2 migration, ya ejecutado
+- `docs/PLANT.md` — plan v3 parcial, reemplazado por este
+- `docs/PLAN_VALIDATE_ACTION.md` — fusionado en este plan
 
 ---
 
 ## Stage 7: Publish
 
 ```bash
-gopush 'form: Field v3 — delete Permitted (now fmt.Permitted), remove Input, ValidateData uses fmt.ValidateFielder'
+gopush 'form: Field v3 + action byte — delete Permitted, remove Input, ValidateData usa fmt.ValidateFields(action, data)'
 ```
 
 ---
 
-## Summary
+## Resumen
 
-| Stage | File(s) | Action |
+| Stage | File(s) | Acción |
 |-------|---------|--------|
-| 1 | `form.go` | Remove `Field.Input` usage, fallback to text, skip all PKs |
-| 2 | `input/permitted.go` → delete, `input/base.go` + all inputs | Replace `input.Permitted` with `fmt.Permitted`, update Validate signature |
-| 3 | `validate_struct.go` | Replace per-input validation with `fmt.ValidateFielder(data)` |
-| 4 | `registry.go` | Simplify input lookup, inline text fallback |
-| 5 | `*_test.go` | Update Field literals with Permitted, validation tests |
-| 6 | `docs/` | Update SKILL.md, DESIGN.md |
+| 1 | `form.go` | Eliminar `Field.Input`, skip all PKs, fallback a text |
+| 2 | `input/permitted.go` → delete, `input/base.go` + inputs | Reemplazar `input.Permitted` con `fmt.Permitted`, actualizar `Validate` signature |
+| 3 | `validate_struct.go` | Reemplazar loop per-input con `fmt.ValidateFields(action, data)` |
+| 4 | `*_test.go` | Actualizar literals, tests action-aware, tests de inputs |
+| 5 | `docs/SKILL.md`, `docs/DESIGN.md`, `input/README.md` | Eliminar `Field.Input`, documentar validación unificada |
+| 6 | `docs/` | Eliminar planes obsoletos |
 | 7 | — | `gotest` + `gopush` |
-
-## Execution Order (cross-package)
-
-```
-1. fmt   → Field v3 (Permitted structure extraction, Field.Validate, ValidateFielder)
-2. orm   → Ormc v3 (Permitted in schema, composite standalone Validate, validate tags)
-3. json  → JSON v3 (Field.Name as key, OmitEmpty, post-decode ValidateFielder)
-4. form  → Form v3 (delete Permitted, fmt.Permitted in inputs, ValidateData → ValidateFielder)
-```
-
-Each step requires publishing before the next can begin (`gopush`).
