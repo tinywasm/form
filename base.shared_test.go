@@ -101,29 +101,21 @@ type CustomUser struct {
 }
 
 func (u *CustomUser) Schema() []fmt.Field {
-	return []fmt.Field{{Name: "Special", Type: fmt.FieldText}}
+	return []fmt.Field{{Name: "Special", Type: fmt.FieldText, Widget: input.NewText()}}
 }
 func (u *CustomUser) Values() []any    { return []any{u.Special} }
 func (u *CustomUser) Pointers() []any  { return []any{&u.Special} }
 func (u *CustomUser) FormName() string { return "customuser" }
 
 func TestForm_CustomInput_Shared(t *testing.T) {
-	// 1. Create a custom input
-	custom := input.Text("", "custom_field")
-	// Add an alias that includes the struct name
-	if b, ok := custom.(interface{ SetAliases(...string) }); ok {
-		b.SetAliases("customuser.special")
-	}
-	form.RegisterInput(custom)
-
-	// 2. Struct with a field that should match the custom input
+	// Struct with a field that has a Widget
 	f, err := form.New("parent", &CustomUser{})
 	if err != nil {
-		t.Fatalf("Failed to create form with custom input: %v", err)
+		t.Fatalf("Failed to create form with widget: %v", err)
 	}
 
 	if f.Input("Special") == nil {
-		t.Error("Custom input 'Special' not found via StructName.FieldName matching")
+		t.Error("Input 'Special' not found")
 	}
 }
 

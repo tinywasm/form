@@ -17,6 +17,7 @@ type Permitted struct {
 	Maximum         int      // max characters eg 1 "l" ok default 0 no defined
 	ExtraValidation func(string) error
 	StartWith       *Permitted // characters allowed at the beginning
+	SkipRules       bool       // If true, basic character rules are skipped
 }
 
 const tabulation = '	'
@@ -63,6 +64,10 @@ func (h Permitted) Validate(text string) (err error) {
 				return fmt.Err("text", "not allowed", ':', h.TextNotAllowed)
 			}
 		}
+	}
+
+	if h.SkipRules {
+		return nil
 	}
 
 	for _, char := range text {

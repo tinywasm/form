@@ -124,10 +124,21 @@ func (b *Base) RenderHTML() string {
 	return b.RenderInput()
 }
 
-// ValidateField validates the input value using the embedded Permitted rules.
-// Override this method in specific input structs for custom validation.
-func (b *Base) ValidateField(value string) error {
+// Type satisfies fmt.Widget.Type(). Returns the semantic input type name.
+func (b *Base) Type() string { return b.htmlName }
+
+// Validate satisfies fmt.Widget.Validate().
+// Concrete structs embedding Base can override this to provide specialized validation.
+func (b *Base) Validate(value string) error {
+	if value == "" && b.Required {
+		return fmt.Err("field", b.name, "is required")
+	}
 	return b.Permitted.Validate(value)
+}
+
+// SetRequired sets the required attribute.
+func (b *Base) SetRequired(req bool) {
+	b.Required = req
 }
 
 // Children returns empty slice (inputs are leaf nodes).

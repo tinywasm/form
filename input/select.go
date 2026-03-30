@@ -1,6 +1,11 @@
 package input
 
+import "github.com/tinywasm/fmt"
+
 // select_ represents a dropdown selection.
+// NewSelect returns a template instance for use in fmt.Field.Widget (no position).
+func NewSelect() fmt.Widget { return Select("", "") }
+
 type select_ struct{ Base }
 
 // Select creates a new Select input instance.
@@ -14,4 +19,4 @@ func Select(parentID, name string) Input {
 }
 
 // Clone creates a new Select input.
-func (s *select_) Build(parentID, name string) Input { return Select(parentID, name) }
+func (s *select_) Clone(parentID, name string) fmt.Widget { return Select(parentID, name) }

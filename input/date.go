@@ -3,6 +3,9 @@ package input
 import "github.com/tinywasm/fmt"
 
 // date represents a date input field.
+// NewDate returns a template instance for use in fmt.Field.Widget (no position).
+func NewDate() fmt.Widget { return Date("", "") }
+
 type date struct{ Base }
 
 // Date creates a new date input instance.
@@ -16,8 +19,8 @@ func Date(parentID, name string) Input {
 	return d
 }
 
-// ValidateField validates YYYY-MM-DD format with leap year and day range checks.
-func (d *date) ValidateField(value string) error {
+// Validate validates YYYY-MM-DD format with leap year and day range checks.
+func (d *date) Validate(value string) error {
 	if err := d.Permitted.Validate(value); err != nil {
 		return err
 	}
@@ -58,4 +61,4 @@ func (d *date) monthDays(year int) [13]int {
 }
 
 // Clone creates a new date input with the given parentID and name.
-func (d *date) Build(parentID, name string) Input { return Date(parentID, name) }
+func (d *date) Clone(parentID, name string) fmt.Widget { return Date(parentID, name) }

@@ -25,7 +25,7 @@ func (f *Form) OnMount() {
 				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
 					setter.SetValues(val)
 				}
-				inp.ValidateField(val)
+				inp.Validate(val)
 				break
 			}
 		}

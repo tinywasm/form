@@ -1,6 +1,11 @@
 package input
 
+import "github.com/tinywasm/fmt"
+
 // address represents an address input (semantic wrapper around text).
+// NewAddress returns a template instance for use in fmt.Field.Widget (no position).
+func NewAddress() fmt.Widget { return Address("", "") }
+
 type address struct{ Base }
 
 // Address creates a new Address input instance.
@@ -18,4 +23,4 @@ func Address(parentID, name string) Input {
 }
 
 // Clone creates a new Address input with the given parentID and name.
-func (a *address) Build(parentID, name string) Input { return Address(parentID, name) }
+func (a *address) Clone(parentID, name string) fmt.Widget { return Address(parentID, name) }

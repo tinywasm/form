@@ -1,6 +1,11 @@
 package input
 
+import "github.com/tinywasm/fmt"
+
 // password represents a password input.
+// NewPassword returns a template instance for use in fmt.Field.Widget (no position).
+func NewPassword() fmt.Widget { return Password("", "") }
+
 type password struct{ Base }
 
 // Password creates a new Password input instance.
@@ -17,4 +22,4 @@ func Password(parentID, name string) Input {
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Build(parentID, name string) Input { return Password(parentID, name) }
+func (p *password) Clone(parentID, name string) fmt.Widget { return Password(parentID, name) }
