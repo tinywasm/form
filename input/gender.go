@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// gender represents a gender input (semantic wrapper around radio).
-// NewGender returns a template instance for use in fmt.Field.Widget (no position).
-func NewGender() fmt.Widget { return Gender("", "") }
-
 type gender struct{ Base }
 
 // Gender creates a new Gender input instance with default Male/Female options.

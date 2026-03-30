@@ -5,11 +5,6 @@ import "github.com/tinywasm/fmt"
 // checkbox represents a boolean input field.
 type checkbox struct{ Base }
 
-// NewCheckbox returns a template instance for use in fmt.Field.Widget (no position).
-func NewCheckbox() fmt.Widget {
-	return Checkbox("", "")
-}
-
 // Checkbox creates a new checkbox input instance.
 func Checkbox(parentID, name string) Input {
 	c := &checkbox{}

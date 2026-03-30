@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// number represents a numeric input field.
-// NewNumber returns a template instance for use in fmt.Field.Widget (no position).
-func NewNumber() fmt.Widget { return Number("", "") }
-
 type number struct{ Base }
 
 // Number creates a new number input instance.

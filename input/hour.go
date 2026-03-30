@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// hour represents a standard time input.
-// NewHour returns a template instance for use in fmt.Field.Widget (no position).
-func NewHour() fmt.Widget { return Hour("", "") }
-
 type hour struct{ Base }
 
 // Hour creates a new time input instance.

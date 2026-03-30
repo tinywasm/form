@@ -1,25 +1,25 @@
 # Standard Input Types
 
-> **Outdated** — See [`input/README.md`](../input/README.md) for the complete, up-to-date list of all 17 input types with aliases and validation rules.
+17 built-in types in `input/`. Each provides `NewXxx() fmt.Widget` and `Clone(parentID, name) fmt.Widget`.
 
-## Quick Reference
+| Input | HTML type | Constructor | Key Aliases |
+|-------|-----------|-------------|-------------|
+| `Address` | `text` | `input.NewAddress()` | `address`, `addr` |
+| `Checkbox` | `checkbox` | `input.NewCheckbox()` | `check`, `boolean`, `bool` |
+| `Date` | `date` | `input.NewDate()` | `fecha` |
+| `Datalist` | `text` | `input.NewDatalist()` | `list`, `options` |
+| `Email` | `email` | `input.NewEmail()` | `mail`, `correo` |
+| `Filepath` | `text` | `input.NewFilepath()` | `path`, `dir`, `file` |
+| `Gender` | `radio` | `input.NewGender()` | `gender`, `sex` |
+| `Hour` | `time` | `input.NewHour()` | `hour` |
+| `IP` | `text` | `input.NewIP()` | `ip` |
+| `Number` | `number` | `input.NewNumber()` | `num`, `amount`, `price`, `age` |
+| `Password` | `password` | `input.NewPassword()` | `pass`, `clave`, `pwd` |
+| `Phone` | `tel` | `input.NewPhone()` | `phone`, `mobile`, `cell` |
+| `Radio` | `radio` | `input.NewRadio()` | -- |
+| `Rut` | `text` | `input.NewRut()` | `rut`, `run`, `dni` |
+| `Select` | `select` | `input.NewSelect()` | -- |
+| `Text` | `text` | `input.NewText()` | `name`, `fullname`, `username` |
+| `Textarea` | `textarea` | `input.NewTextarea()` | `description`, `details`, `comments` |
 
-| Input | HTML type | Key Aliases |
-|-------|-----------|-------------|
-| `Address` | `text` | `address`, `addr` |
-| `Checkbox` | `checkbox` | `check`, `boolean`, `bool` |
-| `Date` | `date` | `fecha` |
-| `Datalist` | `text` | `list`, `options` |
-| `Email` | `email` | `mail`, `correo` |
-| `Filepath` | `text` | `path`, `dir`, `file` |
-| `Gender` | `radio` | `gender`, `sex` |
-| `Hour` | `time` | `hour` |
-| `IP` | `text` | `ip`, `address` |
-| `Number` | `number` | `num`, `amount`, `price`, `age` |
-| `Password` | `password` | `pass`, `clave`, `pwd` |
-| `Phone` | `tel` | `phone`, `mobile`, `cell` |
-| `Radio` | `radio` | — |
-| `Rut` | `text` | `rut`, `run`, `dni` |
-| `Select` | `select` | — |
-| `Text` | `text` | `name`, `fullname`, `username` |
-| `Textarea` | `textarea` | `description`, `details`, `comments` |
+See [input/README.md](../input/README.md) for detailed validation rules and rendering behavior per type.

@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// phone represents a phone number input field.
-// NewPhone returns a template instance for use in fmt.Field.Widget (no position).
-func NewPhone() fmt.Widget { return Phone("", "") }
-
 type phone struct{ Base }
 
 // Phone creates a new phone input instance.

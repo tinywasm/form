@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// radio represents a standard radio button input.
-// NewRadio returns a template instance for use in fmt.Field.Widget (no position).
-func NewRadio() fmt.Widget { return Radio("", "") }
-
 type radio struct{ Base }
 
 // Radio creates a new Radio input instance.

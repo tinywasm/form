@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// filepath represents a file or directory path input field.
-// NewFilepath returns a template instance for use in fmt.Field.Widget (no position).
-func NewFilepath() fmt.Widget { return Filepath("", "") }
-
 type filepath struct{ Base }
 
 // Filepath creates a new filepath input instance.
@@ -25,7 +21,7 @@ func (fp *filepath) Validate(value string) error {
 	if err := fp.Permitted.Validate(value); err != nil {
 		return err
 	}
-	if fmt.Contains(value," ") {
+	if fmt.Contains(value, " ") {
 		return fmt.Err("WhiteSpace", "NotAllowed")
 	}
 	if len(value) > 0 && value[0] == '\\' {

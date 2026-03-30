@@ -2,32 +2,36 @@
 
 > See [README.md](../README.md) for the full API reference.
 > See [DESIGN.md](DESIGN.md) for architecture.
-> See [input/README.md](../input/README.md) for all input types.
 
 ## File Map
 
 | File | Responsibility |
 |------|---------------|
-| `form.go` | `Form` struct, `New()`, tag parsing, `SyncValues()`, `Input()`, `SetOptions()`, `SetValues()` |
-| `registry.go` | `registeredInputs`, `forms`, `RegisterInput()`, `findInputForField()`, `SetGlobalClass()` |
+| `form.go` | `Form` struct, `New()`, `Input()`, `SetOptions()`, `SetValues()`, `Namer` |
+| `sync.go` | `SyncValues()`, pointer-based field sync |
+| `registry.go` | `RegisterInput()`, `findInputByType()`, `SetGlobalClass()` |
 | `render.go` | `Form.RenderHTML()`, `Form.SetSSR()` |
 | `validate.go` | `Form.Validate()` |
+| `validate_struct.go` | `Form.ValidateData()` (crudp.DataValidator) |
+| `words.go` | Registers form UI words into fmt dictionary |
 | `mount.go` | `Form.OnMount()`, `Form.OnUnmount()` (wasm build tag) |
-| `tags.go` | `ParseOptionsTag()`, `GetTagOptions()` helpers |
+| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |
 | `input/permitted.go` | `Permitted` whitelist validation engine |
-| `input/interface.go` | `Input` interface |
-| `input/*.go` | Individual input implementations |
+| `input/*.go` | 17 concrete input implementations |
 
 ## Adding a New Input
 
-1. Create `input/mytype.go` — embed `Base`, add `Permitted`, implement `Input` interface
-2. Register in `registry.go` `init()`: `input.MyType("", "")`
-3. Add to `input/README.md` table
-4. Add test cases in `input/inputs_test.go`
+1. Create `input/mytype.go` — embed `Base`, configure `Permitted`, implement rendering.
+2. Add `NewMyType() fmt.Widget` constructor (template, no position).
+3. Add `Clone(parentID, name string) fmt.Widget` method on the concrete type.
+4. `Type()` and `Validate()` are inherited from `Base` — no need to implement.
+5. Add test cases in `input/inputs_test.go`.
+6. Use `input.NewMyType()` in `ormc` schema generation to assign the widget to fields.
 
 ## Key Constraints
 
 - Only `github.com/tinywasm/fmt` — no `errors`, `strconv`, `strings`
 - No maps in WASM-facing code (increases binary size) — use slices
 - `Permitted.ExtraValidation` for complex rules that can't use whitelist
+- No `reflect` at runtime

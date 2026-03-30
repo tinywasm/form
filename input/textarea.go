@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// textarea represents a textarea field.
-// NewTextarea returns a template instance for use in fmt.Field.Widget (no position).
-func NewTextarea() fmt.Widget { return Textarea("", "") }
-
 type textarea struct{ Base }
 
 // Textarea creates a new textarea input instance.

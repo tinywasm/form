@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// rut represents a Chilean RUT input field.
-// NewRut returns a template instance for use in fmt.Field.Widget (no position).
-func NewRut() fmt.Widget { return Rut("", "") }
-
 type rut struct{ Base }
 
 // Rut creates a new RUT input instance.

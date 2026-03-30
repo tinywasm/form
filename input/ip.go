@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// ip represents an IP address input field (IPv4 or IPv6).
-// NewIP returns a template instance for use in fmt.Field.Widget (no position).
-func NewIP() fmt.Widget { return IP("", "") }
-
 type ip struct{ Base }
 
 // IP creates a new IP input instance.

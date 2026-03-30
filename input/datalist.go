@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// datalist represents a datalist input field.
-// NewDatalist returns a template instance for use in fmt.Field.Widget (no position).
-func NewDatalist() fmt.Widget { return Datalist("", "") }
-
 type datalist struct{ Base }
 
 // Datalist creates a new datalist input instance.

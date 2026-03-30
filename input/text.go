@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// text represents a standard text input.
-// NewText returns a template instance for use in fmt.Field.Widget (no position).
-func NewText() fmt.Widget { return Text("", "") }
-
 type text struct{ Base }
 
 // Text creates a new Text input instance.

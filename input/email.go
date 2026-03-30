@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// email represents an email input.
-// NewEmail returns a template instance for use in fmt.Field.Widget (no position).
-func NewEmail() fmt.Widget { return Email("", "") }
-
 type email struct{ Base }
 
 // Email creates a new Email input instance.

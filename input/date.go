@@ -2,10 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// date represents a date input field.
-// NewDate returns a template instance for use in fmt.Field.Widget (no position).
-func NewDate() fmt.Widget { return Date("", "") }
-
 type date struct{ Base }
 
 // Date creates a new date input instance.
