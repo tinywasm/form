@@ -7,7 +7,6 @@ type datalist struct{ Base }
 // Datalist creates a new datalist input instance.
 func Datalist(parentID, name string) Input {
 	dl := &datalist{}
-	dl.SkipRules = true
 	dl.Base.InitBase(parentID, name, "datalist", "list", "options")
 	return dl
 }

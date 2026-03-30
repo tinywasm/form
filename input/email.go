@@ -9,7 +9,7 @@ func Email(parentID, name string) Input {
 	e := &email{}
 	e.Letters = true
 	e.Numbers = true
-	e.Characters = []rune{'@', '.', '_', '-'}
+	e.Extra = []rune{'@', '.', '_', '-'}
 	e.Minimum = 5
 	e.Maximum = 100
 	e.InitBase(parentID, name, "email", "mail", "correo")

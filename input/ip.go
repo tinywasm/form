@@ -9,7 +9,7 @@ func IP(parentID, name string) Input {
 	i := &ip{}
 	i.Numbers = true
 	i.Letters = true // hex for ipv6
-	i.Characters = []rune{'.', ':'}
+	i.Extra = []rune{'.', ':'}
 	i.Minimum = 7  // 1.1.1.1
 	i.Maximum = 39 // full ipv6 length
 	i.InitBase(parentID, name, "text", "ip", "address")
@@ -21,7 +21,7 @@ func (i *ip) Validate(value string) error {
 	if value == "0.0.0.0" {
 		return fmt.Err("Format", "Invalid")
 	}
-	if err := i.Permitted.Validate(value); err != nil {
+	if err := i.Permitted.Validate(i.name, value); err != nil {
 		return err
 	}
 	// Reject mixed dot+colon (not valid IP)

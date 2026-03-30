@@ -48,7 +48,7 @@ found := fmt.Contains(haystack, needle)
 
 ## Creating a Custom Input (embedding Base)
 
-All inputs share the same pattern: embed `Base`, add a `Permitted` struct for rules, implement the `Input` interface.
+All inputs share the same pattern: embed `Base`, configure `Permitted` rules, implement the `Input` interface.
 
 ```go
 package input
@@ -58,20 +58,16 @@ import "github.com/tinywasm/fmt"
 // myInput is a custom input that only allows lowercase hex characters.
 type myInput struct {
     Base
-    Permitted Permitted
 }
 
 // MyInput creates a new instance ready for use.
 func MyInput(parentID, name string) Input {
-    m := &myInput{
-        Permitted: Permitted{
-            Letters:    true,
-            Numbers:    true,
-            Characters: []rune{},
-            Minimum:    1,
-            Maximum:    40,
-        },
-    }
+    m := &myInput{}
+    m.Letters = true
+    m.Numbers = true
+    m.Extra = []rune{}
+    m.Minimum = 1
+    m.Maximum = 40
     // Args: parentID, fieldName, htmlType, ...aliases
     m.Base.InitBase(parentID, name, "text", "myhex", "hex")
     m.Base.SetPlaceholder("e.g. 3f4a1b")
@@ -88,7 +84,7 @@ func (m *myInput) ValidateField(value string) error {
             return fmt.Err("Character", "Invalid")
         }
     }
-    return m.Permitted.Validate(value)
+    return m.Permitted.Validate(m.name, value)
 }
 
 func (m *myInput) RenderHTML() string  { return m.Base.RenderInput() }

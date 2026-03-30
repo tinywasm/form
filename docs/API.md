@@ -33,30 +33,28 @@ Supports `fmt.FieldText`, `fmt.FieldInt`, `fmt.FieldFloat`, and `fmt.FieldBool`.
 
 Validates the provided `data` using the form's input rules. Satisfies `crudp.DataValidator`.
 
-## `input.Permitted` — Validation Engine
+## `fmt.Permitted` — Validation Engine
 
 ```go
 type Permitted struct {
-    Letters         bool     // A-Z, a-z
-    Tilde           bool     // accented chars
-    Numbers         bool     // 0-9
-    WhiteSpaces     bool     // space ' '
-    BreakLine       bool     // '\n'
-    Tabulation      bool     // '\t'
-    Characters      []rune   // extra allowed chars e.g. []rune{'@', '.'}
-    TextNotAllowed  []string // blacklisted substrings
-    Minimum         int      // minimum length (0 = no limit)
-    Maximum         int      // maximum length (0 = no limit)
-    ExtraValidation func(string) error // custom logic
-    StartWith       *Permitted // rules for first character only
+	Letters    bool     // a-z, A-Z (and ñ/Ñ)
+	Tilde      bool     // á, é, í, ó, ú
+	Numbers    bool     // 0-9
+	Spaces     bool     // ' '
+	BreakLine  bool     // '\n'
+	Tab        bool     // '\t'
+	Extra      []rune   // additional allowed characters
+	NotAllowed []string // disallowed substrings
+	Minimum    int      // minimum length
+	Maximum    int      // maximum length
 }
 ```
 
-Error messages from `Permitted.Validate()`:
-- `"minimum N chars"` — value shorter than Minimum
-- `"maximum N chars"` — value longer than Maximum
-- `"space not allowed"` — space when WhiteSpaces=false
-- `"character X not allowed"` — disallowed character
+Error messages from `Permitted.Validate(name, text)`:
+- `"{name} minimum {min} chars"` — value shorter than Minimum
+- `"{name} maximum {max} chars"` — value longer than Maximum
+- `"space not allowed"` — space when Spaces=false
+- `"character {X} not allowed"` — disallowed character
 
 ## Namer Interface
 

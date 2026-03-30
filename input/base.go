@@ -21,7 +21,7 @@ type Base struct {
 	Readonly       bool // HTML readonly attribute
 	SkipValidation bool // Whether to skip validation for this input
 	Attributes     []fmt.KeyValue
-	Permitted      // anonymous embed: promotes Letters, Numbers, Validate(), etc.
+	fmt.Permitted  // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
 
 // InitBase initializes the base fields and constructs the unique ID.
@@ -133,7 +133,7 @@ func (b *Base) Validate(value string) error {
 	if value == "" && b.Required {
 		return fmt.Err("field", b.name, "is required")
 	}
-	return b.Permitted.Validate(value)
+	return b.Permitted.Validate(b.name, value)
 }
 
 // SetRequired sets the required attribute.
