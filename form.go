@@ -82,22 +82,15 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 
 		fieldName := field.Name
 
-		// Resolve input template:
-		// 1. If Field.Widget is set (via ormc `input:` tag), use it directly.
-		// 2. Otherwise, fall back to name-based heuristic (legacy registry).
-		var template input.Input
-		if field.Widget != nil {
-			if inp, ok := field.Widget.(input.Input); ok {
-				template = inp
-			}
+		// Resolve input: use Field.Widget directly.
+		if field.Widget == nil {
+			continue // skip fields with no UI binding
 		}
-		if template == nil {
-			template = findInputForField(fieldName, structName)
+
+		inp, ok := field.Widget.Clone(formID, fieldName).(input.Input)
+		if !ok {
+			continue // skip widgets that do not implement input.Input
 		}
-		if template == nil {
-			return nil, fmt.Err("field", fieldName, "no matching input registered")
-		}
-		inp := template.Build(formID, fieldName)
 
 		// Apply constraint-based defaults from schema
 		if field.NotNull {
@@ -122,8 +115,10 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 // Input returns the input with the given field name, or nil if not found.
 func (f *Form) Input(fieldName string) input.Input {
 	for _, inp := range f.Inputs {
-		if inp.FieldName() == fieldName {
-			return inp
+		if getter, ok := inp.(interface{ FieldName() string }); ok {
+			if getter.FieldName() == fieldName {
+				return inp
+			}
 		}
 	}
 	return nil

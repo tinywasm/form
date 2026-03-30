@@ -2,7 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// ip represents an IP address input field (IPv4 or IPv6).
 type ip struct{ Base }
 
 // IP creates a new IP input instance.
@@ -17,8 +16,8 @@ func IP(parentID, name string) Input {
 	return i
 }
 
-// ValidateField validates IPv4 or IPv6 format.
-func (i *ip) ValidateField(value string) error {
+// Validate validates IPv4 or IPv6 format.
+func (i *ip) Validate(value string) error {
 	if value == "0.0.0.0" {
 		return fmt.Err("Format", "Invalid")
 	}
@@ -41,5 +40,5 @@ func (i *ip) ValidateField(value string) error {
 	return nil
 }
 
-// Clone creates a new IP input with the given parentID and name.
-func (i *ip) Build(parentID, name string) Input { return IP(parentID, name) }
+// Clone satisfies fmt.Widget — IP() returns Input which implements Widget.
+func (i *ip) Clone(parentID, name string) fmt.Widget { return IP(parentID, name) }

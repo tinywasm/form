@@ -2,7 +2,6 @@ package input
 
 import "github.com/tinywasm/fmt"
 
-// rut represents a Chilean RUT input field.
 type rut struct{ Base }
 
 // Rut creates a new RUT input instance.
@@ -17,8 +16,8 @@ func Rut(parentID, name string) Input {
 	return r
 }
 
-// ValidateField validates the Chilean RUT format and check digit.
-func (r *rut) ValidateField(value string) error {
+// Validate validates the Chilean RUT format and check digit.
+func (r *rut) Validate(value string) error {
 	if err := r.Permitted.Validate(value); err != nil {
 		return err
 	}
@@ -73,4 +72,4 @@ func (r *rut) dvRut(rut int) string {
 }
 
 // Clone creates a new rut input with the given parentID and name.
-func (r *rut) Build(parentID, name string) Input { return Rut(parentID, name) }
+func (r *rut) Clone(parentID, name string) fmt.Widget { return Rut(parentID, name) }

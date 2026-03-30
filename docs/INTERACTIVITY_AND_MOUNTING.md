@@ -21,13 +21,13 @@ dom.Mount("root-id", myForm)
 **onInput** (input + change events):
 1. `e.TargetID()` → find matching `inp` in `f.Inputs`
 2. `inp.SetValues(e.TargetValue())`
-3. `inp.ValidateField(val)` — immediate feedback
+3. `inp.Validate(val)` — immediate feedback
 
 **onSubmit**:
 1. `e.PreventDefault()`
-2. `f.SyncValues()` — flush input values to struct
+2. `f.SyncValues(f.data)` — flush input values to struct
 3. `f.Validate()` — full validation (returns on first error)
-4. `f.onSubmit(f.Value)` — user callback with populated struct
+4. `f.onSubmit(f.data)` — user callback with populated struct
 
 ## Why Centralized?
 

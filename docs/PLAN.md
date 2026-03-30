@@ -1,31 +1,21 @@
-# PLAN: input: Tag Unification — tinywasm/form
+# PLAN: Remove Duplicate Permitted — Use fmt.Permitted in form/input
 
 **Module:** `github.com/tinywasm/form` (covers subpackage `tinywasm/form/input`)
-**Breaking change:** Yes — changes `input.Input` interface, removes registry auto-init.
-**Execution order:** Requires `tinywasm/fmt` PLAN_WIDGET.md to be published first.
-**Note on tag cleanup:** `tinywasm/orm` (PLAN.md) handles source file tag rewriting — it removes `form:` and `validate:` tags from `model.go`/`models.go` automatically when `ormc` runs. This plan does not need to address tag cleanup.
+**Breaking change:** Yes — removes `input.Permitted` struct, renames fields on `Base`.
+**Dependency:** `tinywasm/fmt` — NO changes needed. `fmt.Permitted` already has everything required.
 
 ---
 
 ## Context
 
-`tinywasm/form` is the UI layer of the tinywasm ecosystem. It builds HTML forms from `fmt.Model` schemas.
-`tinywasm/form/input` defines the `Input` interface and all concrete input types (email, text, textarea, etc.).
-
-### Current Problems
-
-1. **`registry.go` `init()`** auto-registers all input types at startup. This is implicit — a field named "Email" magically becomes an email input via name matching. This breaks when field names don't follow conventions and makes the system non-deterministic.
-
-2. **No connection to `fmt.Field`** — the form layer has no access to the input type through the schema; it guesses via `findInputForField()`.
+`input/permitted.go` contains a duplicated `Permitted` struct with its own `Validate()` method and character maps. `fmt/permitted.go` already has the canonical version — optimized (ASCII ranges instead of maps), with the same fields under cleaner names, and a 2-param `Validate(field, text)` signature that includes the field name in errors.
 
 ### Goal
 
-- Remove all magic name matching from `form`.
-- `input.Input` embeds `fmt.Widget` — `Clone(parentID, name)` satisfies both Widget and positioned rendering.
-- Add `New<Type>() fmt.Widget` constructors for use by ormc code generation.
-- Migrate `form/input/` tests to `form/input/tests/` to follow orm convention.
-- Remove `init()` auto-registration from `registry.go`.
-- `form` uses `field.Widget` directly from the schema to render inputs.
+- Delete `input/permitted.go` entirely.
+- `Base` embeds `fmt.Permitted` instead of the local `Permitted`.
+- Rename field references across all 17 concrete inputs.
+- Update all `Permitted.Validate(value)` calls to `Permitted.Validate(name, value)`.
 
 ---
 
@@ -36,143 +26,122 @@
 - **Max 500 lines per file.** If exceeded, subdivide by domain.
 - **TinyGo Compatible:** No `fmt`, `strings`, `strconv`, `errors` from stdlib. Use `tinywasm/fmt`.
 - **No `reflect` at runtime.**
+
 ---
 
-## Part 1: `tinywasm/form/input` Changes
+## Part 1: Delete `input/permitted.go`
 
-### 1.1 Update `input.Input` interface in `interface.go`
+Delete the entire file. It contains:
+- `Permitted` struct (duplicated from `fmt.Permitted`)
+- `Validate(text string) error` method
+- `MinMaxAllowedChars()` method (unused)
+- `valid_letters`, `valid_tilde`, `valid_number` maps (replaced by ASCII ranges in fmt)
+- Constants `tabulation`, `white_space`, `break_line`
 
-**Current state** (partially updated — `Clone` already renamed to `Build`):
-```go
-type Input interface {
-    dom.Component
-    HTMLName() string
-    FieldName() string
-    ValidateField(value string) error
-    Build(parentID, name string) Input
-}
-```
+---
 
-**Target:**
-```go
-type Input interface {
-    fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
-    dom.Component // GetID(), SetID(), RenderHTML(), Children()
-}
-```
+## Part 2: Update `input/base.go`
 
-**Remaining changes:**
-- Embed `fmt.Widget` — promotes `Type()`, `Validate()`, `Clone(parentID, name string) Widget` into `Input`
-- Remove `Build(parentID, name string) Input` — replaced by `fmt.Widget.Clone(parentID, name)` (same signature, returns `Widget` which is type-assertable to `Input`)
-- Remove `HTMLName() string` — replaced by `fmt.Widget.Type()` (same value; kept on `Base` as internal method)
-- Remove `FieldName() string` — internal rendering concern; name passed via `Clone(parentID, name)`
-- Remove `ValidateField(value string) error` — replaced by `fmt.Widget.Validate()` (same behavior; kept on `Base` as implementation detail)
-
-**Why remove `HTMLName`, `FieldName`, `ValidateField`, `Build` from the interface:** Interface Segregation — all replaced by `fmt.Widget` embedding. `HTMLName()` = `Type()`. `FieldName()` is internal. `ValidateField()` = `Validate()`. `Build()` = `Clone()`. Concrete types retain internal methods on `Base` for rendering use.
-
-### 1.2 Update `base.go`
-
-Add `Type()` and `Validate()` to `Base` so all concrete types embedding `Base` satisfy `fmt.Widget`:
-
-```go
-// Type satisfies fmt.Widget.Type(). Returns the semantic input type name.
-func (b *Base) Type() string { return b.htmlName }
-
-// Validate satisfies fmt.Widget.Validate(). Delegates to ValidateField.
-func (b *Base) Validate(value string) error { return b.ValidateField(value) }
-```
-
-`Clone(parentID, name string) fmt.Widget` cannot live on `Base` (doesn't know concrete type) — each concrete type must implement it. See section 1.3.
-
-`HTMLName()`, `FieldName()`, and `ValidateField()` remain on `Base` as internal methods but are no longer part of the `Input` interface.
-
-Remove `Build` method from concrete types (not on `Base` directly) — replaced by `Clone`. Check `base.go` only for internal calls to `Build(`.
-
-### 1.3 Update ALL concrete input types
-
-For each type in `email.go`, `text.go`, `password.go`, `textarea.go`, `phone.go`, `number.go`, `date.go`, `hour.go`, `ip.go`, `rut.go`, `address.go`, `checkbox.go`, `datalist.go`, `select.go`, `radio.go`, `filepath.go`, `gender.go`:
-
-**Pattern (example for `email`):**
+### 2.1 Change embedded struct
 
 ```go
 // Before:
-func Email(parentID, name string) Input {
-    e := &email{}
-    // ... init ...
-    return e
+type Base struct {
+    // ...
+    Permitted // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
-func (e *email) Build(parentID, name string) Input { return Email(parentID, name) }
 
 // After:
-// NewEmail returns a template instance for use in fmt.Field.Widget (no position).
-// Used by ormc-generated schema code.
-func NewEmail() fmt.Widget {
-    return Email("", "")
+type Base struct {
+    // ...
+    fmt.Permitted // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
-
-func Email(parentID, name string) Input {
-    e := &email{}
-    // ... init (unchanged) ...
-    return e
-}
-
-// Clone satisfies fmt.Widget — Email() returns Input which implements Widget.
-func (e *email) Clone(parentID, name string) fmt.Widget { return Email(parentID, name) }
 ```
 
-Apply this pattern to ALL 17 concrete types.
+### 2.2 Update `Base.Validate()` call
 
-### 1.4 Update `permitted.go` if needed
+```go
+// Before (line 136):
+return b.Permitted.Validate(value)
 
-Check `permitted.go` for any reference to `Build` — update to `Clone`.
+// After:
+return b.Permitted.Validate(b.name, value)
+```
+
+No other changes to base.go. `Type()`, `FieldName()`, `HTMLName()` are unaffected.
 
 ---
 
-## Part 2: `tinywasm/form` Changes
+## Part 3: Rename fields in ALL concrete inputs
 
-### 2.1 Remove `init()` from `registry.go`
+Field name mapping (input.Permitted → fmt.Permitted):
 
-Delete the entire `init()` block that calls `RegisterInput(...)` with all default inputs.
+| Old Name | New Name |
+|---|---|
+| `WhiteSpaces` | `Spaces` |
+| `Tabulation` | `Tab` |
+| `Characters` | `Extra` |
+| `TextNotAllowed` | `NotAllowed` |
+| `SkipRules` | _(delete — see Part 4)_ |
+| `ExtraValidation` | _(delete — unused)_ |
 
-The registry and `RegisterInput()` function can be kept for projects that want runtime-registered custom inputs via old API — but it is no longer called automatically.
+### Files that use renamed fields:
 
-**Before:**
-```go
-func init() {
-    RegisterInput(
-        input.Text("", ""),
-        input.Email("", ""),
-        // ... 15 more ...
-    )
-}
-```
+| File | Old Field | New Field |
+|---|---|---|
+| textarea.go | `WhiteSpaces`, `BreakLine`, `Characters` | `Spaces`, `BreakLine`, `Extra` |
+| address.go | `WhiteSpaces`, `Characters` | `Spaces`, `Extra` |
+| hour.go | `Characters` | `Extra` |
+| email.go | `Characters` | `Extra` |
+| text.go | `Characters` | `Extra` |
+| password.go | `Characters` | `Extra` |
+| phone.go | `Characters` | `Extra` |
+| date.go | `Characters` | `Extra` |
+| ip.go | `Characters` | `Extra` |
+| filepath.go | `Characters` | `Extra` |
+| rut.go | `Characters` | `Extra` |
 
-**After:** Delete `init()` entirely. `RegisterInput` stays as exported function but is a no-op until called explicitly by the project.
+Fields that keep the same name (no change needed): `Letters`, `Tilde`, `Numbers`, `BreakLine`, `Minimum`, `Maximum`.
 
-### 2.2 Remove `findInputForField()` from `registry.go`
+---
 
-Delete `findInputForField(fieldName, structName string) input.Input` — this is the magic name-matching function. It is replaced by direct use of `field.Widget`.
+## Part 4: Handle SkipRules removal
 
-### 2.3 Update form rendering to use `field.Widget` directly
+`SkipRules` was used by `checkbox.go` and `datalist.go`. Both types already **override** `Validate()` entirely on the concrete type — they never call `Permitted.Validate()`. The `SkipRules = true` line is therefore dead code.
 
-Wherever `form` calls `findInputForField(field.Name, structName)` to get an input, replace with:
+**Action:** Delete `c.SkipRules = true` from checkbox.go and `dl.SkipRules = true` from datalist.go.
 
-```go
-if field.Widget == nil {
-    continue // field has no UI binding — skip
-}
-inp, ok := field.Widget.Clone(parentID, field.Name).(input.Input)
-if !ok {
-    continue // custom type not implementing input.Input — skip rendering
-}
-// inp is already positioned — ready for rendering
-```
+---
 
-Fields without `Widget` are simply not rendered in the form — this is intentional. No magic fallback.
+## Part 5: Update Validate calls in concrete types with overrides
 
-### 2.4 Keep `findInputByType()` if used elsewhere
+These files call `Permitted.Validate(value)` internally and need the field name added:
 
-Check if `findInputByType(htmlType string)` is used outside of `findInputForField`. If not, delete it too. If yes, keep it for explicit lookup by HTML type name.
+| File | Before | After |
+|---|---|---|
+| date.go | `d.Permitted.Validate(value)` | `d.Permitted.Validate(d.name, value)` |
+| filepath.go | `fp.Permitted.Validate(value)` | `fp.Permitted.Validate(fp.name, value)` |
+| hour.go | `h.Permitted.Validate(value)` | `h.Permitted.Validate(h.name, value)` |
+| ip.go | `i.Permitted.Validate(value)` | `i.Permitted.Validate(i.name, value)` |
+| rut.go | `r.Permitted.Validate(value)` | `r.Permitted.Validate(r.name, value)` |
+
+---
+
+## Part 6: Update tests
+
+### input/validation_test.go
+
+If tests call `Permitted.Validate(value)` directly, update to `Permitted.Validate("field", value)`.
+
+If tests reference old field names (`WhiteSpaces`, `Characters`, etc.), rename them.
+
+### input/inputs_test.go, input/render_test.go
+
+Check for any `Permitted{}` struct literals with old field names — rename accordingly.
+
+### form/ tests (base.back_test.go, base.shared_test.go, etc.)
+
+Check for references to old field names or `Permitted.Validate(value)` calls — update.
 
 ---
 
@@ -181,83 +150,48 @@ Check if `findInputByType(htmlType string)` is used outside of `findInputForFiel
 ### `form/input/`
 | File | Change |
 |---|---|
-| `interface.go` | Embed `fmt.Widget`; remove `HTMLName()`, `FieldName()`, `ValidateField()`, `Build()` |
-| `base.go` | Add `Type() string`, `Validate(value string) error`; remove `Build()` |
-| `email.go` | Add `NewEmail()`; replace `Build` with `Clone(parentID, name string) fmt.Widget` |
-| `text.go` | Same pattern |
-| `password.go` | Same pattern |
-| `textarea.go` | Same pattern |
-| `phone.go` | Same pattern |
-| `number.go` | Same pattern |
-| `date.go` | Same pattern |
-| `hour.go` | Same pattern |
-| `ip.go` | Same pattern |
-| `rut.go` | Same pattern |
-| `address.go` | Same pattern |
-| `checkbox.go` | Same pattern |
-| `datalist.go` | Same pattern |
-| `select.go` | Same pattern |
-| `radio.go` | Same pattern |
-| `filepath.go` | Same pattern |
-| `gender.go` | Same pattern |
+| `permitted.go` | **DELETE** |
+| `base.go` | Embed `fmt.Permitted` instead of `Permitted`; update `Validate` call |
+| `email.go` | `Characters` → `Extra` |
+| `text.go` | `Characters` → `Extra` |
+| `password.go` | `Characters` → `Extra` |
+| `textarea.go` | `WhiteSpaces` → `Spaces`, `Characters` → `Extra` |
+| `phone.go` | `Characters` → `Extra` |
+| `number.go` | No field renames needed |
+| `date.go` | `Characters` → `Extra`; update `Permitted.Validate` call |
+| `hour.go` | `Characters` → `Extra`; update `Permitted.Validate` call |
+| `ip.go` | `Characters` → `Extra`; update `Permitted.Validate` call |
+| `rut.go` | `Characters` → `Extra`; update `Permitted.Validate` call |
+| `address.go` | `WhiteSpaces` → `Spaces`, `Characters` → `Extra` |
+| `checkbox.go` | Delete `c.SkipRules = true` |
+| `datalist.go` | Delete `dl.SkipRules = true` |
+| `select.go` | No field renames needed |
+| `radio.go` | No field renames needed |
+| `filepath.go` | `Characters` → `Extra`; update `Permitted.Validate` call |
+| `gender.go` | No field renames needed |
 
-### `form/`
+### `form/input/` tests
 | File | Change |
 |---|---|
-| `registry.go` | Delete `init()`, delete `findInputForField()` |
-| Form rendering files | Replace `findInputForField()` calls with `field.Widget.Clone(parentID, field.Name).(input.Input)` |
+| `validation_test.go` | Update `Validate` calls and field names if needed |
+| `inputs_test.go` | Update field names if needed |
+| `render_test.go` | Update field names if needed |
+
+### Documentation (already updated)
+README.md and docs/ were updated in prior session — verify `Permitted` section references `fmt.Permitted` field names after execution.
 
 ---
 
-## Tests
+## go.mod
 
-### Test location
-
-Tests currently live alongside source files. This is acceptable for `form/input/` since tests are already in:
-- `form/input/inputs_test.go`
-- `form/input/validation_test.go`
-- `form/input/render_test.go`
-
-Form-level tests are in:
-- `form/base.front_test.go`
-- `form/base.back_test.go`
-- `form/base.shared_test.go`
-- `form/setup_test.go`
-
-Keep existing location — do NOT move to `tests/` subdirectory.
-
-### `form/input/` test updates
-
-Update existing tests that call `Build(parentID, name)` to call `Clone(parentID, name)`.
-
-Add per-type tests in `inputs_test.go`:
-- `New<Type>()` returns a non-nil `fmt.Widget`
-- `Clone(parentID, name)` returns a non-nil `fmt.Widget` with correct `Type()`
-- `Clone(parentID, name)` result is type-assertable to `input.Input`
-
-Update existing validation tests in `validation_test.go`:
-- Replace any `ValidateField()` calls with `Validate()`
-- `Validate(validValue)` returns nil
-- `Validate(invalidValue)` returns error
-
-Update existing render tests in `render_test.go`:
-- Replace `Build()` calls with `Clone()` for positioned instances
-- Verify `Clone(parentID, name).(input.Input).RenderHTML()` produces correct output
-
-### `form/` test updates
-
-Update existing tests in `base.shared_test.go` or `base.back_test.go`:
-- Form built from schema where `Widget == nil` does not render that field
-- `field.Widget.Clone(parentID, field.Name).(input.Input)` produces correct HTML for each known type
-- Replace any calls to `findInputForField()` with `field.Widget.Clone()` pattern
+No changes needed — `tinywasm/fmt` is already a dependency at v0.21.1 which includes `fmt.Permitted`.
 
 ---
 
-## go.mod Update
+## Verification
 
-```bash
-go get github.com/tinywasm/fmt@v0.21.1
-go mod tidy
-```
-
-
+After execution:
+1. `gotest ./input/...` — all input tests pass
+2. `gotest ./...` — all form tests pass
+3. `grep -r "input.Permitted" .` — no results (only `fmt.Permitted` used)
+4. `permitted.go` no longer exists in `input/`

@@ -3,26 +3,27 @@ package form_test
 import (
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
+	"github.com/tinywasm/form/input"
 )
 
 // User is a sample struct for testing data binding.
 type User struct {
-	Name     string // Auto: Text, validates, placeholder="Name" (via fmt.Translate)
-	Email    string // Auto: Email, validates
-	Password string // Auto: Password, validates
-	Gender   string // Auto: Gender (m/f defaults)
-	Role     string `options:"admin:Admin,user:User"` // Custom options
-	Address  string `validate:"false"`                // No validation
+	Name     string
+	Email    string
+	Password string
+	Gender   string
+	Role     string
+	Address  string
 }
 
 func (u *User) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "Name", Type: fmt.FieldText, NotNull: true},
-		{Name: "Email", Type: fmt.FieldText, NotNull: true, Input: "email"},
-		{Name: "Password", Type: fmt.FieldText, NotNull: true, Input: "password"},
-		{Name: "Gender", Type: fmt.FieldText},
-		{Name: "Role", Type: fmt.FieldText},
-		{Name: "Address", Type: fmt.FieldText, Input: "-"}, // testing exclusion as per plan? actually Address was "validate:false"
+		{Name: "Name", Type: fmt.FieldText, NotNull: true, Widget: input.Text("", "")},
+		{Name: "Email", Type: fmt.FieldText, NotNull: true, Widget: input.Email("", "")},
+		{Name: "Password", Type: fmt.FieldText, NotNull: true, Widget: input.Password("", "")},
+		{Name: "Gender", Type: fmt.FieldText, Widget: input.Gender("", "")},
+		{Name: "Role", Type: fmt.FieldText, Widget: input.Select("", "")},
+		{Name: "Address", Type: fmt.FieldText, Widget: input.Address("", "")},
 	}
 }
 

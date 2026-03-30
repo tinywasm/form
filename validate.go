@@ -10,7 +10,7 @@ func (f *Form) Validate() error {
 
 		if valuer, ok := inp.(interface{ GetSelectedValue() string }); ok {
 			val := valuer.GetSelectedValue()
-			if err := inp.ValidateField(val); err != nil {
+			if err := inp.Validate(val); err != nil {
 				return err
 			}
 		}

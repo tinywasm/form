@@ -1,7 +1,6 @@
 package form
 
 import (
-	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form/input"
 )
 
@@ -10,28 +9,6 @@ var forms = make([]*Form, 0)
 
 // Global registry for input types
 var registeredInputs = make([]input.Input, 0)
-
-func init() {
-	RegisterInput(
-		input.Text("", ""),
-		input.Email("", ""),
-		input.Password("", ""),
-		input.Gender("", ""),
-		input.Select("", ""),
-		input.Radio("", ""),
-		input.Address("", ""),
-		input.Checkbox("", ""),
-		input.Datalist("", ""),
-		input.Date("", ""),
-		input.Filepath("", ""),
-		input.Hour("", ""),
-		input.IP("", ""),
-		input.Number("", ""),
-		input.Phone("", ""),
-		input.Rut("", ""),
-		input.Textarea("", ""),
-	)
-}
 
 // RegisterInput registers input types for field mapping.
 func RegisterInput(inputs ...input.Input) {
@@ -42,23 +19,8 @@ func RegisterInput(inputs ...input.Input) {
 // Returns nil if no match found.
 func findInputByType(htmlType string) input.Input {
 	for _, tmpl := range registeredInputs {
-		if tmpl.HTMLName() == htmlType {
+		if tmpl.Type() == htmlType {
 			return tmpl
-		}
-	}
-	return nil
-}
-
-// findInputForField searches for a registered input that matches the field name.
-func findInputForField(fieldName, structName string) input.Input {
-	name := fmt.Convert(fieldName).ToLower().String()
-	fullName := fmt.Convert(structName + "." + fieldName).ToLower().String()
-
-	for _, inp := range registeredInputs {
-		if matcher, ok := inp.(interface{ Matches(string) bool }); ok {
-			if matcher.Matches(name) || matcher.Matches(fullName) {
-				return inp
-			}
 		}
 	}
 	return nil

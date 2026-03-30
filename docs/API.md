@@ -2,19 +2,26 @@
 
 See `README.md` for the consolidated API. This file contains additional detail.
 
-## `form.New` — Field Matching Detail
+## `form.New` — Widget Resolution Detail
 
 ```go
 f, err := form.New("content", data) // data implements fmt.Fielder
-// → f.GetID() == "content." + data.FormName()
-// → f.RenderHTML() renders all matching fields from data.Schema()
-// → err != nil if any field has no matching input
+// -> f.GetID() == "content." + resolveStructName(data)
+// -> f.RenderHTML() renders all fields that have a Widget in data.Schema()
 ```
+
+For each field in `data.Schema()`:
+1. `field.Widget == nil` → skip (no UI binding).
+2. `field.Widget.Clone(formID, fieldName).(input.Input)` → positioned input.
+3. `field.PK && field.AutoInc` → skip (auto-increment PKs not editable).
+4. `field.NotNull` → `SetRequired(true)` on the input.
+5. Current value bound via `fmt.ReadValues()` + `SetValues()`.
 
 ## `(*Form).Validate()` — Validation Detail
 
 - Skips fields with `SkipValidation` set to true in the input.
 - Uses `GetSelectedValue()` to get current value per input.
+- Calls `inp.Validate(val)` (promoted from `fmt.Widget`).
 - Returns the **first** error encountered.
 
 ## `(*Form).SyncValues(data fmt.Fielder)` — Binding Detail
@@ -30,8 +37,8 @@ Validates the provided `data` using the form's input rules. Satisfies `crudp.Dat
 
 ```go
 type Permitted struct {
-    Letters         bool     // A-Z, a-z, Ñ
-    Tilde           bool     // Á É Í Ó Ú á é í ó ú
+    Letters         bool     // A-Z, a-z
+    Tilde           bool     // accented chars
     Numbers         bool     // 0-9
     WhiteSpaces     bool     // space ' '
     BreakLine       bool     // '\n'
@@ -60,3 +67,5 @@ type Namer interface {
     FormName() string
 }
 ```
+
+If not implemented, defaults to `"form"`.

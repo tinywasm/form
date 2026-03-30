@@ -1,6 +1,7 @@
 package input
 
-// radio represents a standard radio button input.
+import "github.com/tinywasm/fmt"
+
 type radio struct{ Base }
 
 // Radio creates a new Radio input instance.
@@ -14,4 +15,4 @@ func Radio(parentID, name string) Input {
 }
 
 // Clone creates a new Radio input.
-func (r *radio) Build(parentID, name string) Input { return Radio(parentID, name) }
+func (r *radio) Clone(parentID, name string) fmt.Widget { return Radio(parentID, name) }

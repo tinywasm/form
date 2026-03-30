@@ -5,6 +5,7 @@ import (
 
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
+	"github.com/tinywasm/form/input"
 )
 
 type testUser struct {
@@ -15,9 +16,9 @@ type testUser struct {
 
 func (u *testUser) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldText, PK: true},
-		{Name: "name", Type: fmt.FieldText, NotNull: true},
-		{Name: "email", Type: fmt.FieldText, NotNull: true},
+		{Name: "id", Type: fmt.FieldText, PK: true, Widget: input.Text("", "")},
+		{Name: "name", Type: fmt.FieldText, NotNull: true, Widget: input.Text("", "")},
+		{Name: "email", Type: fmt.FieldText, NotNull: true, Widget: input.Email("", "")},
 	}
 }
 func (u *testUser) Values() []any    { return []any{u.id, u.name, u.email} }

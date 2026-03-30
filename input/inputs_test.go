@@ -20,6 +20,7 @@ type tc struct {
 	val  string // input value
 	err  string // expected error substring (empty = no error expected)
 	opts []fmt.KeyValue
+	req  bool
 }
 
 // rc is a compact render test case.
@@ -47,7 +48,7 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 	case "Datalist":
 		dl := Datalist(id, "datalist_field")
 		if len(opts) > 0 {
-			dl.(*datalist).SetOptions(opts...)
+			dl.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
 		return dl
 	case "Date":
@@ -57,8 +58,10 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 	case "Filepath":
 		return Filepath(id, name)
 	case "Gender":
-		g := Radio(id, name).(*radio)
-		g.SetOptions(optsGender...)
+		g := Gender(id, name)
+		if len(opts) > 0 {
+			g.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
+		}
 		return g
 	case "Hour":
 		return Hour(id, name)
@@ -71,15 +74,17 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 	case "Phone":
 		return Phone(id, name)
 	case "Radio":
-		r := Radio(id, name).(*radio)
-		r.SetOptions(optsGender...)
+		r := Radio(id, name)
+		if len(opts) > 0 {
+			r.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
+		}
 		return r
 	case "Rut":
 		return Rut(id, name)
 	case "Select":
 		s := Select(id, name)
 		if len(opts) > 0 {
-			s.(*select_).SetOptions(opts...)
+			s.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
 		return s
 	case "Text":

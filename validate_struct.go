@@ -17,7 +17,7 @@ func (f *Form) ValidateData(action byte, data fmt.Fielder) error {
 			continue
 		}
 		val := fmt.Convert(values[idx]).String()
-		if err := inp.ValidateField(val); err != nil {
+		if err := inp.Validate(val); err != nil {
 			return err
 		}
 	}

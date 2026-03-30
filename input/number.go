@@ -1,6 +1,7 @@
 package input
 
-// number represents a numeric input field.
+import "github.com/tinywasm/fmt"
+
 type number struct{ Base }
 
 // Number creates a new number input instance.
@@ -14,4 +15,4 @@ func Number(parentID, name string) Input {
 }
 
 // Clone creates a new number input with the given parentID and name.
-func (n *number) Build(parentID, name string) Input { return Number(parentID, name) }
+func (n *number) Clone(parentID, name string) fmt.Widget { return Number(parentID, name) }

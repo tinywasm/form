@@ -2,15 +2,12 @@ package input
 
 import (
 	"github.com/tinywasm/dom"
+	"github.com/tinywasm/fmt"
 )
 
 // Input interface defines the behavior for all form input types.
 // It embeds dom.Component to ensure compatibility with the tinywasm/dom ecosystem.
 type Input interface {
+	fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
 	dom.Component // Includes GetID(), SetID(), RenderHTML(), Children()
-
-	HTMLName() string                  // Standard HTML5 type (e.g., "text", "email")
-	FieldName() string                 // Struct field name (without parent prefix)
-	ValidateField(value string) error  // Self-contained validation logic
-	Build(parentID, name string) Input // Creates a positioned instance for form rendering
 }

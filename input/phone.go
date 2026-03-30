@@ -1,6 +1,7 @@
 package input
 
-// phone represents a phone number input field.
+import "github.com/tinywasm/fmt"
+
 type phone struct{ Base }
 
 // Phone creates a new phone input instance.
@@ -15,4 +16,4 @@ func Phone(parentID, name string) Input {
 }
 
 // Clone creates a new phone input with the given parentID and name.
-func (p *phone) Build(parentID, name string) Input { return Phone(parentID, name) }
+func (p *phone) Clone(parentID, name string) fmt.Widget { return Phone(parentID, name) }

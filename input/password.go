@@ -1,6 +1,7 @@
 package input
 
-// password represents a password input.
+import "github.com/tinywasm/fmt"
+
 type password struct{ Base }
 
 // Password creates a new Password input instance.
@@ -17,4 +18,4 @@ func Password(parentID, name string) Input {
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Build(parentID, name string) Input { return Password(parentID, name) }
+func (p *password) Clone(parentID, name string) fmt.Widget { return Password(parentID, name) }
