@@ -17,4 +17,4 @@ func Password(parentID, name string) Input {
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Clone(parentID, name string) Input { return Password(parentID, name) }
+func (p *password) Build(parentID, name string) Input { return Password(parentID, name) }

@@ -58,4 +58,4 @@ func (d *date) monthDays(year int) [13]int {
 }
 
 // Clone creates a new date input with the given parentID and name.
-func (d *date) Clone(parentID, name string) Input { return Date(parentID, name) }
+func (d *date) Build(parentID, name string) Input { return Date(parentID, name) }

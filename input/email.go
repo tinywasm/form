@@ -16,4 +16,4 @@ func Email(parentID, name string) Input {
 }
 
 // Clone creates a new Email input with the given parentID and name.
-func (e *email) Clone(parentID, name string) Input { return Email(parentID, name) }
+func (e *email) Build(parentID, name string) Input { return Email(parentID, name) }

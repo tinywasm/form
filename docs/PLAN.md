@@ -2,8 +2,8 @@
 
 **Module:** `github.com/tinywasm/form` (covers subpackage `tinywasm/form/input`)
 **Breaking change:** Yes — changes `input.Input` interface, removes registry auto-init.
-**Execution order:** Requires `tinywasm/fmt` PLAN_FIELD_INPUT.md to be published first.
-**Note on tag cleanup:** `tinywasm/orm` (PLAN_INPUT_TAG.md) handles source file tag rewriting — it removes `form:` and `validate:` tags from `model.go`/`models.go` automatically when `ormc` runs. This plan does not need to address tag cleanup.
+**Execution order:** Requires `tinywasm/fmt` PLAN_WIDGET.md to be published first.
+**Note on tag cleanup:** `tinywasm/orm` (PLAN.md) handles source file tag rewriting — it removes `form:` and `validate:` tags from `model.go`/`models.go` automatically when `ormc` runs. This plan does not need to address tag cleanup.
 
 ---
 
@@ -16,15 +16,14 @@
 
 1. **`registry.go` `init()`** auto-registers all input types at startup. This is implicit — a field named "Email" magically becomes an email input via name matching. This breaks when field names don't follow conventions and makes the system non-deterministic.
 
-2. **`input.Input.Clone(parentID, name string) Input`** creates positioned instances for form rendering. There is no parameterless constructor for use as a schema template.
-
-3. **No connection to `fmt.Field`** — the form layer has no access to the input type through the schema; it guesses via `findInputForField()`.
+2. **No connection to `fmt.Field`** — the form layer has no access to the input type through the schema; it guesses via `findInputForField()`.
 
 ### Goal
 
 - Remove all magic name matching from `form`.
-- Add `Clone() fmt.Widget` (parameterless) to `input.Input` so templates can be stored in `fmt.Field.Widget`.
+- `input.Input` embeds `fmt.Widget` — `Clone(parentID, name)` satisfies both Widget and positioned rendering.
 - Add `New<Type>() fmt.Widget` constructors for use by ormc code generation.
+- Migrate `form/input/` tests to `form/input/tests/` to follow orm convention.
 - Remove `init()` auto-registration from `registry.go`.
 - `form` uses `field.Widget` directly from the schema to render inputs.
 
@@ -37,56 +36,57 @@
 - **Max 500 lines per file.** If exceeded, subdivide by domain.
 - **TinyGo Compatible:** No `fmt`, `strings`, `strconv`, `errors` from stdlib. Use `tinywasm/fmt`.
 - **No `reflect` at runtime.**
-- **Publishing:** Use `gopush 'message'` after tests pass.
-
 ---
 
 ## Part 1: `tinywasm/form/input` Changes
 
 ### 1.1 Update `input.Input` interface in `interface.go`
 
-**Before:**
+**Current state** (partially updated — `Clone` already renamed to `Build`):
 ```go
 type Input interface {
     dom.Component
     HTMLName() string
     FieldName() string
     ValidateField(value string) error
-    Clone(parentID, name string) Input
+    Build(parentID, name string) Input
 }
 ```
 
-**After:**
+**Target:**
 ```go
 type Input interface {
-    dom.Component                          // GetID(), SetID(), RenderHTML(), Children()
-    Type() string                          // Semantic input type (e.g., "email", "textarea") — satisfies fmt.Widget.Type()
-    HTMLName() string                      // HTML5 type attribute — same value as Type(), kept for dom/rendering context
-    FieldName() string                     // Struct field name (without parent prefix)
-    ValidateField(value string) error      // Semantic validation (existing — kept for input.Input consumers)
-    Validate(value string) error           // Alias for ValidateField — satisfies fmt.Widget.Validate()
-    Build(parentID, name string) Input     // Creates positioned instance for form rendering (renamed from Clone)
-    Clone() fmt.Widget                     // Returns a fresh template instance — satisfies fmt.Widget.Clone()
+    fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
+    dom.Component // GetID(), SetID(), RenderHTML(), Children()
 }
 ```
 
-**Changes:**
-- `Clone(parentID, name string) Input` → renamed to `Build(parentID, name string) Input`
-- New `Validate(value string) error` — added to interface, delegates to `ValidateField` (satisfies `fmt.Widget`)
-- New `Clone() fmt.Widget` — added to interface, returns a template copy with no parentID/name (satisfies `fmt.Widget`)
+**Remaining changes:**
+- Embed `fmt.Widget` — promotes `Type()`, `Validate()`, `Clone(parentID, name string) Widget` into `Input`
+- Remove `Build(parentID, name string) Input` — replaced by `fmt.Widget.Clone(parentID, name)` (same signature, returns `Widget` which is type-assertable to `Input`)
+- Remove `HTMLName() string` — replaced by `fmt.Widget.Type()` (same value; kept on `Base` as internal method)
+- Remove `FieldName() string` — internal rendering concern; name passed via `Clone(parentID, name)`
+- Remove `ValidateField(value string) error` — replaced by `fmt.Widget.Validate()` (same behavior; kept on `Base` as implementation detail)
 
-**Why rename `Clone` to `Build`:** Go does not allow two methods with the same name and different signatures. `Clone()` (no params) is required by `fmt.Widget`. The existing positioned constructor is semantically a "build for position", so `Build` is more accurate.
-
-**Why both `Validate` and `ValidateField`:** `ValidateField` is the existing method used by internal form rendering code. `Validate` is required by `fmt.Widget`. Both live in the interface so existing consumers of `input.Input` do not break, and `fmt.Widget` is satisfied. On `Base`, `Validate` delegates to `ValidateField`.
+**Why remove `HTMLName`, `FieldName`, `ValidateField`, `Build` from the interface:** Interface Segregation — all replaced by `fmt.Widget` embedding. `HTMLName()` = `Type()`. `FieldName()` is internal. `ValidateField()` = `Validate()`. `Build()` = `Clone()`. Concrete types retain internal methods on `Base` for rendering use.
 
 ### 1.2 Update `base.go`
 
-Add `Clone() fmt.Widget` to `Base` — all concrete types embedding `Base` automatically inherit it if they have a `New<Type>()` constructor.
+Add `Type()` and `Validate()` to `Base` so all concrete types embedding `Base` satisfy `fmt.Widget`:
 
-Since `Base` doesn't know its concrete type, `Clone()` cannot be implemented on `Base` itself — each concrete type must implement it. See section 1.3.
+```go
+// Type satisfies fmt.Widget.Type(). Returns the semantic input type name.
+func (b *Base) Type() string { return b.htmlName }
 
-Rename `Clone` usage in `Base` if any exist:
-- Search `base.go` for any call to `Clone(` and update to `Build(`.
+// Validate satisfies fmt.Widget.Validate(). Delegates to ValidateField.
+func (b *Base) Validate(value string) error { return b.ValidateField(value) }
+```
+
+`Clone(parentID, name string) fmt.Widget` cannot live on `Base` (doesn't know concrete type) — each concrete type must implement it. See section 1.3.
+
+`HTMLName()`, `FieldName()`, and `ValidateField()` remain on `Base` as internal methods but are no longer part of the `Input` interface.
+
+Remove `Build` method from concrete types (not on `Base` directly) — replaced by `Clone`. Check `base.go` only for internal calls to `Build(`.
 
 ### 1.3 Update ALL concrete input types
 
@@ -101,7 +101,7 @@ func Email(parentID, name string) Input {
     // ... init ...
     return e
 }
-func (e *email) Clone(parentID, name string) Input { return Email(parentID, name) }
+func (e *email) Build(parentID, name string) Input { return Email(parentID, name) }
 
 // After:
 // NewEmail returns a template instance for use in fmt.Field.Widget (no position).
@@ -116,40 +116,15 @@ func Email(parentID, name string) Input {
     return e
 }
 
-// Build creates a positioned instance for form rendering.
-func (e *email) Build(parentID, name string) Input { return Email(parentID, name) }
-
-// Clone returns a fresh template instance implementing fmt.Widget.
-func (e *email) Clone() fmt.Widget { return NewEmail() }
+// Clone satisfies fmt.Widget — Email() returns Input which implements Widget.
+func (e *email) Clone(parentID, name string) fmt.Widget { return Email(parentID, name) }
 ```
 
 Apply this pattern to ALL 17 concrete types.
 
-### 1.4 Add `Type() string` to `Base`
+### 1.4 Update `permitted.go` if needed
 
-`fmt.Widget` requires `Type() string`. `Base` already has `HTMLName() string` returning the same value. Add a `Type()` method on `Base` that delegates to `htmlName`:
-
-```go
-// In base.go
-func (b *Base) Type() string { return b.htmlName }
-```
-
-This satisfies `fmt.Widget.Type()` for all types embedding `Base`. `HTMLName()` is kept unchanged — it is used by the rendering layer (`dom` context) where the HTML attribute name is explicit.
-
-### 1.5 Satisfy `fmt.Widget.Validate()` on concrete types
-
-`fmt.Widget` requires `Validate(value string) error`. Each concrete type already has `ValidateField(value string) error` on `Base`. Add a `Validate` alias on `Base`:
-
-```go
-// In base.go
-func (b *Base) Validate(value string) error { return b.ValidateField(value) }
-```
-
-`ValidateField` is kept for backwards compatibility within the `input.Input` interface.
-
-### 1.6 Update `permitted.go` if needed
-
-Check `permitted.go` for any reference to `Clone` — update to `Build`.
+Check `permitted.go` for any reference to `Build` — update to `Clone`.
 
 ---
 
@@ -186,11 +161,11 @@ Wherever `form` calls `findInputForField(field.Name, structName)` to get an inpu
 if field.Widget == nil {
     continue // field has no UI binding — skip
 }
-inp, ok := field.Widget.Clone().(input.Input)
+inp, ok := field.Widget.Clone(parentID, field.Name).(input.Input)
 if !ok {
     continue // custom type not implementing input.Input — skip rendering
 }
-rendered := inp.Build(parentID, field.Name)
+// inp is already positioned — ready for rendering
 ```
 
 Fields without `Widget` are simply not rendered in the form — this is intentional. No magic fallback.
@@ -206,9 +181,9 @@ Check if `findInputByType(htmlType string)` is used outside of `findInputForFiel
 ### `form/input/`
 | File | Change |
 |---|---|
-| `interface.go` | Rename `Clone → Build`, add `Validate(value string) error`, add `Clone() fmt.Widget` |
-| `base.go` | Add `Type() string`, `Validate(value string) error`, rename any `Clone(` calls to `Build(` |
-| `email.go` | Add `NewEmail()`, rename `Clone → Build`, add `Clone()` |
+| `interface.go` | Embed `fmt.Widget`; remove `HTMLName()`, `FieldName()`, `ValidateField()`, `Build()` |
+| `base.go` | Add `Type() string`, `Validate(value string) error`; remove `Build()` |
+| `email.go` | Add `NewEmail()`; replace `Build` with `Clone(parentID, name string) fmt.Widget` |
 | `text.go` | Same pattern |
 | `password.go` | Same pattern |
 | `textarea.go` | Same pattern |
@@ -230,34 +205,58 @@ Check if `findInputByType(htmlType string)` is used outside of `findInputForFiel
 | File | Change |
 |---|---|
 | `registry.go` | Delete `init()`, delete `findInputForField()` |
-| Form rendering files | Replace `findInputForField()` calls with `field.Widget.Clone().(input.Input).Build(...)` |
+| Form rendering files | Replace `findInputForField()` calls with `field.Widget.Clone(parentID, field.Name).(input.Input)` |
 
 ---
 
 ## Tests
 
-### `form/input/` tests
+### Test location
 
-Update existing tests that call `Clone(parentID, name)` to call `Build(parentID, name)`.
+Tests currently live alongside source files. This is acceptable for `form/input/` since tests are already in:
+- `form/input/inputs_test.go`
+- `form/input/validation_test.go`
+- `form/input/render_test.go`
 
-Add per-type tests for:
+Form-level tests are in:
+- `form/base.front_test.go`
+- `form/base.back_test.go`
+- `form/base.shared_test.go`
+- `form/setup_test.go`
+
+Keep existing location — do NOT move to `tests/` subdirectory.
+
+### `form/input/` test updates
+
+Update existing tests that call `Build(parentID, name)` to call `Clone(parentID, name)`.
+
+Add per-type tests in `inputs_test.go`:
 - `New<Type>()` returns a non-nil `fmt.Widget`
-- `Clone()` returns a non-nil `fmt.Widget` with correct `Name()`
+- `Clone(parentID, name)` returns a non-nil `fmt.Widget` with correct `Type()`
+- `Clone(parentID, name)` result is type-assertable to `input.Input`
+
+Update existing validation tests in `validation_test.go`:
+- Replace any `ValidateField()` calls with `Validate()`
 - `Validate(validValue)` returns nil
 - `Validate(invalidValue)` returns error
-- `Build(parentID, name)` returns a correctly positioned `Input`
 
-### `form/` tests
+Update existing render tests in `render_test.go`:
+- Replace `Build()` calls with `Clone()` for positioned instances
+- Verify `Clone(parentID, name).(input.Input).RenderHTML()` produces correct output
 
-Add test that verifies a form built from a schema where `Widget == nil` does not render that field.
-Add test that verifies `field.Widget.Clone().(input.Input).Build(...)` produces correct HTML for each known type.
+### `form/` test updates
+
+Update existing tests in `base.shared_test.go` or `base.back_test.go`:
+- Form built from schema where `Widget == nil` does not render that field
+- `field.Widget.Clone(parentID, field.Name).(input.Input)` produces correct HTML for each known type
+- Replace any calls to `findInputForField()` with `field.Widget.Clone()` pattern
 
 ---
 
 ## go.mod Update
 
 ```bash
-go get github.com/tinywasm/fmt@v0.21.0
+go get github.com/tinywasm/fmt@v0.21.1
 go mod tidy
 ```
 

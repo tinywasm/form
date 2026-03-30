@@ -73,4 +73,4 @@ func (r *rut) dvRut(rut int) string {
 }
 
 // Clone creates a new rut input with the given parentID and name.
-func (r *rut) Clone(parentID, name string) Input { return Rut(parentID, name) }
+func (r *rut) Build(parentID, name string) Input { return Rut(parentID, name) }

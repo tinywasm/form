@@ -42,4 +42,4 @@ func (i *ip) ValidateField(value string) error {
 }
 
 // Clone creates a new IP input with the given parentID and name.
-func (i *ip) Clone(parentID, name string) Input { return IP(parentID, name) }
+func (i *ip) Build(parentID, name string) Input { return IP(parentID, name) }

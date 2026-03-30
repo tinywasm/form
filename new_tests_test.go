@@ -15,9 +15,9 @@ type testUser struct {
 
 func (u *testUser) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldText, PK: true, Input: "text"},
-		{Name: "name", Type: fmt.FieldText, NotNull: true, Input: "text"},
-		{Name: "email", Type: fmt.FieldText, NotNull: true, Input: "email"},
+		{Name: "id", Type: fmt.FieldText, PK: true},
+		{Name: "name", Type: fmt.FieldText, NotNull: true},
+		{Name: "email", Type: fmt.FieldText, NotNull: true},
 	}
 }
 func (u *testUser) Values() []any    { return []any{u.id, u.name, u.email} }

@@ -80,27 +80,24 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 			continue
 		}
 
-		// Skip fields explicitly excluded from form via form:"-" tag
-		if field.Input == "-" {
-			continue
-		}
-
 		fieldName := field.Name
 
 		// Resolve input template:
-		// 1. If Field.Input is set (e.g., "email"), use it as explicit type override.
-		// 2. Otherwise, use the existing name-based heuristic (field name + struct name).
+		// 1. If Field.Widget is set (via ormc `input:` tag), use it directly.
+		// 2. Otherwise, fall back to name-based heuristic (legacy registry).
 		var template input.Input
-		if field.Input != "" {
-			template = findInputByType(field.Input) // lookup by HTML type name
+		if field.Widget != nil {
+			if inp, ok := field.Widget.(input.Input); ok {
+				template = inp
+			}
 		}
 		if template == nil {
-			template = findInputForField(fieldName, structName) // Existing heuristic
+			template = findInputForField(fieldName, structName)
 		}
 		if template == nil {
 			return nil, fmt.Err("field", fieldName, "no matching input registered")
 		}
-		inp := template.Clone(formID, fieldName)
+		inp := template.Build(formID, fieldName)
 
 		// Apply constraint-based defaults from schema
 		if field.NotNull {

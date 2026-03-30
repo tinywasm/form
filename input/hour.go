@@ -26,4 +26,4 @@ func (h *hour) ValidateField(value string) error {
 }
 
 // Clone creates a new time input with the given parentID and name.
-func (h *hour) Clone(parentID, name string) Input { return Hour(parentID, name) }
+func (h *hour) Build(parentID, name string) Input { return Hour(parentID, name) }

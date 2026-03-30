@@ -25,4 +25,4 @@ func (c *checkbox) ValidateField(value string) error {
 }
 
 // Clone creates a new checkbox input with the given parentID and name.
-func (c *checkbox) Clone(parentID, name string) Input { return Checkbox(parentID, name) }
+func (c *checkbox) Build(parentID, name string) Input { return Checkbox(parentID, name) }

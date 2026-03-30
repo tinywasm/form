@@ -17,4 +17,4 @@ func Text(parentID, name string) Input {
 }
 
 // Clone creates a new Text input with the given parentID and name.
-func (t *text) Clone(parentID, name string) Input { return Text(parentID, name) }
+func (t *text) Build(parentID, name string) Input { return Text(parentID, name) }

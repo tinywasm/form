@@ -12,5 +12,5 @@ type Input interface {
 	HTMLName() string                  // Standard HTML5 type (e.g., "text", "email")
 	FieldName() string                 // Struct field name (without parent prefix)
 	ValidateField(value string) error  // Self-contained validation logic
-	Clone(parentID, name string) Input // Creates a new instance with given parentID and name
+	Build(parentID, name string) Input // Creates a positioned instance for form rendering
 }

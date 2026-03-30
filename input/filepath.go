@@ -32,4 +32,4 @@ func (fp *filepath) ValidateField(value string) error {
 }
 
 // Clone creates a new filepath input with the given parentID and name.
-func (fp *filepath) Clone(parentID, name string) Input { return Filepath(parentID, name) }
+func (fp *filepath) Build(parentID, name string) Input { return Filepath(parentID, name) }

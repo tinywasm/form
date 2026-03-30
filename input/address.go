@@ -1,8 +1,11 @@
 package input
 
-// Address creates a new Address input instance (semantic wrapper around text).
+// address represents an address input (semantic wrapper around text).
+type address struct{ Base }
+
+// Address creates a new Address input instance.
 func Address(parentID, name string) Input {
-	a := &text{}
+	a := &address{}
 	a.Letters = true
 	a.Numbers = true
 	a.WhiteSpaces = true
@@ -13,3 +16,6 @@ func Address(parentID, name string) Input {
 	a.SetPlaceholder("Enter Address")
 	return a
 }
+
+// Clone creates a new Address input with the given parentID and name.
+func (a *address) Build(parentID, name string) Input { return Address(parentID, name) }

@@ -14,4 +14,4 @@ func Select(parentID, name string) Input {
 }
 
 // Clone creates a new Select input.
-func (s *select_) Clone(parentID, name string) Input { return Select(parentID, name) }
+func (s *select_) Build(parentID, name string) Input { return Select(parentID, name) }

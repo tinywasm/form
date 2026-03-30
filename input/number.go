@@ -14,4 +14,4 @@ func Number(parentID, name string) Input {
 }
 
 // Clone creates a new number input with the given parentID and name.
-func (n *number) Clone(parentID, name string) Input { return Number(parentID, name) }
+func (n *number) Build(parentID, name string) Input { return Number(parentID, name) }

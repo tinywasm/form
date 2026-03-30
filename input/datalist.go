@@ -26,4 +26,4 @@ func (dl *datalist) ValidateField(value string) error {
 }
 
 // Clone creates a new datalist input with the given parentID and name.
-func (dl *datalist) Clone(parentID, name string) Input { return Datalist(parentID, name) }
+func (dl *datalist) Build(parentID, name string) Input { return Datalist(parentID, name) }

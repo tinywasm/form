@@ -14,4 +14,4 @@ func Radio(parentID, name string) Input {
 }
 
 // Clone creates a new Radio input.
-func (r *radio) Clone(parentID, name string) Input { return Radio(parentID, name) }
+func (r *radio) Build(parentID, name string) Input { return Radio(parentID, name) }

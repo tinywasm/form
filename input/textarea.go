@@ -19,4 +19,4 @@ func Textarea(parentID, name string) Input {
 }
 
 // Clone creates a new textarea input with the given parentID and name.
-func (t *textarea) Clone(parentID, name string) Input { return Textarea(parentID, name) }
+func (t *textarea) Build(parentID, name string) Input { return Textarea(parentID, name) }
