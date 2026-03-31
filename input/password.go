@@ -10,7 +10,7 @@ func Password(parentID, name string) Input {
 	p.Letters = true
 	p.Numbers = true
 	p.Tilde = true
-	p.Characters = []rune{'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+'}
+	p.Extra = []rune{'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+'}
 	p.Minimum = 5
 	p.Maximum = 50
 	p.InitBase(parentID, name, "password", "pass", "clave", "pwd")

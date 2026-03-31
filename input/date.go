@@ -8,7 +8,7 @@ type date struct{ Base }
 func Date(parentID, name string) Input {
 	d := &date{}
 	d.Numbers = true
-	d.Characters = []rune{'-'}
+	d.Extra = []rune{'-'}
 	d.Minimum = 10
 	d.Maximum = 10
 	d.InitBase(parentID, name, "date", "fecha")
@@ -17,7 +17,7 @@ func Date(parentID, name string) Input {
 
 // Validate validates YYYY-MM-DD format with leap year and day range checks.
 func (d *date) Validate(value string) error {
-	if err := d.Permitted.Validate(value); err != nil {
+	if err := d.Permitted.Validate(d.name, value); err != nil {
 		return err
 	}
 	if len(value) != 10 {

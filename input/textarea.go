@@ -10,9 +10,9 @@ func Textarea(parentID, name string) Input {
 	t.Letters = true
 	t.Numbers = true
 	t.Tilde = true
-	t.WhiteSpaces = true
+	t.Spaces = true
 	t.BreakLine = true
-	t.Characters = []rune{'.', ',', '-', '_', ':', ';', '(', ')', '$', '#', '!', '?'}
+	t.Extra = []rune{'.', ',', '-', '_', ':', ';', '(', ')', '$', '#', '!', '?'}
 	t.Minimum = 5
 	t.Maximum = 2000
 	t.InitBase(parentID, name, "textarea", "description", "details", "comments")

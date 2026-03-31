@@ -17,12 +17,11 @@
 | `mount.go` | `Form.OnMount()`, `Form.OnUnmount()` (wasm build tag) |
 | `input/interface.go` | `Input` interface (embeds `fmt.Widget` + `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |
-| `input/permitted.go` | `Permitted` whitelist validation engine |
 | `input/*.go` | 17 concrete input implementations |
 
 ## Adding a New Input
 
-1. Create `input/mytype.go` — embed `Base`, configure `Permitted`, implement rendering.
+1. Create `input/mytype.go` — embed `Base`, configure `fmt.Permitted` rules, implement rendering.
 2. Add `NewMyType() fmt.Widget` constructor (template, no position).
 3. Add `Clone(parentID, name string) fmt.Widget` method on the concrete type.
 4. `Type()` and `Validate()` are inherited from `Base` — no need to implement.
@@ -33,5 +32,4 @@
 
 - Only `github.com/tinywasm/fmt` — no `errors`, `strconv`, `strings`
 - No maps in WASM-facing code (increases binary size) — use slices
-- `Permitted.ExtraValidation` for complex rules that can't use whitelist
 - No `reflect` at runtime

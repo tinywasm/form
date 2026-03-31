@@ -8,7 +8,8 @@ type phone struct{ Base }
 func Phone(parentID, name string) Input {
 	p := &phone{}
 	p.Numbers = true
-	p.Characters = []rune{'+', ' ', '(', ')', '-'}
+	p.Spaces = true
+	p.Extra = []rune{'+', '(', ')', '-'}
 	p.Minimum = 7
 	p.Maximum = 15
 	p.InitBase(parentID, name, "tel", "phone", "mobile", "cell")

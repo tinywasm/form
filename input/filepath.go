@@ -9,7 +9,7 @@ func Filepath(parentID, name string) Input {
 	fp := &filepath{}
 	fp.Letters = true
 	fp.Numbers = true
-	fp.Characters = []rune{'.', '\\', '/', '-', '_'}
+	fp.Extra = []rune{'.', '\\', '/', '-', '_'}
 	fp.Minimum = 1
 	fp.Maximum = 200
 	fp.InitBase(parentID, name, "text", "path", "dir", "file")
@@ -18,7 +18,7 @@ func Filepath(parentID, name string) Input {
 
 // Validate validates the path — no whitespace, no leading backslash.
 func (fp *filepath) Validate(value string) error {
-	if err := fp.Permitted.Validate(value); err != nil {
+	if err := fp.Permitted.Validate(fp.name, value); err != nil {
 		return err
 	}
 	if fmt.Contains(value, " ") {

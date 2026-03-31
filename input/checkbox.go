@@ -8,7 +8,6 @@ type checkbox struct{ Base }
 // Checkbox creates a new checkbox input instance.
 func Checkbox(parentID, name string) Input {
 	c := &checkbox{}
-	c.SkipRules = true
 	c.InitBase(parentID, name, "checkbox", "check", "boolean", "bool")
 	return c
 }

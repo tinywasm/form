@@ -8,7 +8,7 @@ type hour struct{ Base }
 func Hour(parentID, name string) Input {
 	h := &hour{}
 	h.Numbers = true
-	h.Characters = []rune{':'}
+	h.Extra = []rune{':'}
 	h.Minimum = 0
 	h.Maximum = 5
 	h.InitBase(parentID, name, "time", "hour")
@@ -27,7 +27,7 @@ func (h *hour) Validate(value string) error {
 	if value[0] == '2' && value[1] == '4' {
 		return fmt.Err("Hour", "Invalid")
 	}
-	return h.Permitted.Validate(value)
+	return h.Permitted.Validate(h.name, value)
 }
 
 // Clone satisfies fmt.Widget — Hour() returns Input which implements Widget.

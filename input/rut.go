@@ -8,7 +8,7 @@ type rut struct{ Base }
 func Rut(parentID, name string) Input {
 	r := &rut{}
 	r.Numbers = true
-	r.Characters = []rune{'-', 'k', 'K'}
+	r.Extra = []rune{'-', 'k', 'K'}
 	r.Minimum = 3
 	r.Maximum = 12
 	r.InitBase(parentID, name, "text", "rut", "run", "dni")
@@ -18,7 +18,7 @@ func Rut(parentID, name string) Input {
 
 // Validate validates the Chilean RUT format and check digit.
 func (r *rut) Validate(value string) error {
-	if err := r.Permitted.Validate(value); err != nil {
+	if err := r.Permitted.Validate(r.name, value); err != nil {
 		return err
 	}
 	if len(value) < 3 {

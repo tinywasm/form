@@ -10,7 +10,8 @@ func Text(parentID, name string) Input {
 	t.Letters = true
 	t.Tilde = true
 	t.Numbers = true
-	t.Characters = []rune{' ', '.', ',', '(', ')'}
+	t.Spaces = true
+	t.Extra = []rune{'.', ',', '(', ')'}
 	t.Minimum = 2
 	t.Maximum = 100
 	t.InitBase(parentID, name, "text", "name", "fullname", "username")
