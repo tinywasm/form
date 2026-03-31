@@ -11,9 +11,9 @@ f, err := form.New("content", data) // data implements fmt.Fielder
 ```
 
 For each field in `data.Schema()`:
-1. `field.Widget == nil` → skip (no UI binding).
-2. `field.Widget.Clone(formID, fieldName).(input.Input)` → positioned input.
-3. `field.PK && field.AutoInc` → skip (auto-increment PKs not editable).
+1. `field.IsPK() && field.IsAutoInc()` → skip (auto-increment PKs not editable).
+2. `field.Widget == nil` → skip (no UI binding).
+3. `field.Widget.Clone(formID, fieldName).(input.Input)` → positioned input.
 4. `field.NotNull` → `SetRequired(true)` on the input.
 5. Current value bound via `fmt.ReadValues()` + `SetValues()`.
 

@@ -9,7 +9,7 @@
 |------|---------------|
 | `form.go` | `Form` struct, `New()`, `Input()`, `SetOptions()`, `SetValues()`, `Namer` |
 | `sync.go` | `SyncValues()`, pointer-based field sync |
-| `registry.go` | `RegisterInput()`, `findInputByType()`, `SetGlobalClass()` |
+| `registry.go` | `SetGlobalClass()` |
 | `render.go` | `Form.RenderHTML()`, `Form.SetSSR()` |
 | `validate.go` | `Form.Validate()` |
 | `validate_struct.go` | `Form.ValidateData()` (crudp.DataValidator) |
