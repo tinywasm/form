@@ -5,14 +5,14 @@ import "github.com/tinywasm/fmt"
 type filepath struct{ Base }
 
 // Filepath creates a new filepath input instance.
-func Filepath(parentID, name string) Input {
+func Filepath() Input {
 	fp := &filepath{}
 	fp.Letters = true
 	fp.Numbers = true
 	fp.Extra = []rune{'.', '\\', '/', '-', '_'}
 	fp.Minimum = 1
 	fp.Maximum = 200
-	fp.InitBase(parentID, name, "text", "path", "dir", "file")
+	fp.InitBase("", "", "text")
 	return fp
 }
 
@@ -31,4 +31,8 @@ func (fp *filepath) Validate(value string) error {
 }
 
 // Clone creates a new filepath input with the given parentID and name.
-func (fp *filepath) Clone(parentID, name string) fmt.Widget { return Filepath(parentID, name) }
+func (fp *filepath) Clone(parentID, name string) fmt.Widget {
+	c := *fp
+	c.InitBase(parentID, name, "text")
+	return &c
+}

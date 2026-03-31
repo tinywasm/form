@@ -5,13 +5,13 @@ import "github.com/tinywasm/fmt"
 type date struct{ Base }
 
 // Date creates a new date input instance.
-func Date(parentID, name string) Input {
+func Date() Input {
 	d := &date{}
 	d.Numbers = true
 	d.Extra = []rune{'-'}
 	d.Minimum = 10
 	d.Maximum = 10
-	d.InitBase(parentID, name, "date", "fecha")
+	d.InitBase("", "", "date")
 	return d
 }
 
@@ -57,4 +57,8 @@ func (d *date) monthDays(year int) [13]int {
 }
 
 // Clone creates a new date input with the given parentID and name.
-func (d *date) Clone(parentID, name string) fmt.Widget { return Date(parentID, name) }
+func (d *date) Clone(parentID, name string) fmt.Widget {
+	c := *d
+	c.InitBase(parentID, name, "date")
+	return &c
+}

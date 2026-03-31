@@ -5,9 +5,9 @@ import "github.com/tinywasm/fmt"
 type datalist struct{ Base }
 
 // Datalist creates a new datalist input instance.
-func Datalist(parentID, name string) Input {
+func Datalist() Input {
 	dl := &datalist{}
-	dl.Base.InitBase(parentID, name, "datalist", "list", "options")
+	dl.Base.InitBase("", "", "datalist")
 	return dl
 }
 
@@ -25,4 +25,8 @@ func (dl *datalist) Validate(value string) error {
 }
 
 // Clone satisfies fmt.Widget — Datalist() returns Input which implements Widget.
-func (dl *datalist) Clone(parentID, name string) fmt.Widget { return Datalist(parentID, name) }
+func (dl *datalist) Clone(parentID, name string) fmt.Widget {
+	c := *dl
+	c.InitBase(parentID, name, "datalist")
+	return &c
+}

@@ -16,9 +16,9 @@ type testUser struct {
 
 func (u *testUser) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldText, PK: true, Widget: input.Text("", "")},
-		{Name: "name", Type: fmt.FieldText, NotNull: true, Widget: input.Text("", "")},
-		{Name: "email", Type: fmt.FieldText, NotNull: true, Widget: input.Email("", "")},
+		{Name: "id", Type: fmt.FieldText, DB: &fmt.FieldDB{PK: true}, Widget: input.Text()},
+		{Name: "name", Type: fmt.FieldText, NotNull: true, Widget: input.Text()},
+		{Name: "email", Type: fmt.FieldText, NotNull: true, Widget: input.Email()},
 	}
 }
 func (u *testUser) Values() []any    { return []any{u.id, u.name, u.email} }
@@ -47,7 +47,7 @@ type autoUser struct {
 
 func (u *autoUser) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldInt, PK: true, AutoInc: true},
+		{Name: "id", Type: fmt.FieldInt, DB: &fmt.FieldDB{PK: true, AutoInc: true}},
 	}
 }
 func (u *autoUser) Values() []any    { return []any{u.id} }

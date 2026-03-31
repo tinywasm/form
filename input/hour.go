@@ -5,13 +5,13 @@ import "github.com/tinywasm/fmt"
 type hour struct{ Base }
 
 // Hour creates a new time input instance.
-func Hour(parentID, name string) Input {
+func Hour() Input {
 	h := &hour{}
 	h.Numbers = true
 	h.Extra = []rune{':'}
 	h.Minimum = 0
 	h.Maximum = 5
-	h.InitBase(parentID, name, "time", "hour")
+	h.InitBase("", "", "time")
 	h.SetTitle("formato hora: HH:MM")
 	return h
 }
@@ -31,4 +31,8 @@ func (h *hour) Validate(value string) error {
 }
 
 // Clone satisfies fmt.Widget — Hour() returns Input which implements Widget.
-func (h *hour) Clone(parentID, name string) fmt.Widget { return Hour(parentID, name) }
+func (h *hour) Clone(parentID, name string) fmt.Widget {
+	c := *h
+	c.InitBase(parentID, name, "time")
+	return &c
+}
