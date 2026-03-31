@@ -5,14 +5,18 @@ import "github.com/tinywasm/fmt"
 type select_ struct{ Base }
 
 // Select creates a new Select input instance.
-func Select(parentID, name string) Input {
+func Select() Input {
 	s := &select_{}
 	s.Letters = true
 	s.Numbers = true
 	s.Minimum = 1
-	s.InitBase(parentID, name, "select", "role", "tipo")
+	s.InitBase("", "", "select")
 	return s
 }
 
 // Clone creates a new Select input.
-func (s *select_) Clone(parentID, name string) fmt.Widget { return Select(parentID, name) }
+func (s *select_) Clone(parentID, name string) fmt.Widget {
+	c := *s
+	c.InitBase(parentID, name, "select")
+	return &c
+}

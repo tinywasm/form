@@ -10,4 +10,7 @@ import (
 type Input interface {
 	fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
 	dom.Component // Includes GetID(), SetID(), RenderHTML(), Children()
+	FieldName() string
+	SetRequired(bool)
+	AddAttribute(key, value string)
 }

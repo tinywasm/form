@@ -11,7 +11,6 @@ type Base struct {
 	id             string
 	name           string
 	htmlName       string         // The HTML type (e.g., "text", "email")
-	aliases        []string       // Field name aliases for matching
 	Values         []string       // Multiple values support (for select/checkbox/etc)
 	Options        []fmt.KeyValue // Multiple options for select/checkbox/etc
 	Placeholder    string
@@ -25,7 +24,7 @@ type Base struct {
 }
 
 // InitBase initializes the base fields and constructs the unique ID.
-func (b *Base) InitBase(parentID, name, htmlName string, aliases ...string) {
+func (b *Base) InitBase(parentID, name, htmlName string) {
 	if parentID != "" {
 		b.id = parentID + "." + name
 	} else {
@@ -33,12 +32,14 @@ func (b *Base) InitBase(parentID, name, htmlName string, aliases ...string) {
 	}
 	b.name = name
 	b.htmlName = htmlName
-	b.aliases = aliases
 
-	// Auto-defaults: fmt.Translate looks up the field name in the registered dictionary.
-	// Falls back to the field name itself if no translation is found (pass-through).
-	b.Placeholder = fmt.Translate(name).String()
-	b.Title = fmt.Translate(name).String()
+	// Only apply defaults if not already set (preserves values during Clone)
+	if b.Placeholder == "" {
+		b.Placeholder = fmt.Translate(name).String()
+	}
+	if b.Title == "" {
+		b.Title = fmt.Translate(name).String()
+	}
 }
 
 // SetValues sets the input values.
@@ -92,11 +93,6 @@ func (b *Base) GetSkipValidation() bool {
 // SetOptions sets multiple options (for select/checkbox/etc).
 func (b *Base) SetOptions(opts ...fmt.KeyValue) {
 	b.Options = opts
-}
-
-// SetAliases sets the field name aliases for matching.
-func (b *Base) SetAliases(aliases ...string) {
-	b.aliases = aliases
 }
 
 // GetOptions returns all options.
@@ -160,20 +156,6 @@ func (b *Base) FieldName() string {
 // HTMLName returns the HTML input type.
 func (b *Base) HTMLName() string {
 	return b.htmlName
-}
-
-// Matches checks if the given field name matches this input's htmlName, name or aliases.
-func (b *Base) Matches(fieldName string) bool {
-	name := fmt.Convert(fieldName).ToLower().String()
-	if b.htmlName == name || b.name == name {
-		return true
-	}
-	for _, alias := range b.aliases {
-		if alias == name {
-			return true
-		}
-	}
-	return false
 }
 
 // AddAttribute adds a custom attribute to the input.

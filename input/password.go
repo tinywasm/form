@@ -5,7 +5,7 @@ import "github.com/tinywasm/fmt"
 type password struct{ Base }
 
 // Password creates a new Password input instance.
-func Password(parentID, name string) Input {
+func Password() Input {
 	p := &password{}
 	p.Letters = true
 	p.Numbers = true
@@ -13,9 +13,13 @@ func Password(parentID, name string) Input {
 	p.Extra = []rune{'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+'}
 	p.Minimum = 5
 	p.Maximum = 50
-	p.InitBase(parentID, name, "password", "pass", "clave", "pwd")
+	p.InitBase("", "", "password")
 	return p
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Clone(parentID, name string) fmt.Widget { return Password(parentID, name) }
+func (p *password) Clone(parentID, name string) fmt.Widget {
+	c := *p
+	c.InitBase(parentID, name, "password")
+	return &c
+}

@@ -5,13 +5,13 @@ import "github.com/tinywasm/fmt"
 type rut struct{ Base }
 
 // Rut creates a new RUT input instance.
-func Rut(parentID, name string) Input {
+func Rut() Input {
 	r := &rut{}
 	r.Numbers = true
 	r.Extra = []rune{'-', 'k', 'K'}
 	r.Minimum = 3
 	r.Maximum = 12
-	r.InitBase(parentID, name, "text", "rut", "run", "dni")
+	r.InitBase("", "", "text")
 	r.SetPlaceholder("12345678-9")
 	return r
 }
@@ -72,4 +72,8 @@ func (r *rut) dvRut(rut int) string {
 }
 
 // Clone creates a new rut input with the given parentID and name.
-func (r *rut) Clone(parentID, name string) fmt.Widget { return Rut(parentID, name) }
+func (r *rut) Clone(parentID, name string) fmt.Widget {
+	c := *r
+	c.InitBase(parentID, name, "text")
+	return &c
+}

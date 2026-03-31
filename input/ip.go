@@ -5,14 +5,14 @@ import "github.com/tinywasm/fmt"
 type ip struct{ Base }
 
 // IP creates a new IP input instance.
-func IP(parentID, name string) Input {
+func IP() Input {
 	i := &ip{}
 	i.Numbers = true
 	i.Letters = true // hex for ipv6
 	i.Extra = []rune{'.', ':'}
 	i.Minimum = 7  // 1.1.1.1
 	i.Maximum = 39 // full ipv6 length
-	i.InitBase(parentID, name, "text", "ip", "address")
+	i.InitBase("", "", "text")
 	return i
 }
 
@@ -41,4 +41,8 @@ func (i *ip) Validate(value string) error {
 }
 
 // Clone satisfies fmt.Widget — IP() returns Input which implements Widget.
-func (i *ip) Clone(parentID, name string) fmt.Widget { return IP(parentID, name) }
+func (i *ip) Clone(parentID, name string) fmt.Widget {
+	c := *i
+	c.InitBase(parentID, name, "text")
+	return &c
+}

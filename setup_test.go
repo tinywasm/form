@@ -18,12 +18,12 @@ type User struct {
 
 func (u *User) Schema() []fmt.Field {
 	return []fmt.Field{
-		{Name: "Name", Type: fmt.FieldText, NotNull: true, Widget: input.Text("", "")},
-		{Name: "Email", Type: fmt.FieldText, NotNull: true, Widget: input.Email("", "")},
-		{Name: "Password", Type: fmt.FieldText, NotNull: true, Widget: input.Password("", "")},
-		{Name: "Gender", Type: fmt.FieldText, Widget: input.Gender("", "")},
-		{Name: "Role", Type: fmt.FieldText, Widget: input.Select("", "")},
-		{Name: "Address", Type: fmt.FieldText, Widget: input.Address("", "")},
+		{Name: "Name", Type: fmt.FieldText, NotNull: true, Widget: input.Text()},
+		{Name: "Email", Type: fmt.FieldText, NotNull: true, Widget: input.Email()},
+		{Name: "Password", Type: fmt.FieldText, NotNull: true, Widget: input.Password()},
+		{Name: "Gender", Type: fmt.FieldText, Widget: input.Gender()},
+		{Name: "Role", Type: fmt.FieldText, Widget: input.Select()},
+		{Name: "Address", Type: fmt.FieldText, Widget: input.Address()},
 	}
 }
 

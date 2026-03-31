@@ -6,9 +6,9 @@ import "github.com/tinywasm/fmt"
 type checkbox struct{ Base }
 
 // Checkbox creates a new checkbox input instance.
-func Checkbox(parentID, name string) Input {
+func Checkbox() Input {
 	c := &checkbox{}
-	c.InitBase(parentID, name, "checkbox", "check", "boolean", "bool")
+	c.InitBase("", "", "checkbox")
 	return c
 }
 
@@ -25,4 +25,8 @@ func (c *checkbox) Validate(value string) error {
 }
 
 // Clone satisfies fmt.Widget — Checkbox() returns Input which implements Widget.
-func (c *checkbox) Clone(parentID, name string) fmt.Widget { return Checkbox(parentID, name) }
+func (c *checkbox) Clone(parentID, name string) fmt.Widget {
+	c2 := *c
+	c2.InitBase(parentID, name, "checkbox")
+	return &c2
+}

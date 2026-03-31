@@ -40,61 +40,63 @@ var optsGender = []fmt.KeyValue{{Key: "m", Value: "Male"}, {Key: "f", Value: "Fe
 func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 	t.Helper()
 	id, name := "tid", "tfield"
+	var inp Input
 	switch kind {
 	case "Address":
-		return Address(id, name)
+		inp = Address()
 	case "Checkbox":
-		return Checkbox(id, name)
+		inp = Checkbox()
 	case "Datalist":
-		dl := Datalist(id, "datalist_field")
+		dl := Datalist()
 		if len(opts) > 0 {
 			dl.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
-		return dl
+		inp = dl
 	case "Date":
-		return Date(id, name)
+		inp = Date()
 	case "Email":
-		return Email(id, name)
+		inp = Email()
 	case "Filepath":
-		return Filepath(id, name)
+		inp = Filepath()
 	case "Gender":
-		g := Gender(id, name)
+		g := Gender()
 		if len(opts) > 0 {
 			g.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
-		return g
+		inp = g
 	case "Hour":
-		return Hour(id, name)
+		inp = Hour()
 	case "IP":
-		return IP(id, name)
+		inp = IP()
 	case "Number":
-		return Number(id, name)
+		inp = Number()
 	case "Password":
-		return Password(id, name)
+		inp = Password()
 	case "Phone":
-		return Phone(id, name)
+		inp = Phone()
 	case "Radio":
-		r := Radio(id, name)
+		r := Radio()
 		if len(opts) > 0 {
 			r.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
-		return r
+		inp = r
 	case "Rut":
-		return Rut(id, name)
+		inp = Rut()
 	case "Select":
-		s := Select(id, name)
+		s := Select()
 		if len(opts) > 0 {
 			s.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
 		}
-		return s
+		inp = s
 	case "Text":
-		return Text(id, name)
+		inp = Text()
 	case "Textarea":
-		return Textarea(id, name)
+		inp = Textarea()
 	default:
 		t.Fatalf("unknown input type: %q — add it to buildInput()", kind)
 		return nil
 	}
+	return inp.Clone(id, name).(Input)
 }
 
 // checkErr asserts the error matches the expected substring (case-insensitive).
@@ -114,5 +116,50 @@ func checkErr(t *testing.T, err error, expected string) {
 	exp := fmt.Convert(expected).ToLower().String()
 	if !fmt.Contains(got, exp) {
 		t.Errorf("expected error containing %q, got %q", expected, err.Error())
+	}
+}
+
+func TestClone_Preservation(t *testing.T) {
+	// Create a prototype with custom configuration
+	proto := Text()
+	if setter, ok := proto.(interface{ SetPlaceholder(string) }); ok {
+		setter.SetPlaceholder("Custom Placeholder")
+	}
+	if setter, ok := proto.(interface{ SetTitle(string) }); ok {
+		setter.SetTitle("Custom Title")
+	}
+	proto.AddAttribute("data-test", "value")
+	proto.SetRequired(true)
+
+	// Clone it
+	cloned := proto.Clone("parent", "field").(Input)
+
+	// Verify ID and name are updated
+	if cloned.GetID() != "parent.field" {
+		t.Errorf("Expected ID 'parent.field', got %q", cloned.GetID())
+	}
+	if cloned.FieldName() != "field" {
+		t.Errorf("Expected name 'field', got %q", cloned.FieldName())
+	}
+
+	// Verify custom configuration is preserved
+	if getter, ok := cloned.(interface{ GetPlaceholder() string }); ok {
+		if getter.GetPlaceholder() != "Custom Placeholder" {
+			t.Errorf("Expected placeholder 'Custom Placeholder', got %q", getter.GetPlaceholder())
+		}
+	}
+	if getter, ok := cloned.(interface{ GetTitle() string }); ok {
+		if getter.GetTitle() != "Custom Title" {
+			t.Errorf("Expected title 'Custom Title', got %q", getter.GetTitle())
+		}
+	}
+
+	// Verify attributes are preserved
+	html := cloned.RenderHTML()
+	if !fmt.Contains(html, `data-test="value"`) {
+		t.Errorf("Expected attribute data-test=\"value\" in HTML, got %s", html)
+	}
+	if !fmt.Contains(html, `required`) {
+		t.Errorf("Expected required attribute in HTML, got %s", html)
 	}
 }

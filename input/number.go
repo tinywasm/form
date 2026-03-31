@@ -5,14 +5,18 @@ import "github.com/tinywasm/fmt"
 type number struct{ Base }
 
 // Number creates a new number input instance.
-func Number(parentID, name string) Input {
+func Number() Input {
 	n := &number{}
 	n.Numbers = true
 	n.Minimum = 1
 	n.Maximum = 20
-	n.InitBase(parentID, name, "number", "num", "amount", "price", "age")
+	n.InitBase("", "", "number")
 	return n
 }
 
 // Clone creates a new number input with the given parentID and name.
-func (n *number) Clone(parentID, name string) fmt.Widget { return Number(parentID, name) }
+func (n *number) Clone(parentID, name string) fmt.Widget {
+	c := *n
+	c.InitBase(parentID, name, "number")
+	return &c
+}

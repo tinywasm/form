@@ -13,7 +13,7 @@
 - `field.Widget.Clone(formID, fieldName).(input.Input)` → positioned input ready for rendering.
 - No registry lookup. No name-based heuristics. The schema is the source of truth.
 
-`RegisterInput()` and `findInputByType()` remain available for explicit runtime lookup by projects that need it, but are not called automatically.
+Input constructors take zero arguments and act as prototypes. `Clone(parentID, name)` creates positioned copies that preserve all configuration (Permitted rules, Options, Attributes).
 
 ### 2. State & Binding (`form.go`, `sync.go`)
 - **Fielder-based**: `New()` uses `data.Schema()` and `data.Pointers()`.

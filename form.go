@@ -76,7 +76,7 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 
 	for i, field := range schema {
 		// Skip auto-increment PKs (not editable)
-		if field.PK && field.AutoInc {
+		if field.IsPK() && field.IsAutoInc() {
 			continue
 		}
 
