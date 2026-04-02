@@ -126,16 +126,16 @@ One listener per form (not per input) = fewer closures = smaller WASM binary.
 
 ## Struct Tags
 
-Tags are parsed at generation time by `ormc` and populate `fmt.Field` schema:
+The unified `input:` tag is parsed by `ormc` at generation time to populate the `fmt.Field` schema:
 
-| Tag | Format | Description |
-|-----|--------|-------------|
-| `form` | `"email"` | Force input type |
-| `form` | `"-"` | Exclude from form |
-| `options` | `"k1:v1,k2:v2"` | Select/radio/datalist options |
-| `placeholder` | `"text"` | Override auto-translated placeholder |
-| `title` | `"text"` | Override auto-translated title |
-| `validate` | `"false"` | Skip validation |
+| Feature | Format | Example |
+|---------|--------|---------|
+| **Widget** | `input:"type"` | `input:"email"`, `input:"textarea"`, `input:"-"` |
+| **Validation** | `input:"rule"` | `input:"required"`, `input:"min=5"`, `input:"max=100"` |
+| **Metadata** | `input:"key=val"` | `input:"title=\"Label\""`, `input:"placeholder=\"Hint\""` |
+| **Options** | `input:"options=..."` | `input:"options=\"1:Yes,0:No\""` |
+
+Multiple rules are comma-separated: `` `input:"email,required,max=100"` ``. See [docs/TAGS.md](docs/TAGS.md) for full reference.
 
 Runtime overrides: `f.Input("Field").SetPlaceholder()`, `f.SetOptions("Field", ...)`.
 
