@@ -18,15 +18,12 @@ type Form struct {
 	action       string                  // Form action URL (default: struct name)
 	ssrMode      bool                    // Per-form SSR mode (default false)
 	onSubmit     func(fmt.Fielder) error // WASM submit callback
+	children     []dom.Component         // Cached dom components (zero-alloc)
 }
 
-// Children returns the form's input fields as dom components.
+// Children returns the form's input fields as dom components (O(1), zero-alloc).
 func (f *Form) Children() []dom.Component {
-	children := make([]dom.Component, 0, len(f.Inputs))
-	for _, inp := range f.Inputs {
-		children = append(children, inp)
-	}
-	return children
+	return f.children
 }
 
 // GetID returns the html id that group the form
@@ -82,6 +79,7 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 		method:   "POST",
 		action:   "/" + structName,
 		ssrMode:  false,
+		children: make([]dom.Component, 0, len(schema)),
 	}
 
 	for i, field := range schema {
@@ -115,6 +113,7 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 		}
 
 		f.Inputs = append(f.Inputs, inp)
+		f.children = append(f.children, inp)
 		f.fieldIndices = append(f.fieldIndices, i)
 	}
 
