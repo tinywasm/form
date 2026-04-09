@@ -1,6 +1,7 @@
 package form
 
 import (
+	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form/input"
 )
@@ -17,6 +18,15 @@ type Form struct {
 	action       string                  // Form action URL (default: struct name)
 	ssrMode      bool                    // Per-form SSR mode (default false)
 	onSubmit     func(fmt.Fielder) error // WASM submit callback
+}
+
+// Children returns the form's input fields as dom components.
+func (f *Form) Children() []dom.Component {
+	children := make([]dom.Component, 0, len(f.Inputs))
+	for _, inp := range f.Inputs {
+		children = append(children, inp)
+	}
+	return children
 }
 
 // GetID returns the html id that group the form
