@@ -1,36 +1,56 @@
-# Plan de Implementación: Compatibilidad de form.Form con dom.Component
+# Plan de Optimización: Caching de Children en Form
 
 ## Contexto y Justificación
-Durante la implementación de proyectos frontend que utilizan `github.com/tinywasm/form` para generar formularios y `github.com/tinywasm/dom` para el montaje, se ha descubierto un error de compilación: `*form.Form does not implement dom.Component (missing method Children)`.
-
-La raíz del problema es que la interfaz `dom.Component` requiere el método `Children() []dom.Component`. La estructura `*form.Form` posee `GetID`, `SetID` y `RenderHTML`, pero omite `Children`. Dado que los `Input` internos de un formulario ya implementan `dom.Component`, es logico, limpio y arquitectónicamente correcto hacer que el formulario devuelva esos inputs.
-
-**Pros:**
-1. Mantener la consistencia arquitectónica del ecosistema `tinywasm`.
-2. Permitir el uso directo de formularios en `dom.Render()` sin necesidad de escribir componentes envoltorios (wrappers).
-3. Habilitar posibles funcionalidades de recorrido del DOM virtual (re-bound handlers, actualizaciones parciales).
-
-**Contras:**
- - Ninguno, es una extensión esperable y obligatoria del contrato `dom.Component`.
-
-## Pasos de Ejecución
-
-1. **Modificar `form.go`**
-   - Asegurar la importación de `github.com/tinywasm/dom`.
-   - Implementar el método `Children() []dom.Component` para el tipo `*Form`.
-   - La implementación debe crear un slice de `[]dom.Component` con la misma longitud que `f.Inputs`, iterar sobre `f.Inputs` (los cuales implementan `Input` que incluye `dom.Component`) y retornarlos.
-
+Durante la implementación de la interfaz `dom.Component` para `*form.Form`, se introdujo el método `Children()` el cual crea y retorna un nuevo *slice* `[]dom.Component` en cada llamada:
 ```go
-// Children returns the form's input fields as dom components.
 func (f *Form) Children() []dom.Component {
 	children := make([]dom.Component, 0, len(f.Inputs))
-	for _, inp := range f.Inputs {
-		children = append(children, inp)
-	}
-	return children
+	// ... append y return
+}
+```
+Esta aproximación genera asignación de memoria dinámica en el *heap* del motor (en WebAssembly/TinyGo) con cada ciclo de renderizado o recorrido del DOM virtual. Puesto que los *inputs* del formulario se determinan en el momento de su inicialización (en la función `New`), podemos pre-calcular este slice y guardarlo de forma estática en la estructura para evitar re-asignaciones, logrando cero allocs por llamada.
+
+## Ejecución
+
+### 1. Modificar la estructura `Form`
+En el archivo `form.go`, añadir un campo privado `children` a la declaración de `Form` para almacenar las referencias previas:
+```go
+type Form struct {
+	// ... campos actuales ...
+	Inputs       []input.Input
+	// ...
+	onSubmit     func(fmt.Fielder) error
+	children     []dom.Component // Cache para evitar allocations dinámicos en el heap
 }
 ```
 
-2. **Verificar Compilación y Tests**
-   - Asegurar de que no se rompan pruebas unitarias dentro del propio módulo `form`.
-   - Confirmar que `*form.Form` ahora se puede instanciar o asignar satisfactoriamente a interfaces `dom.Component` sin fallar en compilación.
+### 2. Modificar la inicialización en `New()`
+Dentro de la función `New()` en `form.go`, inicializar `f.children` con capacidad pre-alojada y llenarlo mientras se agregan elementos a `f.Inputs`:
+```go
+	f := &Form{
+		// ...
+		Inputs:   make([]input.Input, 0, len(schema)),
+		children: make([]dom.Component, 0, len(schema)),
+		// ...
+	}
+
+	for i, field := range schema {
+		// ... validaciones ...
+		
+		f.Inputs = append(f.Inputs, inp)
+		f.children = append(f.children, inp) // Almacenar el input como componente dom
+		f.fieldIndices = append(f.fieldIndices, i)
+	}
+```
+
+### 3. Modificar el método `Children()`
+Actualizar el método en `form.go` para que devuelva directamente el campo cacheado, operando de forma Inmediata (O(1)):
+```go
+// Children returns the form's input fields as dom components (O(1), zero-alloc).
+func (f *Form) Children() []dom.Component {
+	return f.children
+}
+```
+
+## Resultados Esperados
+Este cambio reducirá la presión en el GC y asegurará un alto rendimiento en la traversing de los hijos del formulario de parte de librerías como `dom.Render` con una asignación de memoria en el Heap equivalente a `0 allocs/op` por llamada.
