@@ -1,25 +1,26 @@
 # Standard Input Types
 
-17 built-in types in `input/`. Each provides `NewXxx() fmt.Widget` and `Clone(parentID, name) fmt.Widget`.
+18 built-in types in `input/`. Each provides `Xxx() fmt.Widget` and `Clone(parentID, name) fmt.Widget`.
 
 | Input | HTML type | Constructor | Key Aliases |
 |-------|-----------|-------------|-------------|
-| `Address` | `text` | `input.NewAddress()` | `address`, `addr` |
-| `Checkbox` | `checkbox` | `input.NewCheckbox()` | `check`, `boolean`, `bool` |
-| `Date` | `date` | `input.NewDate()` | `fecha` |
-| `Datalist` | `text` | `input.NewDatalist()` | `list`, `options` |
-| `Email` | `email` | `input.NewEmail()` | `mail`, `correo` |
-| `Filepath` | `text` | `input.NewFilepath()` | `path`, `dir`, `file` |
-| `Gender` | `radio` | `input.NewGender()` | `gender`, `sex` |
-| `Hour` | `time` | `input.NewHour()` | `hour` |
-| `IP` | `text` | `input.NewIP()` | `ip` |
-| `Number` | `number` | `input.NewNumber()` | `num`, `amount`, `price`, `age` |
-| `Password` | `password` | `input.NewPassword()` | `pass`, `clave`, `pwd` |
-| `Phone` | `tel` | `input.NewPhone()` | `phone`, `mobile`, `cell` |
-| `Radio` | `radio` | `input.NewRadio()` | -- |
-| `Rut` | `text` | `input.NewRut()` | `rut`, `run`, `dni` |
-| `Select` | `select` | `input.NewSelect()` | -- |
-| `Text` | `text` | `input.NewText()` | `name`, `fullname`, `username` |
-| `Textarea` | `textarea` | `input.NewTextarea()` | `description`, `details`, `comments` |
+| `Address` | `text` | `input.Address()` | `address`, `addr` |
+| `Checkbox` | `checkbox` | `input.Checkbox()` | `check`, `boolean`, `bool` |
+| `Date` | `date` | `input.Date()` | `fecha` |
+| `Datalist` | `text` | `input.Datalist()` | `list`, `options` |
+| `Email` | `email` | `input.Email()` | `mail`, `correo` |
+| `Filepath` | `text` | `input.Filepath()` | `path`, `dir`, `file` |
+| `Gender` | `radio` | `input.Gender()` | `gender`, `sex` |
+| `Hour` | `time` | `input.Hour()` | `hour` |
+| `IP` | `text` | `input.IP()` | `ip` |
+| `Number` | `number` | `input.Number()` | `num`, `amount`, `price`, `age` |
+| `Password` | `password` | `input.Password()` | `pass`, `clave`, `pwd` |
+| `Phone` | `tel` | `input.Phone()` | `phone`, `mobile`, `cell` |
+| `Radio` | `radio` | `input.Radio()` | -- |
+| `Rut` | `text` | `input.Rut()` | `rut`, `run`, `dni` |
+| `Search` | `search` | `input.Search()` | `search`, `find`, `q` |
+| `Select` | `select` | `input.Select()` | -- |
+| `Text` | `text` | `input.Text()` | `name`, `fullname`, `username` |
+| `Textarea` | `textarea` | `input.Textarea()` | `description`, `details`, `comments` |
 
 See [input/README.md](../input/README.md) for detailed validation rules and rendering behavior per type.

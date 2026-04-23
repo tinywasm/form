@@ -102,7 +102,7 @@ One listener per form (not per input) = fewer closures = smaller WASM binary.
 
 ## Standard Input Types
 
-17 built-in types in `input/`:
+18 built-in types in `input/`:
 
 | Input | HTML type |
 |-------|-----------|
@@ -120,6 +120,7 @@ One listener per form (not per input) = fewer closures = smaller WASM binary.
 | `Phone` | `tel` |
 | `Radio` | `radio` |
 | `Rut` | `text` |
+| `Search` | `search` |
 | `Select` | `select` |
 | `Text` | `text` |
 | `Textarea` | `textarea` |
@@ -177,6 +178,6 @@ type Permitted struct {
 - [API Reference](docs/API.md) — additional detail on Validate, SyncValues, Permitted
 - [Design & Architecture](docs/DESIGN.md) — core layers and philosophy
 - [Struct Tags](docs/TAGS.md) — tag format and runtime overrides
-- [Standard Types](docs/STANDARD_TYPES.md) — quick reference of 17 input types
+- [Standard Types](docs/STANDARD_TYPES.md) — quick reference of 18 input types
 - [Implementation Notes](docs/IMPLEMENTATION.md) — file map, adding new inputs, constraints
 - [Interactivity & Mounting](docs/INTERACTIVITY_AND_MOUNTING.md) — WASM event handling detail
