@@ -80,6 +80,14 @@ func Test_Render(t *testing.T) {
 			contain: `hello world`,
 		},
 
+		// ── Rut ──────────────────────────────────────────────────────────────
+
+		// ── Search ───────────────────────────────────────────────────────────
+		{
+			t: "Search", name: "renders search input",
+			contain: `type="search"`,
+		},
+
 		// ── Text ─────────────────────────────────────────────────────────────
 		{
 			t: "Text", name: "renders input tag",

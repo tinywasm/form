@@ -82,6 +82,8 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 		inp = r
 	case "Rut":
 		inp = Rut()
+	case "Search":
+		inp = Search()
 	case "Select":
 		s := Select()
 		if len(opts) > 0 {

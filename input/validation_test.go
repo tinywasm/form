@@ -112,6 +112,10 @@ func Test_Validation(t *testing.T) {
 		{"Rut", "leading zero", "01234567-1", "invalid", nil, false},
 		{"Rut", "empty", "", "chars", nil, false},
 
+		// ── Search ───────────────────────────────────────────────────────────
+		{"Search", "valid search", "golang tinywasm", "", nil, false},
+		{"Search", "empty search", "", "", nil, false},
+
 		// ── Select ───────────────────────────────────────────────────────────
 		{"Select", "valid", "admin", "", nil, false},
 		{"Select", "empty", "", "chars", nil, false},
