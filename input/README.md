@@ -22,6 +22,7 @@ All inputs use **only** `tinywasm/fmt` — no `errors` or `strconv` from the sta
 | `Phone` | `tel` | Digits, `+ ( ) -`, Min: 7, Max: 15 |
 | `Radio` | `radio` | Value must match one of the registered `Options.Key` |
 | `Rut` | `text` | Chilean RUT `XXXXXXX-D`, verifies check digit |
+| `Search` | `search` | Letters, Numbers, Spaces, Min: 0, Max: 100 — optional |
 | `Select` | `select` | Value must match one of the registered `Options.Key` |
 | `Text` | `text` | Letters, Numbers, `. , ( )`, Min: 2, Max: 100 |
 | `Textarea` | `textarea` | Wide char set incl. `\n`, Min: 5, Max: 2000 |

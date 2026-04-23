@@ -1,4 +1,6 @@
 # PLAN: Add `Search` Input to `tinywasm/form/input`
+Status: COMPLETED
+
 
 ## Context
 
