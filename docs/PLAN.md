@@ -1,20 +1,28 @@
-# PLAN: tinywasm/form — Validación en tiempo real + errores near-field + tag `notilde`
+# PLAN: tinywasm/form — Validación en tiempo real + errores near-field + submit lifecycle
 
 ## Contexto
 
-El formulario de contacto en goflare-demo muestra un 422 silencioso al enviar datos válidos
-con tildes. Además, no hay feedback visual mientras el usuario escribe. Este plan cubre:
+El formulario de contacto en goflare-demo tiene tres problemas:
+1. No hay feedback visual mientras el usuario escribe (no hay errores near-field).
+2. El botón submit puede presionarse infinitas veces — no hay protección contra doble envío.
+3. La firma del callback `func(fmt.Fielder) error` es incompatible con fetch async en WASM:
+   el callback retorna `nil` antes de que el fetch complete, por lo que el form no puede
+   saber cuándo rehabilitar el botón ni cuándo resetear los campos.
 
-1. Fix de validación en tiempo real (mount.go)
-2. Error near-field en el DOM (render.go + base.go)
-3. CSS de error usando tokens de tinywasm/css
-4. Tag `notilde` para opt-out de tildes en `input.Text()`
+Este plan cubre:
+1. Error near-field en el DOM (`base.go` + `mount.go`)
+2. CSS de error usando tokens de `tinywasm/css`
+3. Tag `notilde` para opt-out de tildes en `input.Text()`
+4. Ciclo de vida del submit: callback async, loading state, reset por defecto
+
+Nota: el fix de `tinywasm/fmt` (`hasPermittedRules`/`validateLength`/`validateChars`)
+ya fue publicado. Este plan solo cubre la capa `tinywasm/form`.
 
 ---
 
 ## 1. Error near-field en el DOM
 
-### Decisión: opción A (render SSR + actualización WASM)
+### Decisión: span SSR + actualización via dom.Render en WASM
 
 `RenderInput()` en `base.go` emite un `<span>` de error junto al input:
 
@@ -27,19 +35,33 @@ con tildes. Además, no hay feedback visual mientras el usuario escribe. Este pl
 <span id="app.nombre.error" class="tw-field-error" aria-live="polite"></span>
 ```
 
-- El span existe en el HTML inicial (SSR-compatible).
-- Empieza vacío (`aria-live="polite"` para accesibilidad).
-- En WASM, `mount.go` lo llena/vacía según el resultado de `Validate`.
+- El span existe en el HTML inicial (SSR-compatible, sin layout shift).
+- Empieza vacío. `min-height` en CSS reserva espacio para evitar saltos de layout.
+- En WASM, `mount.go` lo actualiza usando `dom.Render` (única API disponible en `tinywasm/dom`
+  para manipular el DOM; `Reference` solo expone `GetAttr`, `Value`, `Checked`, `On`, `Focus`).
+
+### Nuevo método en `base.go` — `ErrorID()`
+
+`Base` encapsula la convención del ID del span de error, igual que `GetID()` encapsula
+`b.id`. Todos los consumidores (`RenderInput`, `mount.go`) usan este método en lugar de
+concatenar strings manualmente:
+
+```go
+// ErrorID returns the ID of the associated error span for this input.
+func (b *Base) ErrorID() string { return b.id + ".error" }
+```
 
 ### Cambio en `base.go` — `RenderInput()`
 
-Al final de cada rama de renderizado (textarea, input), agregar:
+Al final de cada rama (textarea e input), construcción tipada via el builder de `dom`
+(`base.go` ya importa `"github.com/tinywasm/dom"` para `Children() []dom.Component`):
 
 ```go
-out.Write(`<span id="`).Write(b.id).Write(`.error" class="tw-field-error" aria-live="polite"></span>`)
+errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+out.Write(errSpan.RenderHTML())
 ```
 
-Para radio/select/datalist: el span va después del contenedor del grupo, no dentro.
+Para radio/select/datalist: el span va después del contenedor del grupo.
 
 ---
 
@@ -50,30 +72,27 @@ Para radio/select/datalist: el span va después del contenedor del grupo, no den
 inp.Validate(val)
 
 // Después
-errID := inp.GetID() + ".error"
+errID := inp.ErrorID()
 if err := inp.Validate(val); err != nil {
-    dom.SetText(errID, err.Error())
-    dom.AddClass(errID, "tw-field-error--visible")
+    dom.Render(errID, dom.Span(err.Error()).Class("tw-field-error", "tw-field-error--visible"))
 } else {
-    dom.SetText(errID, "")
-    dom.RemoveClass(errID, "tw-field-error--visible")
+    dom.Render(errID, dom.Span("").Class("tw-field-error"))
 }
 ```
 
-`dom.SetText` y `dom.AddClass`/`dom.RemoveClass` ya existen en `tinywasm/dom`.
-Si no existen, se usan los métodos disponibles equivalentes.
+`dom.Render` reemplaza el contenido del elemento con el ID dado — es la API correcta
+para actualizar nodos existentes sin métodos imperativos de DOM.
 
-### En onSubmit: mostrar todos los errores
+### En onSubmit: mostrar el primer error near-field
 
 ```go
 if err := f.Validate(); err != nil {
-    // Mostrar el primer error near-field (Validate ya retorna el primer campo fallido)
-    // La iteración completa es opcional en v1
+    // mostrar error en el primer campo fallido — iteración completa va en v2
     return
 }
 ```
 
-En v1 basta con mostrar el primer error. Una iteración completa puede venir en v2.
+En v1 basta con el primer error. Iteración completa de todos los campos queda para v2.
 
 ---
 
@@ -104,7 +123,7 @@ func (f *formCSS) String() string {
   margin-top: ` + css.Space1.Var() + `;
 }
 .tw-field-error--visible {
-  display: block;
+  font-weight: ` + css.FontWeightMedium.Var() + `;
 }`
 }
 
@@ -112,13 +131,15 @@ func (f *formCSS) String() string {
 func RenderCSS() *formCSS { return &formCSS{} }
 ```
 
+`.tw-field-error` siempre `display:block` con `min-height` — reserva espacio para
+evitar layout shift. `.tw-field-error--visible` solo añade peso visual; no cambia display.
+
 ### Cadena completa
 
 ```
-tinywasm/css     → --color-error: #E34F26  (token + fallback)
-tinywasm/form    → .tw-field-error { color: var(--color-error, #E34F26) }
-goflare-demo     → puede redefinir --color-error en su ssr.go (opcional)
-                   resultado: el color de error cambia automáticamente
+tinywasm/css   → --color-error: #E34F26  (token + fallback)
+tinywasm/form  → .tw-field-error { color: var(--color-error, #E34F26) }
+goflare-demo   → puede redefinir --color-error en su ssr.go (opcional)
 ```
 
 ---
@@ -129,7 +150,7 @@ goflare-demo     → puede redefinir --color-error en su ssr.go (opcional)
 
 En español las tildes son normativas: `María`, `Andrés`, `Diseño`.
 `input.Text()` las permite por defecto (`Tilde: true` en su `Permitted`).
-Campos técnicos (usernames, códigos) deben poder desactivarlas sin cambiar el widget.
+Campos técnicos (usernames, códigos) deben poder desactivarlas sin crear un widget nuevo.
 
 ### Sintaxis de tag (opt-out)
 
@@ -143,30 +164,27 @@ Username string `input:"required,min=3,notilde"`
 
 ### Implementación
 
-**En `tinywasm/form/input/text.go`**: exponer método `SetTilde(bool)`:
+**En `tinywasm/form/input/text.go`** — método `SetTilde(bool)`:
 
 ```go
 func (t *text) SetTilde(v bool) { t.Tilde = v }
 ```
 
-No se expande la interfaz `Input`. El parser usa duck-typing via type-assert.
+No se expande la interfaz `Input`. El parser usa duck-typing para no acoplar la
+interfaz base a una característica opt-out de un solo widget.
 
-**En `tinywasm/form/registry.go` o `validate_struct.go`**: al registrar campos desde struct,
-parsear la etiqueta `input:"..."`:
+**En `tinywasm/form/validate_struct.go`** — parsear tag `notilde`:
 
 ```go
-tags := strings.Split(inputTag, ",")
-for _, tag := range tags {
-    if tag == "notilde" {
-        if nt, ok := widget.(interface{ SetTilde(bool) }); ok {
-            nt.SetTilde(false)
-        }
-        break
+if hasTag(inputTag, "notilde") {
+    if nt, ok := widget.(interface{ SetTilde(bool) }); ok {
+        nt.SetTilde(false)
     }
 }
 ```
 
-Esto permite que `input.Text()` desactive tildes sin necesidad de crear un widget nuevo.
+`validate_struct.go` ya parsea otras etiquetas (`required`, `min`) — es el lugar correcto.
+`SetTilde(false)` modifica la instancia clonada por campo, no el template global de `Text()`.
 
 **Documentación (comentario en text.go)**:
 
@@ -180,11 +198,126 @@ Esto permite que `input.Text()` desactive tildes sin necesidad de crear un widge
 func Text() Input { ... }
 ```
 
-### Relación con tinywasm/fmt
+---
 
-`tinywasm/fmt.Permitted` expone el campo `Tilde bool`. El widget `text` lo usa directamente.
-Cuando `form/registry` parsea `notilde`, llama `widget.SetTilde(false)` que modifica el
-`Permitted` embebido.
+## 5. Ciclo de vida del submit — callback async + loading + reset
+
+### Problema actual
+
+La firma `func(fmt.Fielder) error` es síncrona, pero `fetch.Send` en WASM es async.
+El callback retorna `nil` antes de que llegue la respuesta del servidor. El form no
+puede saber cuándo terminó la operación ni cuándo rehabilitar el botón.
+
+### Nueva firma del callback — breaking change
+
+```go
+// Antes
+f.OnSubmit(func(data fmt.Fielder) error { ... })
+
+// Después
+f.OnSubmit(func(data fmt.Fielder, done func(error)) {
+    fetch.Post(apiURL).Send(func(resp *fetch.Response, err error) {
+        done(err) // ← el form sabe que terminó
+    })
+})
+```
+
+`done(nil)` = éxito → form se resetea + botón rehabilitado.
+`done(err)` = error → botón rehabilitado, form conserva datos para corrección.
+
+### Estado del botón submit
+
+El botón necesita un ID para ser direccionable via `dom.Render`.
+En `render.go`, el botón pasa de:
+
+```go
+out.Write(`<button type="submit">`).Write(label).Write(`</button>`)
+```
+
+a:
+
+```go
+out.Write(`<button type="submit" id="`).Write(f.id).Write(`.submit">`).Write(label).Write(`</button>`)
+```
+
+**En `form.go`**: nuevo campo `submitLoadingLabel string`. Configurable con:
+
+```go
+f.SubmitLoadingLabel("Enviando...") // default vacío = usa submitLabel + "..."
+```
+
+**En `mount.go`** — flujo completo:
+
+```go
+onSubmit := func(e dom.Event) {
+    e.PreventDefault()
+    f.SyncValues(f.data)
+
+    if err := f.Validate(); err != nil {
+        // mostrar error near-field del primer campo fallido
+        return
+    }
+
+    // Deshabilitar botón + mostrar label de carga
+    submitID := f.GetID() + ".submit"
+    loadingLabel := f.submitLoadingLabel
+    if loadingLabel == "" {
+        loadingLabel = f.resolveSubmitLabel() + "..."
+    }
+    dom.Render(submitID,
+        dom.Button(loadingLabel).
+            Attr("type", "submit").
+            Attr("disabled", "true").
+            ID(submitID),
+    )
+
+    if f.onSubmit != nil {
+        f.onSubmit(f.data, func(err error) {
+            if err == nil && !f.noResetOnSuccess {
+                f.reset()
+            }
+            // Rehabilitar botón
+            dom.Render(submitID,
+                dom.Button(f.resolveSubmitLabel()).
+                    Attr("type", "submit").
+                    ID(submitID),
+            )
+        })
+    }
+}
+```
+
+### Reset del form
+
+`f.reset()` (privado, llamado por `done(nil)`) + `f.Reset()` (público, para uso manual):
+
+```go
+func (f *Form) Reset() {
+    // 1. Limpiar valores en inputs
+    for _, inp := range f.Inputs {
+        if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+            setter.SetValues("")
+        }
+        // 2. Limpiar span de error near-field
+        errID := inp.ErrorID()
+        dom.Render(errID, dom.Span("").Class("tw-field-error"))
+    }
+    // 3. Re-render de cada input con valor vacío se hace via dom.Render
+    //    (requiere que cada input tenga ID propio — ya lo tiene via base.go)
+}
+```
+
+### Configuración
+
+```go
+f.SubmitLoadingLabel("Enviando...")  // texto del botón mientras carga
+f.NoResetOnSuccess()                 // opt-out del reset automático en éxito
+f.Reset()                            // reset manual (público)
+```
+
+Nuevos campos en `Form`:
+- `submitLoadingLabel string`
+- `noResetOnSuccess bool`
 
 ---
 
@@ -193,32 +326,38 @@ Cuando `form/registry` parsea `notilde`, llama `widget.SetTilde(false)` que modi
 | Archivo | Cambio |
 |---------|--------|
 | `form/input/base.go` — `RenderInput()` | Emitir `<span id="X.error" class="tw-field-error">` junto a cada input |
-| `form/mount.go` — `OnMount()` | Capturar error de `Validate` y actualizar el span near-field |
+| `form/render.go` | Añadir `id="formID.submit"` al botón submit |
+| `form/mount.go` — `OnMount()` | Callback async con `done func(error)`, loading state, reset via `dom.Render` |
+| `form/form.go` | Nuevos campos: `submitLoadingLabel`, `noResetOnSuccess`; nuevo método `Reset()`, `SubmitLoadingLabel()`, `NoResetOnSuccess()` |
 | `form/ssr.go` (nuevo) | Exportar `RenderCSS()` con `.tw-field-error` usando tokens de `tinywasm/css` |
-| `form/input/text.go` | Agregar `SetTilde(bool)` |
-| `form/registry.go` o `validate_struct.go` | Parsear tag `notilde` y llamar `SetTilde(false)` |
-| `form/go.mod` | Agregar dependencia `github.com/tinywasm/css` |
+| `form/input/text.go` | Agregar `SetTilde(bool)` + doc de la etiqueta `notilde` |
+| `form/validate_struct.go` | Parsear tag `notilde` y llamar `SetTilde(false)` via type-assert |
+| `form/go.mod` | Agregar dependencia `github.com/tinywasm/css` (build `!wasm` only) |
 
 ---
 
 ## Tests a agregar
 
-| Test | Verifica |
-|------|----------|
-| `render_test.go` | `RenderInput()` emite el span `id="X.error"` |
-| `notilde_test.go` | Campo con `notilde` rechaza `á`; campo sin tag acepta `á` |
-| `mount_test.go` (si hay harness WASM) | Error near-field aparece al escribir carácter inválido |
+| Test | Archivo | Verifica |
+|------|---------|----------|
+| `TestRenderInput_EmitsErrorSpan` | `render_test.go` | `RenderInput()` contiene `id="X.error"` |
+| `TestRender_SubmitButtonHasID` | `render_test.go` | Botón submit tiene `id="formID.submit"` |
+| `TestNotilde_RejectsAccent` | `notilde_test.go` | Campo `notilde` rechaza `á` |
+| `TestNotilde_AllowsNormal` | `notilde_test.go` | Campo `notilde` acepta `a` |
+| `TestText_AllowsAccentByDefault` | `notilde_test.go` | Campo sin tag acepta `á` |
 
 ---
 
 ## Orden de ejecución
 
-1. `tinywasm/fmt`: fix `hasPermittedRules` + `validateLength`/`validateChars` → publicar
-2. `form/input/base.go`: agregar span de error en `RenderInput`
-3. `form/ssr.go`: crear con `RenderCSS()` usando tokens css
-4. `form/mount.go`: actualizar span on-input
-5. `form/input/text.go`: agregar `SetTilde(bool)`
-6. `form/registry.go`: parsear tag `notilde`
-7. Agregar tests
-8. Publicar via `gopush`
-9. Actualizar `goflare-demo`: agregar `RenderCSS()` del form en su `ssr.go`
+1. `form/form.go`: nuevos campos + métodos (`SubmitLoadingLabel`, `NoResetOnSuccess`, `Reset`)
+2. `form/render.go`: añadir ID al botón submit
+3. `form/input/base.go`: agregar span de error en `RenderInput`
+4. `form/ssr.go`: crear con `RenderCSS()` usando tokens css
+5. `form/mount.go`: callback async con `done`, loading state, reset on success
+6. `form/input/text.go`: agregar `SetTilde(bool)` + doc
+7. `form/validate_struct.go`: parsear tag `notilde`
+8. `form/go.mod`: agregar `github.com/tinywasm/css`
+9. Agregar tests
+10. Publicar via `gopush`
+11. Actualizar `goflare-demo`: nueva firma de callback + `form.RenderCSS()` en `ssr.go`
