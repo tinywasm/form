@@ -25,7 +25,18 @@ func (f *Form) OnMount() {
 				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
 					setter.SetValues(val)
 				}
-				inp.Validate(val)
+
+				// Real-time validation feedback
+				errID := inp.GetID() + ".error"
+				if ref, ok := dom.Get(errID); ok {
+					if err := inp.Validate(val); err != nil {
+						ref.SetText(err.Error())
+						ref.SetAttr("class", "tw-field-error tw-field-error--visible")
+					} else {
+						ref.SetText("")
+						ref.SetAttr("class", "tw-field-error")
+					}
+				}
 				break
 			}
 		}
@@ -44,9 +55,31 @@ func (f *Form) OnMount() {
 			return
 		}
 
-		// Call OnSubmit callback
+		// Disable button + show loading state via Reference (no re-render)
+		submitID := f.GetID() + ".submit"
+		loadingLabel := f.submitLoadingLabel
+		if loadingLabel == "" {
+			loadingLabel = f.resolveSubmitLabel() + "..."
+		}
+
+		if btnRef, ok := dom.Get(submitID); ok {
+			btnRef.SetAttr("disabled", "")
+			btnRef.SetText(loadingLabel)
+		}
+
+		// Call OnSubmit callback with async done helper
 		if f.onSubmit != nil {
-			f.onSubmit(f.data)
+			f.onSubmit(f.data, func(err error) {
+				if err == nil && !f.noResetOnSuccess {
+					f.reset()
+				}
+
+				// Restore button state
+				if btnRef, ok := dom.Get(submitID); ok {
+					btnRef.RemoveAttr("disabled")
+					btnRef.SetText(f.resolveSubmitLabel())
+				}
+			})
 		}
 	}
 

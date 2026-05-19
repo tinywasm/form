@@ -24,3 +24,5 @@ func (t *text) Clone(parentID, name string) fmt.Widget {
 	c.InitBase(parentID, name, "text")
 	return &c
 }
+
+func (t *text) setTilde(v bool) { t.Tilde = v }
