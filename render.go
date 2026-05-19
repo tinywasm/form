@@ -38,7 +38,7 @@ func (f *Form) RenderHTML() string {
 		if label == "" {
 			label = fmt.Translate("Submit").String()
 		}
-		out.Write(`<button type="submit">`).Write(label).Write(`</button>`)
+		out.Write(`<button type="submit" id="`).Write(f.id).Write(`.submit">`).Write(label).Write(`</button>`)
 	}
 
 	out.Write("</form>")
