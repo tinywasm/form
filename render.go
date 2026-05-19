@@ -30,9 +30,15 @@ func (f *Form) RenderHTML() string {
 		out.Write(inp.RenderHTML())
 	}
 
-	// SSR mode: render submit button
-	if f.ssrMode {
-		out.Write(`<button type="submit">`).Write(fmt.Translate("Submit").String()).Write(`</button>`)
+	// Render submit button in both SSR and WASM modes unless explicitly
+	// disabled via HideSubmit. Every form needs a way to submit; the dev can
+	// customize the label with SubmitLabel(text).
+	if !f.noSubmit {
+		label := f.submitLabel
+		if label == "" {
+			label = fmt.Translate("Submit").String()
+		}
+		out.Write(`<button type="submit">`).Write(label).Write(`</button>`)
 	}
 
 	out.Write("</form>")

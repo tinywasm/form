@@ -17,6 +17,8 @@ type Form struct {
 	method       string                  // HTTP method (default POST)
 	action       string                  // Form action URL (default: struct name)
 	ssrMode      bool                    // Per-form SSR mode (default false)
+	submitLabel  string                  // Submit button label (empty = use Translate("Submit"))
+	noSubmit     bool                    // True when the form should NOT render a submit button
 	onSubmit     func(fmt.Fielder) error // WASM submit callback
 	children     []dom.Component         // Cached dom components (zero-alloc)
 }
@@ -44,6 +46,21 @@ func (f *Form) ParentID() string {
 // OnSubmit sets the callback for form submission in WASM mode.
 func (f *Form) OnSubmit(fn func(fmt.Fielder) error) *Form {
 	f.onSubmit = fn
+	return f
+}
+
+// SubmitLabel customizes the text on the submit button.
+// If never called, the button shows Translate("Submit") (locale-aware).
+func (f *Form) SubmitLabel(text string) *Form {
+	f.submitLabel = text
+	return f
+}
+
+// HideSubmit disables rendering of the submit button.
+// Use this when the form is part of a larger UI that provides its own
+// submit control (e.g. an external toolbar). Default is to render one.
+func (f *Form) HideSubmit() *Form {
+	f.noSubmit = true
 	return f
 }
 
