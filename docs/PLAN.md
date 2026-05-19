@@ -130,6 +130,10 @@ if err := f.Validate(); err != nil {
 
 ### Nuevo archivo: `form/ssr.go`
 
+Usa el DSL tipado de `tinywasm/css` (ver `tinywasm/css/README.md`). No se concatenan
+strings: cada propiedad y token es una expresión Go con seguridad en tiempo de
+compilación.
+
 ```go
 //go:build !wasm
 
@@ -138,88 +142,160 @@ package form
 // IMPORTANTE: este build tag es correcto. El CSS se emite en SSR y el navegador
 // lo recibe en el <style> del HTML inicial. El código WASM no necesita CSS.
 
-import "github.com/tinywasm/css"
+import . "github.com/tinywasm/css"
 
-type formCSS struct{}
-
-func (f *formCSS) String() string {
-    return `.tw-field-error {
-  display: block;
-  font-size: ` + css.TextSm.Var() + `;
-  color: ` + css.ColorError.Var() + `;
-  min-height: 1.2em;
-  margin-top: ` + css.Space1.Var() + `;
+// RenderCSS returns the form's CSS contribution (additive — see tinywasm/css contract).
+// Call from the project's ssr.go aggregate so assetmin picks it up.
+func RenderCSS() *Stylesheet {
+    return NewStylesheet(
+        Rule(".tw-field-error",
+            Display(Block),
+            FontSize(TextSm),
+            Color(ColorError),
+            MinHeight(Em(1.2)),
+        ),
+        Rule(".tw-field-error--visible",
+            FontWeight(FontWeightMedium),
+        ),
+    )
 }
-.tw-field-error--visible {
-  font-weight: ` + css.FontWeightMedium.Var() + `;
-}`
-}
-
-// RenderCSS returns the default CSS for form validation errors.
-// Call from the project's ssr.go to include this CSS in the page.
-func RenderCSS() *formCSS { return &formCSS{} }
 ```
+
+Notas:
+- Nombre `RenderCSS()` alineado con el contrato aditivo de `tinywasm/css` (ver tabla
+  `RootCSS` vs `RenderCSS` en su README).
+- `min-height` reserva espacio; no se necesita `margin-top` (el padre controla el
+  spacing entre campos).
 
 `.tw-field-error` siempre `display:block` con `min-height` — reserva espacio para
 evitar layout shift. `.tw-field-error--visible` añade peso visual cuando hay error.
 
-### Cadena completa
+### Regla: form NUNCA define colores, fuentes ni espaciados
+
+Cualquier valor visual (color, tamaño de texto, espacios, pesos de fuente) debe venir
+de un `Token` de `tinywasm/css` consumido vía el DSL (`Color(ColorError)`,
+`FontSize(TextSm)`, etc.). El DSL emite la referencia `var(--color-error, <fallback>)`
+automáticamente — el hex jamás se escribe en `form/ssr.go`.
+
+### Cadena de resolución
 
 ```
-tinywasm/css   → --color-error: #E34F26  (token + fallback)
-tinywasm/form  → .tw-field-error { color: var(--color-error, #E34F26) }
-goflare-demo   → puede redefinir --color-error en su ssr.go (opcional)
+tinywasm/css    → define el Token: ColorError = {"--color-error", "#E34F26"}
+                  RootCSS() emite: :root { --color-error: #E34F26; }
+tinywasm/form   → consume: Color(ColorError) → emite var(--color-error, #E34F26)
+app (goflare)   → puede override: Declare(ColorError, "#FF0000") en su RootCSS()
+                  → todas las consumidoras (form incluido) reciben el nuevo color sin
+                    tocar su código
 ```
+
+Si un color/espacio necesario no existe como token, el camino correcto es **añadirlo
+a `tinywasm/css`** y luego usarlo, no hardcodearlo en `form`.
 
 ---
 
-## 4. Tag `notilde` — opt-out en input.Text()
+## 4. Tag `notilde` — setter en widget + emisión por ormc
 
-### Motivación
+`notilde` se resuelve en `tinywasm/orm` (ormc) en tiempo de compilación. Este paquete
+solo necesita exponer un setter en el widget afectado:
 
-En español las tildes son normativas: `María`, `Andrés`, `Diseño`.
-`input.Text()` las permite por defecto (`Tilde: true`). Campos técnicos pueden desactivarlas.
+**Diseño: helper a nivel de paquete + método privado en widgets que aplican.** La
+interface `Input` queda intacta (es genérica para todo widget de formulario; `Tilde`
+solo aplica a 3 widgets, no debe contaminarla).
 
-### Sintaxis de tag (opt-out)
-
-```go
-Nombre   string `input:"required,min=2"`          // tildes permitidas por defecto
-Username string `input:"required,min=3,notilde"`  // opt-out explícito
-```
-
-### Implementación
-
-**`tinywasm/form/input/text.go`** — añadir `SetTilde(bool)`:
+**`form/input/tilde.go`** (nuevo):
 
 ```go
-func (t *text) SetTilde(v bool) { t.Tilde = v }
-```
+package input
 
-No se expande la interfaz `Input`. El parser usa duck-typing.
+// tildeSetter is the private contract for widgets that allow toggling accented chars.
+// Unexported on purpose — it never appears in user-facing APIs.
+type tildeSetter interface{ setTilde(bool) }
 
-**`tinywasm/form/validate_struct.go`** — parsear tag `notilde`:
-
-```go
-if hasTag(inputTag, "notilde") {
-    if nt, ok := widget.(interface{ SetTilde(bool) }); ok {
-        nt.SetTilde(false)
+// SetTilde toggles tilde acceptance on w and returns w for chaining.
+// No-op if w doesn't implement tildeSetter (e.g. checkbox, select).
+// Called from ormc-generated code when struct tag `notilde` is present:
+//   Widget: input.SetTilde(input.Text(), false)
+func SetTilde(w Input, v bool) Input {
+    if t, ok := w.(tildeSetter); ok {
+        t.setTilde(v)
     }
+    return w
 }
 ```
 
-`SetTilde(false)` modifica la instancia clonada por campo, no el template global de `Text()`.
-
-**Documentación en `text.go`**:
+**`form/input/text.go`** — añadir método privado:
 
 ```go
-// Text creates a standard text input.
-// Tildes (á, é, í, ó, ú, Á, É, Í, Ó, Ú, Ñ) are allowed by default (natural for Spanish).
-// To disallow tildes for a specific field, use the struct tag: `input:"...,notilde"`.
-// Example:
-//   Name   string `input:"required,min=2"`         // tildes allowed
-//   UserID string `input:"required,min=3,notilde"` // tildes rejected
-func Text() Input { ... }
+func (t *text) setTilde(v bool) { t.Tilde = v }
 ```
+
+Replicar idéntico en `textarea.go` y `password.go` (los demás widgets que tengan
+`Tilde:true` por default). Widgets sin Tilde (`checkbox`, `select`, `radio`, `date`,
+`number`, `checkbox`, `gender`, `filepath`, `address`, `phone`, `ip`, `hour`, `rut`,
+`datalist`): **no implementan nada**. El helper `SetTilde` simplemente hace no-op
+para ellos.
+
+**Cambio en `tinywasm/orm/ormc.go`** — el mapa `tagSetters` pasa de emitir un sufijo
+de método chaining a un wrapper. Una forma simple:
+
+```go
+type tagEmit struct {
+    Wrap string // template con %s para el constructor del widget
+}
+
+var tagSetters = map[string]tagEmit{
+    "notilde": {Wrap: "input.SetTilde(%s, false)"},
+    // future:
+    // "nonumbers": {Wrap: "input.SetNumbers(%s, false)"},
+    // "nospaces":  {Wrap: "input.SetSpaces(%s, false)"},
+}
+```
+
+Emisión en `ormc_generate.go`:
+
+```go
+widgetExpr := fi.WidgetConstructor  // ej: "input.Text()"
+for _, tag := range fi.Tags {
+    if emit, ok := tagSetters[tag]; ok {
+        widgetExpr = fmt.Sprintf(emit.Wrap, widgetExpr)
+    }
+}
+buf.Write(", Widget: ", widgetExpr)
+```
+
+Salida generada para `Nombre string \`input:"required,min=2,notilde"\``:
+
+```go
+{
+    Name: "nombre", NotNull: true,
+    Widget: input.SetTilde(input.Text(), false),
+    Permitted: fmt.Permitted{Minimum: 2},
+}
+```
+
+**Beneficios del diseño:**
+
+- `Input` queda limpia (no contamina con métodos de 1-3 widgets).
+- Widgets que no aplican: cero líneas de código. El helper es no-op gracias al
+  type-assert.
+- Type-assert encapsulado en un único punto (`tilde.go`), no se filtra al código
+  generado ni al usuario.
+- Escala trivialmente: para `nonumbers`/`nospaces` se replica el patrón — 1 helper
+  público + 1 método privado por widget que aplique. Nuevo entry en `tagSetters` de
+  ormc.
+
+**Actualizar [tinywasm/orm/docs/PLAN.md](../../orm/docs/PLAN.md)** para reflejar el
+cambio de formato del mapa `tagSetters` y de la emisión del Widget.
+
+**`docs/TAGS.md`**: documentar la tag `notilde` (qué widget acepta, qué efecto produce).
+
+No se toca `fmt.Widget`, ni `Field.Validate`, ni el embed `fmt.Permitted` en `Base`, ni
+el método `Validate` del widget. `Widget.Validate` ya respeta `Tilde:false` correctamente
+(es solo un flag de su `Permitted` interno).
+
+Ver detalle completo en `tinywasm/orm/docs/PLAN.md`.
+
+`form/validate_struct.go` NO necesita cambios.
 
 ---
 

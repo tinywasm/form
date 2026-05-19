@@ -35,6 +35,7 @@ Mapped directly to `fmt.Permitted` and `NotNull` properties in the schema.
 | `letters` | Requires letters only |
 | `numbers` | Requires numbers only |
 | `spaces` | Allows spaces |
+| `notilde` | Disables accented characters (á, é, í, ó, ú) on `text` widget. Emitted by ormc as `input.Text().SetTilde(false)`. |
 
 ### 3. Metadata
 | Prefix | Description |
