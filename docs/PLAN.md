@@ -338,13 +338,67 @@ Nuevos campos en `Form`:
 
 ## Tests a agregar
 
-| Test | Archivo | Verifica |
-|------|---------|----------|
-| `TestRenderInput_EmitsErrorSpan` | `render_test.go` | `RenderInput()` contiene `id="X.error"` |
-| `TestRender_SubmitButtonHasID` | `render_test.go` | Botón submit tiene `id="formID.submit"` |
-| `TestNotilde_RejectsAccent` | `notilde_test.go` | Campo `notilde` rechaza `á` |
-| `TestNotilde_AllowsNormal` | `notilde_test.go` | Campo `notilde` acepta `a` |
-| `TestText_AllowsAccentByDefault` | `notilde_test.go` | Campo sin tag acepta `á` |
+### Instalación de gotest y wasmbrowsertest
+
+`gotest` es la herramienta estándar del ecosistema tinywasm que ejecuta automáticamente:
+vet, race detection, cobertura, **tests WASM en el navegador** (via `wasmbrowsertest`) y
+badges de estado. Es el único comando necesario para validar la librería completa.
+
+```bash
+# Instalar gotest (una sola vez)
+go install github.com/tinywasm/devflow/cmd/gotest@latest
+
+# gotest instala wasmbrowsertest automáticamente si no está disponible:
+# go install github.com/tinywasm/wasmbrowsertest@latest
+```
+
+Uso:
+```bash
+gotest              # suite completa: vet + race + cover + wasm + badges
+gotest -no-cache    # forzar re-ejecución aunque el código no haya cambiado
+gotest -run TestFoo # ejecutar un test específico
+gotest -all         # incluye tests de integración, timeout 60s
+```
+
+### Patrón de tests en tinywasm/form
+
+La librería usa tres archivos para cada grupo de tests, siguiendo el patrón ya establecido
+(`base.back_test.go`, `base.front_test.go`, `base.shared_test.go`):
+
+| Archivo | Build tag | Propósito |
+|---------|-----------|-----------|
+| `X.shared_test.go` | ninguno | lógica de test compartida (`runXTests(t)`) |
+| `X.back_test.go` | `//go:build !wasm` | invoca `runXTests` en entorno nativo |
+| `X.front_test.go` | `//go:build wasm` | invoca `runXTests` en el navegador via `wasmbrowsertest` |
+
+`gotest` detecta automáticamente la presencia de archivos con `//go:build wasm` y lanza
+`wasmbrowsertest` para ejecutar los tests del navegador sin configuración adicional.
+
+### Tests nuevos a crear
+
+**`render.shared_test.go`** (sin build tag) + `render.back_test.go` + `render.front_test.go`:
+
+| Test | Verifica |
+|------|----------|
+| `TestRenderInput_EmitsErrorSpan` | `RenderHTML()` contiene `id="X.error"` y `class="tw-field-error"` |
+| `TestRender_SubmitButtonHasID` | Botón submit tiene `id="formID.submit"` |
+| `TestRender_ErrorIDMethod` | `inp.ErrorID()` retorna `inp.GetID() + ".error"` |
+
+**`notilde.shared_test.go`** + back + front:
+
+| Test | Verifica |
+|------|----------|
+| `TestNotilde_RejectsAccent` | Campo con tag `notilde` rechaza `á` |
+| `TestNotilde_AllowsNormal` | Campo con tag `notilde` acepta `a` |
+| `TestText_AllowsAccentByDefault` | Campo sin tag acepta `á` |
+
+**`submit.shared_test.go`** + back + front:
+
+| Test | Verifica |
+|------|----------|
+| `TestSubmit_CallbackReceivesDone` | La nueva firma `func(Fielder, func(error))` es invocada con `done` |
+| `TestSubmit_NoResetOnSuccess` | `NoResetOnSuccess()` evita el reset al llamar `done(nil)` |
+| `TestSubmit_ResetClearsValues` | `Reset()` vacía todos los inputs y spans de error |
 
 ---
 
