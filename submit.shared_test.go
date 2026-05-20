@@ -44,6 +44,33 @@ func runSubmitTests(t *testing.T) {
 		}
 	})
 
+	t.Run("TestSubmit_NoResetOnSuccess", func(t *testing.T) {
+		s := &submitStruct{Nombre: "Jules"}
+		f, _ := New("app", s)
+		f.NoResetOnSuccess()
+		f.SetValues("nombre", "Valor Original")
+
+		doneCalled := false
+		f.onSubmit = func(data fmt.Fielder, done func(error)) {
+			done(nil)
+		}
+		f.onSubmit(f.data, func(err error) {
+			doneCalled = true
+			if err == nil && !f.noResetOnSuccess {
+				f.reset()
+			}
+		})
+
+		if !doneCalled {
+			t.Error("done callback was not called")
+		}
+
+		val := f.Input("nombre").(interface{ GetValue() string }).GetValue()
+		if val == "" {
+			t.Error("Expected form to retain values when NoResetOnSuccess is set")
+		}
+	})
+
 	t.Run("TestSubmit_ResetClearsValues", func(t *testing.T) {
 		s := &submitStruct{Nombre: "Jules"}
 		f, _ := New("app", s)
