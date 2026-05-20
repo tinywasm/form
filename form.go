@@ -17,10 +17,12 @@ type Form struct {
 	method       string                  // HTTP method (default POST)
 	action       string                  // Form action URL (default: struct name)
 	ssrMode      bool                    // Per-form SSR mode (default false)
-	submitLabel  string                  // Submit button label (empty = use Translate("Submit"))
-	noSubmit     bool                    // True when the form should NOT render a submit button
-	onSubmit     func(fmt.Fielder) error // WASM submit callback
-	children     []dom.Component         // Cached dom components (zero-alloc)
+	submitLabel        string                            // Submit button label (empty = use Translate("Submit"))
+	submitLoadingLabel string                            // Label while submitting (default: label + "...")
+	noResetOnSuccess   bool                              // Disable auto-reset after successful submit
+	noSubmit           bool                              // True when the form should NOT render a submit button
+	onSubmit           func(fmt.Fielder, func(error))    // WASM submit callback
+	children           []dom.Component                   // Cached dom components (zero-alloc)
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -44,8 +46,20 @@ func (f *Form) ParentID() string {
 }
 
 // OnSubmit sets the callback for form submission in WASM mode.
-func (f *Form) OnSubmit(fn func(fmt.Fielder) error) *Form {
+func (f *Form) OnSubmit(fn func(fmt.Fielder, func(error))) *Form {
 	f.onSubmit = fn
+	return f
+}
+
+// SubmitLoadingLabel customizes the text on the submit button while submitting.
+func (f *Form) SubmitLoadingLabel(text string) *Form {
+	f.submitLoadingLabel = text
+	return f
+}
+
+// NoResetOnSuccess disables the automatic form reset after a successful submit.
+func (f *Form) NoResetOnSuccess() *Form {
+	f.noResetOnSuccess = true
 	return f
 }
 
@@ -159,6 +173,39 @@ func (f *Form) SetOptions(fieldName string, opts ...fmt.KeyValue) *Form {
 		}
 	}
 	return f
+}
+
+// Reset clears all input values and error messages in the DOM and internal state.
+func (f *Form) Reset() { f.reset() }
+
+func (f *Form) resolveSubmitLabel() string {
+	label := f.submitLabel
+	if label == "" {
+		label = fmt.Translate("Submit").String()
+	}
+	return label
+}
+
+func (f *Form) reset() {
+	for _, inp := range f.Inputs {
+		id := inp.GetID()
+		// Clear value via Reference (preserves event listeners)
+		if ref, ok := dom.Get(id); ok {
+			ref.SetValue("")
+		}
+
+		// Clear error span
+		errID := id + ".error" // Using the pattern f.id + ".error" defined in base.go later
+		if ref, ok := dom.Get(errID); ok {
+			ref.SetText("")
+			ref.SetAttr("class", "tw-field-error")
+		}
+
+		// Clear internal state
+		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+			setter.SetValues("")
+		}
+	}
 }
 
 // SetValues sets values for the input matching the given field name.

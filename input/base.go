@@ -110,6 +110,9 @@ func (b *Base) GetID() string {
 	return b.id
 }
 
+// ErrorID returns the ID of the associated error span for this input.
+func (b *Base) ErrorID() string { return b.id + ".error" }
+
 // SetID sets the component's unique identifier.
 func (b *Base) SetID(id string) {
 	b.id = id
@@ -228,6 +231,9 @@ func (b *Base) RenderInput() string {
 		out.Write(">")
 	}
 
+	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.RenderHTML())
+
 	return out.String()
 }
 
@@ -252,6 +258,10 @@ func (b *Base) renderSelect() string {
 		out.Write(`>`).Write(opt.Value).Write(`</option>`)
 	}
 	out.Write(`</select>`)
+
+	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.RenderHTML())
+
 	return out.String()
 }
 
@@ -275,6 +285,10 @@ func (b *Base) renderRadio() string {
 		out.Write(opt.Value)
 		out.Write(`</label>`)
 	}
+
+	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.RenderHTML())
+
 	return out.String()
 }
 

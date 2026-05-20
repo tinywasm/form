@@ -25,3 +25,5 @@ func (t *textarea) Clone(parentID, name string) fmt.Widget {
 	c.InitBase(parentID, name, "textarea")
 	return &c
 }
+
+func (t *textarea) setTilde(v bool) { t.Tilde = v }

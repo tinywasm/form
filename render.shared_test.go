@@ -1,0 +1,62 @@
+package form
+
+import (
+	"strings"
+	"testing"
+	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/form/input"
+)
+
+type renderStruct struct {
+	fmt.Fielder
+	Nombre string `input:"required"`
+}
+
+func (s *renderStruct) Schema() []fmt.Field {
+	return []fmt.Field{
+		{Name: "nombre", NotNull: true, Widget: input.Text()},
+	}
+}
+
+func (s *renderStruct) Pointers() []any { return []any{&s.Nombre} }
+func (s *renderStruct) Values() []any   { return []any{s.Nombre} }
+
+func runRenderTests(t *testing.T) {
+	t.Run("TestRenderInput_EmitsErrorSpan", func(t *testing.T) {
+		s := &renderStruct{}
+		f, _ := New("app", s)
+		html := f.RenderHTML()
+
+		// Note: dom.Span().RenderHTML() uses single quotes for attributes
+		expectedSpan := `id='app.form.nombre.error' class='tw-field-error' aria-live='polite'`
+		if !strings.Contains(html, expectedSpan) {
+			t.Errorf("Expected error span not found in HTML: %s", html)
+		}
+	})
+
+	t.Run("TestRender_SubmitButtonHasID", func(t *testing.T) {
+		s := &renderStruct{}
+		f, _ := New("app", s)
+		html := f.RenderHTML()
+
+		expectedID := `id="app.form.submit"`
+		if !strings.Contains(html, expectedID) {
+			t.Errorf("Expected submit button ID not found in HTML: %s", html)
+		}
+	})
+
+	t.Run("TestRender_ErrorIDMethod", func(t *testing.T) {
+		s := &renderStruct{}
+		f, _ := New("app", s)
+		inp := f.Input("nombre")
+
+		expectedErrorID := "app.form.nombre.error"
+		if getter, ok := inp.(interface{ ErrorID() string }); ok {
+			if getter.ErrorID() != expectedErrorID {
+				t.Errorf("Expected ErrorID %s, got %s", expectedErrorID, getter.ErrorID())
+			}
+		} else {
+			t.Errorf("Input does not implement ErrorID()")
+		}
+	})
+}

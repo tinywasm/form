@@ -23,3 +23,5 @@ func (p *password) Clone(parentID, name string) fmt.Widget {
 	c.InitBase(parentID, name, "password")
 	return &c
 }
+
+func (p *password) setTilde(v bool) { p.Tilde = v }
