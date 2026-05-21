@@ -8,7 +8,7 @@ package form
 import "github.com/tinywasm/css"
 
 // RenderCSS returns the form's CSS contribution (additive — see tinywasm/css contract).
-// Call from the project's ssr.go aggregate so assetmin picks it up.
+// Call from the project's css.go aggregate so assetmin picks it up.
 func RenderCSS() *css.Stylesheet {
 	return css.NewStylesheet(
 		css.Rule(".tw-field-error",
