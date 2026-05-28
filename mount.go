@@ -88,7 +88,7 @@ func (f *Form) OnMount() {
 	el.On("submit", onSubmit)
 }
 
-// OnUnmount implements dom.Mountable.
+// OnUnmount implements dom.Unmountable.
 func (f *Form) OnUnmount() {
 	// Cleanup is handled automatically by tinywasm/dom on Unmount
 }
