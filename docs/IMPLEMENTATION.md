@@ -10,7 +10,7 @@
 | `form.go` | `Form` struct, `New()`, `Input()`, `SetOptions()`, `SetValues()`, `Namer` |
 | `sync.go` | `SyncValues()`, pointer-based field sync |
 | `registry.go` | `SetGlobalClass()` |
-| `render.go` | `Form.RenderHTML()`, `Form.SetSSR()` |
+| `render.go` | `Form.String()`, `Form.SetSSR()` |
 | `validate.go` | `Form.Validate()` |
 | `validate_struct.go` | `Form.ValidateData()` (crudp.DataValidator) |
 | `words.go` | Registers form UI words into fmt dictionary |

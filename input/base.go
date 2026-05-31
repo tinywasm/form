@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/tinywasm/html"
 	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 )
@@ -118,8 +119,8 @@ func (b *Base) SetID(id string) {
 	b.id = id
 }
 
-// RenderHTML renders the input to HTML.
-func (b *Base) RenderHTML() string {
+// String serializes the input to its HTML string representation.
+func (b *Base) String() string {
 	return b.RenderInput()
 }
 
@@ -231,8 +232,8 @@ func (b *Base) RenderInput() string {
 		out.Write(">")
 	}
 
-	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.RenderHTML())
+	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.String())
 
 	return out.String()
 }
@@ -259,8 +260,8 @@ func (b *Base) renderSelect() string {
 	}
 	out.Write(`</select>`)
 
-	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.RenderHTML())
+	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.String())
 
 	return out.String()
 }
@@ -286,8 +287,8 @@ func (b *Base) renderRadio() string {
 		out.Write(`</label>`)
 	}
 
-	errSpan := dom.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.RenderHTML())
+	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
+	out.Write(errSpan.String())
 
 	return out.String()
 }

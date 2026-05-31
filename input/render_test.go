@@ -6,7 +6,7 @@ import (
 	"github.com/tinywasm/fmt"
 )
 
-// Test_Render verifies RenderHTML output for inputs with custom rendering.
+// Test_Render verifies String output for inputs with custom rendering.
 // Standard inputs (text, email, etc.) delegate to Base.RenderInput and are not verified here.
 func Test_Render(t *testing.T) {
 	cases := []rc{
@@ -106,9 +106,9 @@ func Test_Render(t *testing.T) {
 			if setter, ok := inp.(interface{ SetValues(...string) }); ok && len(c.values) > 0 {
 				setter.SetValues(c.values...)
 			}
-			html := inp.RenderHTML()
+			html := inp.String()
 			if !fmt.Contains(html, c.contain) {
-				t.Errorf("RenderHTML() missing %q\ngot: %s", c.contain, html)
+				t.Errorf("String() missing %q\ngot: %s", c.contain, html)
 			}
 		})
 	}

@@ -9,7 +9,7 @@ import (
 // It embeds dom.Component to ensure compatibility with the tinywasm/dom ecosystem.
 type Input interface {
 	fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
-	dom.Component // Includes GetID(), SetID(), RenderHTML(), Children()
+	dom.Component // Includes GetID(), SetID(), String(), Children()
 	FieldName() string
 	SetRequired(bool)
 	AddAttribute(key, value string)
