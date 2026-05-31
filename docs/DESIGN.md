@@ -27,7 +27,7 @@ Input constructors take zero arguments and act as prototypes. `Clone(parentID, n
 - `ValidateData(action, data)` provides server-side or isomorphic validation via `crudp.DataValidator`.
 
 ### 4. Rendering (`render.go`)
-`RenderHTML()` builds: `<form id="..."> [method action if SSR] inputs [submit if SSR] </form>`
+`String()` builds: `<form id="..."> [method action if SSR] inputs [submit if SSR] </form>`
 
 ### 5. WASM Interactivity (`mount.go`)
 `OnMount()` attaches delegated listeners:

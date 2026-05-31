@@ -3,7 +3,7 @@
 // To add a new input:
 //  1. Add a case in buildInput()
 //  2. Add validation cases in validation_test.go
-//  3. Add render cases in render_test.go (if it has custom RenderHTML)
+//  3. Add render cases in render_test.go (if it has custom String())
 package input
 
 import (
@@ -157,7 +157,7 @@ func TestClone_Preservation(t *testing.T) {
 	}
 
 	// Verify attributes are preserved
-	html := cloned.RenderHTML()
+	html := cloned.String()
 	if !fmt.Contains(html, `data-test="value"`) {
 		t.Errorf("Expected attribute data-test=\"value\" in HTML, got %s", html)
 	}

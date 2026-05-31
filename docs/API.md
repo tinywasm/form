@@ -7,7 +7,7 @@ See `README.md` for the consolidated API. This file contains additional detail.
 ```go
 f, err := form.New("content", data) // data implements fmt.Fielder
 // -> f.GetID() == "content." + resolveStructName(data)
-// -> f.RenderHTML() renders all fields that have a Widget in data.Schema()
+// -> f.String() renders all fields that have a Widget in data.Schema()
 ```
 
 For each field in `data.Schema()`:

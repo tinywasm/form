@@ -25,9 +25,9 @@ func runRenderTests(t *testing.T) {
 	t.Run("TestRenderInput_EmitsErrorSpan", func(t *testing.T) {
 		s := &renderStruct{}
 		f, _ := New("app", s)
-		html := f.RenderHTML()
+		html := f.String()
 
-		// Note: dom.Span().RenderHTML() uses single quotes for attributes
+		// Note: html.Span().String() uses single quotes for attributes
 		expectedSpan := `id='app.form.nombre.error' class='tw-field-error' aria-live='polite'`
 		if !strings.Contains(html, expectedSpan) {
 			t.Errorf("Expected error span not found in HTML: %s", html)
@@ -37,7 +37,7 @@ func runRenderTests(t *testing.T) {
 	t.Run("TestRender_SubmitButtonHasID", func(t *testing.T) {
 		s := &renderStruct{}
 		f, _ := New("app", s)
-		html := f.RenderHTML()
+		html := f.String()
 
 		expectedID := `id="app.form.submit"`
 		if !strings.Contains(html, expectedID) {

@@ -8,8 +8,8 @@ func (f *Form) SetSSR(enabled bool) *Form {
 	return f
 }
 
-// RenderHTML renders the form based on its SSR mode.
-func (f *Form) RenderHTML() string {
+// String serializes the form to its HTML string representation.
+func (f *Form) String() string {
 	out := fmt.GetConv()
 
 	out.Write(`<form id="`).Write(f.GetID()).Write(`"`)
@@ -27,7 +27,7 @@ func (f *Form) RenderHTML() string {
 	out.Write(`>`)
 
 	for _, inp := range f.Inputs {
-		out.Write(inp.RenderHTML())
+		out.Write(inp.String())
 	}
 
 	// Render submit button in both SSR and WASM modes unless explicitly

@@ -8,7 +8,7 @@ Called automatically by `tinywasm/dom` after the form is injected into the DOM.
 
 ```
 dom.Mount("root-id", myForm)
-  1. dom calls myForm.RenderHTML() → injects HTML
+  1. dom calls myForm.String() → injects HTML
   2. dom calls myForm.OnMount()
      → dom.Get(f.GetID()) → gets <form> element
      → el.On("input",  onInput)   ← live sync per keystroke

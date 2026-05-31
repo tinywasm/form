@@ -1,7 +1,7 @@
 # Input Types
 
 This package contains all input implementations for `tinywasm/form`.
-Each input implements `fmt.Widget` (Type, Validate, Clone) and `dom.Component` (RenderHTML).
+Each input implements `fmt.Widget` (Type, Validate, Clone) and `dom.Component` (String).
 All inputs use **only** `tinywasm/fmt` — no `errors` or `strconv` from the standard library.
 
 ## Available Inputs

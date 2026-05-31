@@ -39,11 +39,11 @@ func TestForm_NewAndBinding_Shared(t *testing.T) {
 	}
 }
 
-func TestForm_RenderHTML_SSR_Shared(t *testing.T) {
+func TestForm_String_SSR_Shared(t *testing.T) {
 	f := createTestForm()
 	f.SetSSR(true)
 
-	html := f.RenderHTML()
+	html := f.String()
 
 	// Verify SSR specific attributes
 	if !fmt.Contains(html, `method="POST"`) {
@@ -151,7 +151,7 @@ func runSharedTests(t *testing.T) {
 	t.Run("NewAndBinding", TestForm_NewAndBinding_Shared)
 	t.Run("AutoDefaults", TestForm_AutoDefaults_Shared)
 	t.Run("CustomInput", TestForm_CustomInput_Shared)
-	t.Run("RenderHTML_SSR", TestForm_RenderHTML_SSR_Shared)
+	t.Run("String_SSR", TestForm_String_SSR_Shared)
 	t.Run("Validate", TestForm_Validate_Shared)
 	t.Run("ValidateData", TestForm_ValidateData_Shared)
 }
