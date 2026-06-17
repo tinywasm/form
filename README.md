@@ -36,10 +36,28 @@ There is **no registry-based name matching**. Each field's `Widget` is set expli
 ```go
 // input.Input — defined in input/interface.go
 type Input interface {
-    fmt.Widget    // Type(), Validate(value string) error, Clone(parentID, name string) Widget
-    dom.Component // GetID(), SetID(), String(), Children()
+    fmt.Widget  // Type(), Validate(value string) error, Clone(parentID, name string) Widget
+    FieldName() string
+    SetRequired(bool)
+    AddAttribute(key, value string)
+    // Metadata getters used by form.RenderInput:
+    GetID() string
+    SetID(string)
+    GetValues() []string
+    GetOptions() []fmt.KeyValue
+    GetPlaceholder() string
+    GetTitle() string
+    IsRequired() bool
+    IsDisabled() bool
+    IsReadonly() bool
+    GetAttributes() []fmt.KeyValue
+    ErrorID() string
+    HTMLName() string
+    HandlerName() string
 }
 ```
+
+`input.Input` does **not** embed `dom.Component`. HTML rendering is done by `form.RenderInput(input.Input)` in the `form` package, keeping `input` free of `dom`/`html` imports (edge-safe).
 
 Each concrete type (Email, Text, etc.) provides:
 - `Xxx() Input` — template instance for use in schema (no position).
@@ -169,7 +187,8 @@ type Permitted struct {
 | `validate_struct.go` | `ValidateData()` (crudp.DataValidator) |
 | `words.go` | Registers form UI words into fmt dictionary |
 | `mount.go` | `OnMount()`, `OnUnmount()` (wasm only) |
-| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + `dom.Component`) |
+| `render_input.go` | `RenderInput()` — renders any `input.Input` to HTML (owns `dom`/`html` imports) |
+| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + metadata getters; no `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |
 | `input/*.go` | 17 concrete input implementations |
 
