@@ -15,7 +15,8 @@
 | `validate_struct.go` | `Form.ValidateData()` (crudp.DataValidator) |
 | `words.go` | Registers form UI words into fmt dictionary |
 | `mount.go` | `Form.OnMount()`, `Form.OnUnmount()` (wasm build tag) |
-| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + `dom.Component`) |
+| `render_input.go` | `RenderInput(input.Input) string` — HTML rendering; owns `dom`/`html` imports |
+| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + metadata getters; no `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |
 | `input/*.go` | 17 concrete input implementations |
 

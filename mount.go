@@ -27,7 +27,7 @@ func (f *Form) OnMount() {
 				}
 
 				// Real-time validation feedback
-				errID := inp.GetID() + ".error"
+				errID := inp.ErrorID()
 				if ref, ok := dom.Get(errID); ok {
 					if err := inp.Validate(val); err != nil {
 						ref.SetText(err.Error())

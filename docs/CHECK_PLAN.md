@@ -1,4 +1,4 @@
-# PLAN — Desacoplar metadata de widget del rendering (fuga de tamaño al edge)
+# PLAN — Desacoplar metadata de widget del rendering (fuga de tamaño al edge). 
 
 > Este plan se despacha vía el workflow CodeJob. Ver skill: `agents-workflow`.
 > **Estado:** LISTO PARA DESPACHO.

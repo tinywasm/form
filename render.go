@@ -27,7 +27,7 @@ func (f *Form) String() string {
 	out.Write(`>`)
 
 	for _, inp := range f.Inputs {
-		out.Write(inp.String())
+		out.Write(RenderInput(inp))
 	}
 
 	// Render submit button in both SSR and WASM modes unless explicitly

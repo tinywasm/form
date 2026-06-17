@@ -1,8 +1,6 @@
 package input
 
 import (
-	"github.com/tinywasm/html"
-	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 )
 
@@ -119,11 +117,6 @@ func (b *Base) SetID(id string) {
 	b.id = id
 }
 
-// String serializes the input to its HTML string representation.
-func (b *Base) String() string {
-	return b.RenderInput()
-}
-
 // Type satisfies fmt.Widget.Type(). Returns the semantic input type name.
 func (b *Base) Type() string { return b.htmlName }
 
@@ -141,9 +134,24 @@ func (b *Base) SetRequired(req bool) {
 	b.Required = req
 }
 
-// Children returns empty slice (inputs are leaf nodes).
-func (b *Base) Children() []dom.Component {
-	return nil
+// IsRequired returns true if the input is required.
+func (b *Base) IsRequired() bool {
+	return b.Required
+}
+
+// IsDisabled returns true if the input is disabled.
+func (b *Base) IsDisabled() bool {
+	return b.Disabled
+}
+
+// IsReadonly returns true if the input is readonly.
+func (b *Base) IsReadonly() bool {
+	return b.Readonly
+}
+
+// GetAttributes returns custom attributes.
+func (b *Base) GetAttributes() []fmt.KeyValue {
+	return b.Attributes
 }
 
 // HandlerName returns the component's unique identifier.
@@ -165,148 +173,4 @@ func (b *Base) HTMLName() string {
 // AddAttribute adds a custom attribute to the input.
 func (b *Base) AddAttribute(key, value string) {
 	b.Attributes = append(b.Attributes, fmt.KeyValue{Key: key, Value: value})
-}
-
-// RenderInput generates the HTML for the input based on its htmlName.
-// Handles: input, textarea, select (with options), radio (label+input per option),
-// and datalist (input + datalist element). No custom RenderHTML needed in sub-types.
-func (b *Base) RenderInput() string {
-	switch b.htmlName {
-	case "select":
-		return b.renderSelect()
-	case "radio":
-		return b.renderRadio()
-	case "datalist":
-		return b.renderDatalist()
-	}
-
-	out := fmt.GetConv()
-
-	var tag string
-	var isInput bool
-
-	if b.htmlName == "textarea" {
-		tag = "textarea"
-	} else {
-		tag = "input"
-		isInput = true
-	}
-
-	out.Write("<").Write(tag)
-	if isInput {
-		out.Write(` type="`).Write(b.htmlName).Write(`"`)
-	}
-	out.Write(` id="`).Write(b.id).Write(`"`)
-	out.Write(` name="`).Write(b.name).Write(`"`)
-	if isInput && b.GetValue() != "" {
-		out.Write(` value="`).Write(b.GetValue()).Write(`"`)
-	}
-	if b.Placeholder != "" {
-		out.Write(` placeholder="`).Write(b.Placeholder).Write(`"`)
-	}
-	if b.Title != "" {
-		out.Write(` title="`).Write(b.Title).Write(`"`)
-	}
-	for _, attr := range b.Attributes {
-		if attr.Value != "" {
-			out.Write(` `).Write(attr.Key).Write(`="`).Write(attr.Value).Write(`"`)
-		}
-	}
-	if b.Required {
-		out.Write(` required`)
-	}
-	if b.Disabled {
-		out.Write(` disabled`)
-	}
-	if b.Readonly {
-		out.Write(` readonly`)
-	}
-
-	if b.htmlName == "textarea" {
-		out.Write(">")
-		if b.GetValue() != "" {
-			out.Write(b.GetValue())
-		}
-		out.Write("</textarea>")
-	} else {
-		out.Write(">")
-	}
-
-	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.String())
-
-	return out.String()
-}
-
-// renderSelect generates <select> with <option> elements.
-func (b *Base) renderSelect() string {
-	out := fmt.GetConv()
-	values := b.GetValues()
-	out.Write(`<select id="`).Write(b.HandlerName()).Write(`"`)
-	out.Write(` name="`).Write(b.FieldName()).Write(`"`)
-	if b.Required {
-		out.Write(` required`)
-	}
-	out.Write(`>`)
-	for _, opt := range b.GetOptions() {
-		out.Write(`<option value="`).Write(opt.Key).Write(`"`)
-		for _, v := range values {
-			if v == opt.Key {
-				out.Write(` selected`)
-				break
-			}
-		}
-		out.Write(`>`).Write(opt.Value).Write(`</option>`)
-	}
-	out.Write(`</select>`)
-
-	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.String())
-
-	return out.String()
-}
-
-// renderRadio generates <label><input type="radio"></label> per option.
-func (b *Base) renderRadio() string {
-	out := fmt.GetConv()
-	values := b.GetValues()
-	for _, opt := range b.GetOptions() {
-		optID := b.HandlerName() + "." + opt.Key
-		out.Write(`<label>`)
-		out.Write(`<input type="radio" id="`).Write(optID).Write(`"`)
-		out.Write(` name="`).Write(b.FieldName()).Write(`"`)
-		out.Write(` value="`).Write(opt.Key).Write(`"`)
-		for _, v := range values {
-			if v == opt.Key {
-				out.Write(` checked`)
-				break
-			}
-		}
-		out.Write(`>`)
-		out.Write(opt.Value)
-		out.Write(`</label>`)
-	}
-
-	errSpan := html.Span("").ID(b.ErrorID()).Class("tw-field-error").Attr("aria-live", "polite")
-	out.Write(errSpan.String())
-
-	return out.String()
-}
-
-// renderDatalist generates <input> linked to a <datalist> element.
-func (b *Base) renderDatalist() string {
-	listID := b.id + "-list"
-	b.AddAttribute("list", listID)
-	out := fmt.GetConv()
-	// Render as text input (temporarily set htmlName for RenderInput call)
-	saved := b.htmlName
-	b.htmlName = "text"
-	out.Write(b.RenderInput())
-	b.htmlName = saved
-	out.Write(`<datalist id="`).Write(listID).Write(`">`)
-	for _, opt := range b.Options {
-		out.Write(`<option value="`).Write(opt.Key).Write(`">`).Write(opt.Value).Write(`</option>`)
-	}
-	out.Write(`</datalist>`)
-	return out.String()
 }
