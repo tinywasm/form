@@ -1,16 +1,28 @@
 package input
 
 import (
-	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 )
 
 // Input interface defines the behavior for all form input types.
-// It embeds dom.Component to ensure compatibility with the tinywasm/dom ecosystem.
 type Input interface {
-	fmt.Widget    // Type(), Validate(), Clone(parentID, name) — semantic type contract
-	dom.Component // Includes GetID(), SetID(), String(), Children()
+	fmt.Widget // Type(), Validate(), Clone(parentID, name) — semantic type contract
 	FieldName() string
 	SetRequired(bool)
 	AddAttribute(key, value string)
+
+	// Metadata getters for rendering
+	GetID() string
+	SetID(string)
+	GetValues() []string
+	GetOptions() []fmt.KeyValue
+	GetPlaceholder() string
+	GetTitle() string
+	IsRequired() bool
+	IsDisabled() bool
+	IsReadonly() bool
+	GetAttributes() []fmt.KeyValue
+	ErrorID() string
+	HTMLName() string
+	HandlerName() string
 }

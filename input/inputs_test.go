@@ -157,11 +157,19 @@ func TestClone_Preservation(t *testing.T) {
 	}
 
 	// Verify attributes are preserved
-	html := cloned.String()
-	if !fmt.Contains(html, `data-test="value"`) {
-		t.Errorf("Expected attribute data-test=\"value\" in HTML, got %s", html)
+	attrs := cloned.GetAttributes()
+	found := false
+	for _, attr := range attrs {
+		if attr.Key == "data-test" && attr.Value == "value" {
+			found = true
+			break
+		}
 	}
-	if !fmt.Contains(html, `required`) {
-		t.Errorf("Expected required attribute in HTML, got %s", html)
+	if !found {
+		t.Errorf("Expected attribute data-test=\"value\" to be preserved")
+	}
+
+	if !cloned.IsRequired() {
+		t.Errorf("Expected required attribute to be preserved")
 	}
 }

@@ -144,7 +144,7 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 		}
 
 		f.Inputs = append(f.Inputs, inp)
-		f.children = append(f.children, inp)
+		f.children = append(f.children, &fieldComponent{inp})
 		f.fieldIndices = append(f.fieldIndices, i)
 	}
 
@@ -195,7 +195,7 @@ func (f *Form) reset() {
 		}
 
 		// Clear error span
-		errID := id + ".error" // Using the pattern f.id + ".error" defined in base.go later
+		errID := inp.ErrorID()
 		if ref, ok := dom.Get(errID); ok {
 			ref.SetText("")
 			ref.SetAttr("class", "tw-field-error")
