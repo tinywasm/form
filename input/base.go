@@ -34,10 +34,10 @@ func (b *Base) InitBase(parentID, name, htmlName string) {
 
 	// Only apply defaults if not already set (preserves values during Clone)
 	if b.Placeholder == "" {
-		b.Placeholder = fmt.Translate(name).String()
+		b.Placeholder = name
 	}
 	if b.Title == "" {
-		b.Title = fmt.Translate(name).String()
+		b.Title = name
 	}
 }
 

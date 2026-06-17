@@ -62,8 +62,7 @@ func TestForm_String_SSR_Shared(t *testing.T) {
 func TestForm_AutoDefaults_Shared(t *testing.T) {
 	f := createTestForm()
 
-	// Placeholder and title default to the translated field name via fmt.Translate.
-	// Without a registered translation for "Name", it passes through as-is.
+	// Placeholder and title default to the raw field name.
 	nameInp := f.Input("Name")
 	if p, ok := nameInp.(interface{ GetPlaceholder() string }); ok {
 		if p.GetPlaceholder() != "Name" {

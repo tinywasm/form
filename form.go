@@ -17,7 +17,7 @@ type Form struct {
 	method       string                  // HTTP method (default POST)
 	action       string                  // Form action URL (default: struct name)
 	ssrMode      bool                    // Per-form SSR mode (default false)
-	submitLabel        string                            // Submit button label (empty = use Translate("Submit"))
+	submitLabel        string                            // Submit button label (empty = "Submit")
 	submitLoadingLabel string                            // Label while submitting (default: label + "...")
 	noResetOnSuccess   bool                              // Disable auto-reset after successful submit
 	noSubmit           bool                              // True when the form should NOT render a submit button
@@ -64,7 +64,7 @@ func (f *Form) NoResetOnSuccess() *Form {
 }
 
 // SubmitLabel customizes the text on the submit button.
-// If never called, the button shows Translate("Submit") (locale-aware).
+// If never called, the button shows "Submit".
 func (f *Form) SubmitLabel(text string) *Form {
 	f.submitLabel = text
 	return f
@@ -181,7 +181,7 @@ func (f *Form) Reset() { f.reset() }
 func (f *Form) resolveSubmitLabel() string {
 	label := f.submitLabel
 	if label == "" {
-		label = fmt.Translate("Submit").String()
+		label = "Submit"
 	}
 	return label
 }

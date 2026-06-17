@@ -36,7 +36,7 @@ func (f *Form) String() string {
 	if !f.noSubmit {
 		label := f.submitLabel
 		if label == "" {
-			label = fmt.Translate("Submit").String()
+			label = "Submit"
 		}
 		out.Write(`<button type="submit" id="`).Write(f.id).Write(`.submit">`).Write(label).Write(`</button>`)
 	}

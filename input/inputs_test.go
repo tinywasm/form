@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/tinywasm/fmt"
-	_ "github.com/tinywasm/fmt/dictionary"
 )
 
 // tc is a compact validation test case.
