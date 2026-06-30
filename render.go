@@ -1,6 +1,6 @@
 package form
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/dom"
 
 // SetSSR enables or disables SSR mode for this form.
 func (f *Form) SetSSR(enabled bool) *Form {
@@ -10,37 +10,70 @@ func (f *Form) SetSSR(enabled bool) *Form {
 
 // String serializes the form to its HTML string representation.
 func (f *Form) String() string {
-	out := fmt.GetConv()
+	return f.Render().String()
+}
 
-	out.Write(`<form id="`).Write(f.GetID()).Write(`"`)
+// Render returns a reactive dom.Element tree for the form.
+func (f *Form) Render() *dom.Element {
+	el := dom.NewElement("form").ID(f.GetID())
 
 	if f.class != "" {
-		out.Write(` class="`).Write(f.class).Write(`"`)
+		el.Class(f.class)
 	}
 
 	// SSR mode: render method and action
 	if f.ssrMode {
-		out.Write(` method="`).Write(f.method).Write(`"`)
-		out.Write(` action="`).Write(f.action).Write(`"`)
+		el.Attr("method", f.method).Attr("action", f.action)
 	}
 
-	out.Write(`>`)
-
-	for _, inp := range f.Inputs {
-		out.Write(RenderInput(inp))
+	for _, child := range f.Children() {
+		el.Child(child)
 	}
 
-	// Render submit button in both SSR and WASM modes unless explicitly
-	// disabled via HideSubmit. Every form needs a way to submit; the dev can
-	// customize the label with SubmitLabel(text).
+	// Submit button
 	if !f.noSubmit {
-		label := f.submitLabel
-		if label == "" {
-			label = "Submit"
-		}
-		out.Write(`<button type="submit" id="`).Write(f.id).Write(`.submit">`).Write(label).Write(`</button>`)
+		btn := dom.NewElement("button").
+			Attr("type", "submit").
+			ID(f.id + ".submit")
+
+		btn.BindAttrBool("disabled", f.submitting)
+
+		btn.BindTextFunc(func() string {
+			if f.submitting.Get() {
+				label := f.submitLoadingLabel
+				if label == "" {
+					label = f.resolveSubmitLabel() + "..."
+				}
+				return label
+			}
+			return f.resolveSubmitLabel()
+		})
+
+		el.Child(btn)
 	}
 
-	out.Write("</form>")
-	return out.String()
+	// Bind submit event
+	el.On("submit", func(e dom.Event) {
+		e.PreventDefault()
+
+		// Sync all values from signals to struct
+		f.SyncValues(f.data)
+
+		// Validate all (final check)
+		if err := f.Validate(); err != nil {
+			return
+		}
+
+		if f.onSubmit != nil {
+			f.submitting.Set(true)
+			f.onSubmit(f.data, func(err error) {
+				f.submitting.Set(false)
+				if err == nil && !f.noResetOnSuccess {
+					f.reset()
+				}
+			})
+		}
+	})
+
+	return el
 }

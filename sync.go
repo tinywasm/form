@@ -16,15 +16,26 @@ func (f *Form) SyncValues(data fmt.Fielder) error {
 			continue
 		}
 
-		var values []string
-		if getter, ok := inp.(interface{ GetValues() []string }); ok {
-			values = getter.GetValues()
+		// Signal is the source of truth in WASM mode.
+		val := f.valueSignals[i].Get()
+
+		// Fallback only if we are somehow in SSR mode where signals might be empty
+		// but input state is populated (though f.Render() should handle this).
+		if val == "" && f.ssrMode {
+			if getter, ok := inp.(interface{ GetValues() []string }); ok {
+				vals := getter.GetValues()
+				if len(vals) > 0 {
+					val = vals[0]
+				}
+			}
 		}
+
+		values := []string{val}
 
 		ptr := pointers[idx]
 		field := schema[idx]
 
-		if len(values) == 0 {
+		if val == "" {
 			// Zero the field
 			zeroField(ptr, field.Type)
 			continue

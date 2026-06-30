@@ -1,34 +1,50 @@
-# Interactivity and Mounting
+# Interactivity and Reactive Binding
 
 > Summary in `README.md` under "WASM Event Flow". This file has additional details.
 
-## `OnMount()` — WASM Only (`mount.go`)
+## Signal-Bound Fields
 
-Called automatically by `tinywasm/dom` after the form is injected into the DOM.
+`tinywasm/form` uses a reactive binding model via `github.com/tinywasm/dom` signals. Unlike traditional imperative mounting where a form must "attach" listeners after being added to the DOM, this form is reactive by construction.
 
+Each field is bound to a `SignalString` for its value and another for its error state.
+
+```go
+// Simplified field binding in Render()
+in := dom.NewElement("input").
+    Bind(field.value).
+    On("input", func(e dom.Event) {
+        field.value.Set(e.TargetValue())
+        if err := field.input.Validate(field.value.Get()); err != nil {
+            field.err.Set(err.Error())
+        } else {
+            field.err.Set("")
+        }
+    })
+
+errSpan := dom.NewElement("span").
+    BindText(field.err).
+    BindClassFunc("tw-field-error--visible", func() bool {
+        return field.err.Get() != ""
+    })
 ```
-dom.Mount("root-id", myForm)
-  1. dom calls myForm.String() → injects HTML
-  2. dom calls myForm.OnMount()
-     → dom.Get(f.GetID()) → gets <form> element
-     → el.On("input",  onInput)   ← live sync per keystroke
-     → el.On("change", onInput)   ← for select/radio/checkbox
-     → el.On("submit", onSubmit)  ← intercepts form submit
-```
+
+## Advantages of Reactive Binding
+
+1. **IME & Cursor Safety**: Two-way `Bind` in `tinywasm/dom` is designed to be cursor-safe. It detects if the element is currently focused and active (e.g., during IME composition for accents or CJK characters) and avoids patching the `value` attribute if it matches the current signal value. This prevents cursor jumps and broken compositions.
+2. **Surgical Updates**: When a user types, only the specific error text node and CSS classes are patched in the DOM. The `<input>` node itself is never replaced or re-rendered.
+3. **No Lifecycle Hooks**: There is no `OnMount` or `OnUnmount`. The form is a `dom.Component` that provides a `Render() *dom.Element` method. The DOM tree it returns is already "alive" with signal bindings.
 
 ## Event Handlers
 
-**onInput** (input + change events):
-1. `e.TargetID()` → find matching `inp` in `f.Inputs`
-2. `inp.SetValues(e.TargetValue())`
-3. `inp.Validate(val)` — immediate feedback
+**Live Validation**:
+Triggered on the `input` event. It updates the field's value signal and performs validation, updating the error signal immediately.
 
-**onSubmit**:
+**Submission**:
+Triggered on the form's `submit` event.
 1. `e.PreventDefault()`
-2. `f.SyncValues(f.data)` — flush input values to struct
-3. `f.Validate()` — full validation (returns on first error)
-4. `f.onSubmit(f.data)` — user callback with populated struct
-
-## Why Centralized?
-
-One listener per form (not per input) = fewer closures = smaller WASM binary.
+2. `f.SyncValues(f.data)` — pulls current values from signals into the struct.
+3. `f.Validate()` — full validation check.
+4. `f.submitting.Set(true)` — toggles the submit button's loading state.
+5. `f.onSubmit(f.data, done)` — user callback.
+6. `done(err)` — called by user to signal completion.
+7. `f.submitting.Set(false)` and optional `f.reset()`.

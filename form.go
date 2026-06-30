@@ -23,6 +23,9 @@ type Form struct {
 	noSubmit           bool                              // True when the form should NOT render a submit button
 	onSubmit           func(fmt.Fielder, func(error))    // WASM submit callback
 	children           []dom.Component                   // Cached dom components (zero-alloc)
+	valueSignals       []*dom.SignalString               // One per input
+	errorSignals       []*dom.SignalString               // One per input
+	submitting         *dom.SignalBool                   // Global form submitting state
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -102,15 +105,18 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 	formID := parentID + "." + structName
 
 	f := &Form{
-		id:       formID,
-		parentID: parentID,
-		data:     data,
-		Inputs:   make([]input.Input, 0, len(schema)),
-		class:    globalClass,
-		method:   "POST",
-		action:   "/" + structName,
-		ssrMode:  false,
-		children: make([]dom.Component, 0, len(schema)),
+		id:           formID,
+		parentID:     parentID,
+		data:         data,
+		Inputs:       make([]input.Input, 0, len(schema)),
+		class:        globalClass,
+		method:       "POST",
+		action:       "/" + structName,
+		ssrMode:      false,
+		children:     make([]dom.Component, 0, len(schema)),
+		valueSignals: make([]*dom.SignalString, 0, len(schema)),
+		errorSignals: make([]*dom.SignalString, 0, len(schema)),
+		submitting:   dom.NewBool(false),
 	}
 
 	for i, field := range schema {
@@ -138,13 +144,21 @@ func New(parentID string, data fmt.Fielder) (*Form, error) {
 			}
 		}
 
-		// Bind current value to input
+		// Initial value
+		val := fmt.Convert(values[i]).String()
+
+		// Bind current value to input (still needed for SSR/initial state)
 		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
-			setter.SetValues(fmt.Convert(values[i]).String())
+			setter.SetValues(val)
 		}
 
+		vSig := dom.NewString(val)
+		eSig := dom.NewString("")
+
 		f.Inputs = append(f.Inputs, inp)
-		f.children = append(f.children, &fieldComponent{inp})
+		f.valueSignals = append(f.valueSignals, vSig)
+		f.errorSignals = append(f.errorSignals, eSig)
+		f.children = append(f.children, &fieldComponent{inp, vSig, eSig})
 		f.fieldIndices = append(f.fieldIndices, i)
 	}
 
@@ -187,21 +201,12 @@ func (f *Form) resolveSubmitLabel() string {
 }
 
 func (f *Form) reset() {
-	for _, inp := range f.Inputs {
-		id := inp.GetID()
-		// Clear value via Reference (preserves event listeners)
-		if ref, ok := dom.Get(id); ok {
-			ref.SetValue("")
-		}
+	for i, inp := range f.Inputs {
+		// Reset signals
+		f.valueSignals[i].Set("")
+		f.errorSignals[i].Set("")
 
-		// Clear error span
-		errID := inp.ErrorID()
-		if ref, ok := dom.Get(errID); ok {
-			ref.SetText("")
-			ref.SetAttr("class", "tw-field-error")
-		}
-
-		// Clear internal state
+		// Clear internal state (used by SSR/SyncValues if signals not available)
 		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
 			setter.SetValues("")
 		}
@@ -210,10 +215,19 @@ func (f *Form) reset() {
 
 // SetValues sets values for the input matching the given field name.
 func (f *Form) SetValues(fieldName string, values ...string) *Form {
-	inp := f.Input(fieldName)
-	if inp != nil {
-		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
-			setter.SetValues(values...)
+	for i, inp := range f.Inputs {
+		if getter, ok := inp.(interface{ FieldName() string }); ok {
+			if getter.FieldName() == fieldName {
+				val := ""
+				if len(values) > 0 {
+					val = values[0]
+				}
+				f.valueSignals[i].Set(val)
+				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+					setter.SetValues(values...)
+				}
+				break
+			}
 		}
 	}
 	return f

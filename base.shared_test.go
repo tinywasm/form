@@ -46,16 +46,16 @@ func TestForm_String_SSR_Shared(t *testing.T) {
 	html := f.String()
 
 	// Verify SSR specific attributes
-	if !fmt.Contains(html, `method="POST"`) {
-		t.Error("SSR form should contain method=\"POST\"")
+	if !fmt.Contains(html, `method='POST'`) {
+		t.Error("SSR form should contain method='POST'")
 	}
 
 	// Verify inputs are present
-	if !fmt.Contains(html, `name="Name"`) {
-		t.Error("SSR form should contain input name=\"Name\"")
+	if !fmt.Contains(html, `name='Name'`) {
+		t.Error("SSR form should contain input name='Name'")
 	}
-	if !fmt.Contains(html, `value="John Doe"`) {
-		t.Error("SSR form should contain value=\"John Doe\"")
+	if !fmt.Contains(html, `value='John Doe'`) {
+		t.Error("SSR form should contain value='John Doe'")
 	}
 }
 

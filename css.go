@@ -11,6 +11,12 @@ import "github.com/tinywasm/css"
 // Call from the project's css.go aggregate so assetmin picks it up.
 func RenderCSS() *css.Stylesheet {
 	return css.NewStylesheet(
+		css.Rule(".tw-field",
+			css.Display(css.Flex_),
+			css.FlexDirection(css.Column),
+			css.Gap(css.Px(4)),
+			css.Margin(css.Zero, css.Zero, css.Rem(1), css.Zero),
+		),
 		css.Rule(".tw-field-error",
 			css.Display(css.Block),
 			css.FontSize(css.TextSm),
