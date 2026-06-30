@@ -89,11 +89,15 @@ Sets CSS classes applied to all new forms.
 | `Validate() error` | Validates all inputs, returns first error |
 | `SyncValues(fmt.Fielder) error` | Copies input values back into the provided data |
 | `ValidateData(byte, fmt.Fielder) error` | Server-side validation (crudp.DataValidator) |
-| `OnSubmit(func(fmt.Fielder) error) *Form` | Sets WASM submit callback |
-| `OnMount()` | **WASM only** — sets up event delegation |
+| `OnSubmit(func(fmt.Fielder, func(error))) *Form` | Sets WASM submit callback |
+| `Render() *dom.Element` | **WASM only** — returns reactive DOM tree |
 | `Input(fieldName string) input.Input` | Returns input for a field name |
 | `SetOptions(fieldName, ...fmt.KeyValue) *Form` | Sets options for select/radio/datalist |
 | `SetValues(fieldName, ...string) *Form` | Sets value programmatically |
+
+### Reactive Rendering
+
+`Form` implements `dom.ViewRenderer`, providing a `Render() *dom.Element` method that returns a reactive DOM tree with signal-bound inputs. This ensures IME-safe live validation and surgical DOM updates without full re-renders.
 
 ### Namer Interface
 
@@ -109,14 +113,13 @@ If not implemented, defaults to `"form"`.
 
 ```
 dom.Mount("root", f)
-  -> f.String() injected into DOM
-  -> f.OnMount():
-      el.On("input",  fn) -> SetValues + Validate per input
-      el.On("change", fn) -> same (for select/radio/checkbox)
-      el.On("submit", fn) -> PreventDefault -> SyncValues(f.data) -> Validate -> onSubmit(f.data)
+  -> f.Render() returns a reactive dom.Element tree
+  -> Inputs are bound to signals via Bind()
+  -> Live validation updates error signals on "input"
+  -> Submit button state bound to submitting signal
 ```
 
-One listener per form (not per input) = fewer closures = smaller WASM binary.
+Reactive binding ensures IME/cursor safety during live validation.
 
 ## Standard Input Types
 
@@ -186,7 +189,6 @@ type Permitted struct {
 | `validate.go` | `Validate()` |
 | `validate_struct.go` | `ValidateData()` (crudp.DataValidator) |
 | `words.go` | Registers form UI words into fmt dictionary |
-| `mount.go` | `OnMount()`, `OnUnmount()` (wasm only) |
 | `render_input.go` | `RenderInput()` — renders any `input.Input` to HTML (owns `dom`/`html` imports) |
 | `input/interface.go` | `Input` interface (embeds `fmt.Widget` + metadata getters; no `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |

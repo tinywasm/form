@@ -3,6 +3,7 @@ package form
 import (
 	"testing"
 
+	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form/input"
 )
@@ -13,7 +14,7 @@ func Test_Render(t *testing.T) {
 		// ── Checkbox ─────────────────────────────────────────────────────────
 		{
 			t: "Checkbox", name: "renders checkbox input",
-			contain: `type="checkbox"`,
+			contain: `type='checkbox'`,
 		},
 
 		// ── Datalist ─────────────────────────────────────────────────────────
@@ -25,12 +26,12 @@ func Test_Render(t *testing.T) {
 		{
 			t: "Datalist", name: "contains option values",
 			opts:    opts12,
-			contain: `value="1"`,
+			contain: `value='1'`,
 		},
 		{
 			t: "Datalist", name: "links input to datalist via list attribute",
 			opts:    opts12,
-			contain: `list="`,
+			contain: `list='`,
 		},
 
 		// ── Radio ────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ func Test_Render(t *testing.T) {
 		{
 			t: "Radio", name: "renders male option value",
 			opts:    optsGender,
-			contain: `value="m"`,
+			contain: `value='m'`,
 		},
 		{
 			t: "Radio", name: "renders checked when value matches",
@@ -85,7 +86,7 @@ func Test_Render(t *testing.T) {
 		// ── Search ───────────────────────────────────────────────────────────
 		{
 			t: "Search", name: "renders search input",
-			contain: `type="search"`,
+			contain: `type='search'`,
 		},
 
 		// ── Text ─────────────────────────────────────────────────────────────
@@ -95,7 +96,7 @@ func Test_Render(t *testing.T) {
 		},
 		{
 			t: "Text", name: "has type text",
-			contain: `type="text"`,
+			contain: `type='text'`,
 		},
 	}
 
@@ -103,10 +104,20 @@ func Test_Render(t *testing.T) {
 		c := c
 		t.Run(c.t+"/"+c.name, func(t *testing.T) {
 			inp := buildInput(t, c.t, c.opts)
-			if setter, ok := inp.(interface{ SetValues(...string) }); ok && len(c.values) > 0 {
-				setter.SetValues(c.values...)
+			vSig := dom.NewString("")
+			if len(c.values) > 0 {
+				vSig.Set(c.values[0])
+				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
+					setter.SetValues(c.values...)
+				}
 			}
-			html := RenderInput(inp)
+			fc := &fieldComponent{
+				Input: inp,
+				value: vSig,
+				err:   dom.NewString(""),
+			}
+			el := fc.Render()
+			html := el.String()
 			if !fmt.Contains(html, c.contain) {
 				t.Errorf("RenderInput() missing %q\ngot: %s", c.contain, html)
 			}

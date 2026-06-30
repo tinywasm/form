@@ -20,7 +20,7 @@ For each field in `data.Schema()`:
 ## `(*Form).Validate()` — Validation Detail
 
 - Skips fields with `SkipValidation` set to true in the input.
-- Uses `GetSelectedValue()` to get current value per input.
+- Pulls values from reactive signals.
 - Calls `inp.Validate(val)` (promoted from `fmt.Widget`).
 - Returns the **first** error encountered.
 

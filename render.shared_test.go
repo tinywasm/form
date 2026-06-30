@@ -39,7 +39,7 @@ func runRenderTests(t *testing.T) {
 		f, _ := New("app", s)
 		html := f.String()
 
-		expectedID := `id="app.form.submit"`
+		expectedID := `id='app.form.submit'`
 		if !strings.Contains(html, expectedID) {
 			t.Errorf("Expected submit button ID not found in HTML: %s", html)
 		}

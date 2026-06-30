@@ -29,9 +29,9 @@ Input constructors take zero arguments and act as prototypes. `Clone(parentID, n
 ### 4. Rendering (`render.go`)
 `String()` builds: `<form id="..."> [method action if SSR] inputs [submit if SSR] </form>`
 
-### 5. WASM Interactivity (`mount.go`)
-`OnMount()` attaches delegated listeners:
-- `input`/`change` → Live sync and validation.
-- `submit` → `SyncValues(f.data)` → `Validate()` → `OnSubmit(f.data)`.
-
-One listener per form (not per input) = fewer closures = smaller WASM binary.
+### 5. Reactive Binding (`render.go`, `render_input.go`)
+Instead of imperative mounting, the form uses Signal-Bound fields for IME/cursor safety:
+- Each field has a `value` and `err` Signal.
+- `Bind(signal)` ensures two-way sync without breaking IME composition or jumping the cursor.
+- Live validation updates only the error text node and class, never re-rendering the input.
+- Submit button state (disabled/label) is bound to a `submitting` Signal.
