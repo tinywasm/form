@@ -1,5 +1,7 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import "github.com/tinywasm/fmt"
 
 // checkbox represents a boolean input field.
@@ -24,8 +26,8 @@ func (c *checkbox) Validate(value string) error {
 	return fmt.Err("Format", "Invalid")
 }
 
-// Clone satisfies fmt.Widget — Checkbox() returns Input which implements Widget.
-func (c *checkbox) Clone(parentID, name string) fmt.Widget {
+// Clone satisfies model.Widget — Checkbox() returns Input which implements Widget.
+func (c *checkbox) Clone(parentID, name string) model.Widget {
 	c2 := *c
 	c2.InitBase(parentID, name, "checkbox")
 	return &c2

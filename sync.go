@@ -1,12 +1,14 @@
 package form
 
+import "github.com/tinywasm/model"
+
 import (
 	"github.com/tinywasm/fmt"
 )
 
 // SyncValues copies all input values back into the bound struct
 // via the Fielder's Pointers() method.
-func (f *Form) SyncValues(data fmt.Fielder) error {
+func (f *Form) SyncValues(data model.Fielder) error {
 	pointers := data.Pointers()
 	schema := data.Schema()
 
@@ -47,21 +49,21 @@ func (f *Form) SyncValues(data fmt.Fielder) error {
 }
 
 // zeroField sets a field to its zero value via its pointer.
-func zeroField(ptr any, ft fmt.FieldType) {
+func zeroField(ptr any, ft model.FieldType) {
 	switch ft {
-	case fmt.FieldText:
+	case model.FieldText:
 		if p, ok := ptr.(*string); ok {
 			*p = ""
 		}
-	case fmt.FieldInt:
+	case model.FieldInt:
 		if p, ok := ptr.(*int64); ok {
 			*p = 0
 		}
-	case fmt.FieldFloat:
+	case model.FieldFloat:
 		if p, ok := ptr.(*float64); ok {
 			*p = 0
 		}
-	case fmt.FieldBool:
+	case model.FieldBool:
 		if p, ok := ptr.(*bool); ok {
 			*p = false
 		}
@@ -69,23 +71,23 @@ func zeroField(ptr any, ft fmt.FieldType) {
 }
 
 // writeField writes string values into a field via its pointer.
-func writeField(ptr any, ft fmt.FieldType, values []string) {
+func writeField(ptr any, ft model.FieldType, values []string) {
 	switch ft {
-	case fmt.FieldText:
+	case model.FieldText:
 		if p, ok := ptr.(*string); ok {
 			*p = values[0]
 		}
-	case fmt.FieldInt:
+	case model.FieldInt:
 		if p, ok := ptr.(*int64); ok {
 			val, _ := fmt.Convert(values[0]).Int64()
 			*p = val
 		}
-	case fmt.FieldFloat:
+	case model.FieldFloat:
 		if p, ok := ptr.(*float64); ok {
 			val, _ := fmt.Convert(values[0]).Float64()
 			*p = val
 		}
-	case fmt.FieldBool:
+	case model.FieldBool:
 		if p, ok := ptr.(*bool); ok {
 			val, _ := fmt.Convert(values[0]).Bool()
 			*p = val

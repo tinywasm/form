@@ -1,5 +1,7 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import "github.com/tinywasm/fmt"
 
 type rut struct{ Base }
@@ -72,7 +74,7 @@ func (r *rut) dvRut(rut int) string {
 }
 
 // Clone creates a new rut input with the given parentID and name.
-func (r *rut) Clone(parentID, name string) fmt.Widget {
+func (r *rut) Clone(parentID, name string) model.Widget {
 	c := *r
 	c.InitBase(parentID, name, "text")
 	return &c

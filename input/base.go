@@ -1,5 +1,7 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import (
 	"github.com/tinywasm/fmt"
 )
@@ -19,7 +21,7 @@ type Base struct {
 	Readonly       bool // HTML readonly attribute
 	SkipValidation bool // Whether to skip validation for this input
 	Attributes     []fmt.KeyValue
-	fmt.Permitted  // anonymous embed: promotes Letters, Numbers, Validate(), etc.
+	model.Permitted  // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
 
 // InitBase initializes the base fields and constructs the unique ID.
@@ -117,10 +119,10 @@ func (b *Base) SetID(id string) {
 	b.id = id
 }
 
-// Type satisfies fmt.Widget.Type(). Returns the semantic input type name.
+// Type satisfies model.Widget.Type(). Returns the semantic input type name.
 func (b *Base) Type() string { return b.htmlName }
 
-// Validate satisfies fmt.Widget.Validate().
+// Validate satisfies model.Widget.Validate().
 // Concrete structs embedding Base can override this to provide specialized validation.
 func (b *Base) Validate(value string) error {
 	if value == "" && b.Required {

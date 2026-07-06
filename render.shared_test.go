@@ -1,19 +1,20 @@
 package form
 
+import "github.com/tinywasm/model"
+
 import (
+	"github.com/tinywasm/form/input"
 	"strings"
 	"testing"
-	"github.com/tinywasm/fmt"
-	"github.com/tinywasm/form/input"
 )
 
 type renderStruct struct {
-	fmt.Fielder
+	model.Fielder
 	Nombre string `input:"required"`
 }
 
-func (s *renderStruct) Schema() []fmt.Field {
-	return []fmt.Field{
+func (s *renderStruct) Schema() []model.Field {
+	return []model.Field{
 		{Name: "nombre", NotNull: true, Widget: input.Text()},
 	}
 }

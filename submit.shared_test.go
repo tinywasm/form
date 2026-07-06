@@ -1,18 +1,19 @@
 package form
 
+import "github.com/tinywasm/model"
+
 import (
-	"testing"
-	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form/input"
+	"testing"
 )
 
 type submitStruct struct {
-	fmt.Fielder
+	model.Fielder
 	Nombre string `input:"required"`
 }
 
-func (s *submitStruct) Schema() []fmt.Field {
-	return []fmt.Field{
+func (s *submitStruct) Schema() []model.Field {
+	return []model.Field{
 		{Name: "nombre", NotNull: true, Widget: input.Text()},
 	}
 }
@@ -26,7 +27,7 @@ func runSubmitTests(t *testing.T) {
 		f, _ := New("app", s)
 
 		called := false
-		f.OnSubmit(func(data fmt.Fielder, done func(error)) {
+		f.OnSubmit(func(data model.Fielder, done func(error)) {
 			called = true
 			done(nil)
 		})
@@ -51,7 +52,7 @@ func runSubmitTests(t *testing.T) {
 		f.SetValues("nombre", "Valor Original")
 
 		doneCalled := false
-		f.onSubmit = func(data fmt.Fielder, done func(error)) {
+		f.onSubmit = func(data model.Fielder, done func(error)) {
 			done(nil)
 		}
 		f.onSubmit(f.data, func(err error) {

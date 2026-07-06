@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/tinywasm/dom"
-	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/model"
 )
 
 type mockFielder struct {
 }
 
-func (m *mockFielder) Schema() []fmt.Field {
-	return []fmt.Field{}
+func (m *mockFielder) Schema() []model.Field {
+	return []model.Field{}
 }
 
 func (m *mockFielder) Pointers() []any {

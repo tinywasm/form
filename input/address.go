@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type address struct{ Base }
 
@@ -19,7 +20,7 @@ func Address() Input {
 }
 
 // Clone creates a new Address input with the given parentID and name.
-func (a *address) Clone(parentID, name string) fmt.Widget {
+func (a *address) Clone(parentID, name string) model.Widget {
 	c := *a
 	c.InitBase(parentID, name, "text")
 	return &c

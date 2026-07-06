@@ -1,5 +1,7 @@
 package form_test
 
+import "github.com/tinywasm/model"
+
 import (
 	"testing"
 
@@ -99,8 +101,8 @@ type CustomUser struct {
 	Special string
 }
 
-func (u *CustomUser) Schema() []fmt.Field {
-	return []fmt.Field{{Name: "Special", Type: fmt.FieldText, Widget: input.Text()}}
+func (u *CustomUser) Schema() []model.Field {
+	return []model.Field{{Name: "Special", Type: model.FieldText, Widget: input.Text()}}
 }
 func (u *CustomUser) Values() []any    { return []any{u.Special} }
 func (u *CustomUser) Pointers() []any  { return []any{&u.Special} }

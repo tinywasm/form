@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type search_ struct{ Base }
 
@@ -17,7 +18,7 @@ func Search() Input {
 }
 
 // Clone creates a new Search input with the given parentID and name.
-func (s *search_) Clone(parentID, name string) fmt.Widget {
+func (s *search_) Clone(parentID, name string) model.Widget {
 	c := *s
 	c.InitBase(parentID, name, "search")
 	return &c

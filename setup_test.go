@@ -1,7 +1,8 @@
 package form_test
 
+import "github.com/tinywasm/model"
+
 import (
-	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
 	"github.com/tinywasm/form/input"
 )
@@ -16,14 +17,14 @@ type User struct {
 	Address  string
 }
 
-func (u *User) Schema() []fmt.Field {
-	return []fmt.Field{
-		{Name: "Name", Type: fmt.FieldText, NotNull: true, Widget: input.Text()},
-		{Name: "Email", Type: fmt.FieldText, NotNull: true, Widget: input.Email()},
-		{Name: "Password", Type: fmt.FieldText, NotNull: true, Widget: input.Password()},
-		{Name: "Gender", Type: fmt.FieldText, Widget: input.Gender()},
-		{Name: "Role", Type: fmt.FieldText, Widget: input.Select()},
-		{Name: "Address", Type: fmt.FieldText, Widget: input.Address()},
+func (u *User) Schema() []model.Field {
+	return []model.Field{
+		{Name: "Name", Type: model.FieldText, NotNull: true, Widget: input.Text()},
+		{Name: "Email", Type: model.FieldText, NotNull: true, Widget: input.Email()},
+		{Name: "Password", Type: model.FieldText, NotNull: true, Widget: input.Password()},
+		{Name: "Gender", Type: model.FieldText, Widget: input.Gender()},
+		{Name: "Role", Type: model.FieldText, Widget: input.Select()},
+		{Name: "Address", Type: model.FieldText, Widget: input.Address()},
 	}
 }
 

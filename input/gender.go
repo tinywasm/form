@@ -1,5 +1,7 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import "github.com/tinywasm/fmt"
 
 type gender struct{ Base }
@@ -19,7 +21,7 @@ func Gender() Input {
 }
 
 // Clone creates a new Gender input with the given parentID and name.
-func (g *gender) Clone(parentID, name string) fmt.Widget {
+func (g *gender) Clone(parentID, name string) model.Widget {
 	c := *g
 	c.InitBase(parentID, name, "radio")
 	return &c

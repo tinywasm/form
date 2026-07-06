@@ -1,5 +1,7 @@
 package form
 
+import "github.com/tinywasm/model"
+
 import (
 	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
@@ -10,7 +12,7 @@ import (
 type Form struct {
 	id           string
 	parentID     string // Parent element ID where the form is mounted
-	data         fmt.Fielder
+	data         model.Fielder
 	Inputs       []input.Input
 	fieldIndices []int                   // Pre-computed struct field index per Input (-1 if not found)
 	class        string                  // CSS class(es)
@@ -21,7 +23,7 @@ type Form struct {
 	submitLoadingLabel string                            // Label while submitting (default: label + "...")
 	noResetOnSuccess   bool                              // Disable auto-reset after successful submit
 	noSubmit           bool                              // True when the form should NOT render a submit button
-	onSubmit           func(fmt.Fielder, func(error))    // WASM submit callback
+	onSubmit           func(model.Fielder, func(error))    // WASM submit callback
 	children           []dom.Component                   // Cached dom components (zero-alloc)
 	valueSignals       []*dom.SignalString               // One per input
 	errorSignals       []*dom.SignalString               // One per input
@@ -49,7 +51,7 @@ func (f *Form) ParentID() string {
 }
 
 // OnSubmit sets the callback for form submission in WASM mode.
-func (f *Form) OnSubmit(fn func(fmt.Fielder, func(error))) *Form {
+func (f *Form) OnSubmit(fn func(model.Fielder, func(error))) *Form {
 	f.onSubmit = fn
 	return f
 }
@@ -87,7 +89,7 @@ type Namer interface {
 	FormName() string
 }
 
-func resolveStructName(data fmt.Fielder) string {
+func resolveStructName(data model.Fielder) string {
 	if n, ok := data.(Namer); ok {
 		return n.FormName()
 	}
@@ -97,9 +99,9 @@ func resolveStructName(data fmt.Fielder) string {
 // New creates a new Form from a Fielder.
 // parentID: ID of the parent DOM element where the form will be mounted.
 // Returns an error if any exported field has no matching registered input.
-func New(parentID string, data fmt.Fielder) (*Form, error) {
+func New(parentID string, data model.Fielder) (*Form, error) {
 	schema := data.Schema()
-	values := fmt.ReadValues(schema, data.Pointers())
+	values := model.ReadValues(schema, data.Pointers())
 
 	structName := resolveStructName(data)
 	formID := parentID + "." + structName

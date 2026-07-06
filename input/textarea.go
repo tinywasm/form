@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type textarea struct{ Base }
 
@@ -20,7 +21,7 @@ func Textarea() Input {
 }
 
 // Clone creates a new textarea input with the given parentID and name.
-func (t *textarea) Clone(parentID, name string) fmt.Widget {
+func (t *textarea) Clone(parentID, name string) model.Widget {
 	c := *t
 	c.InitBase(parentID, name, "textarea")
 	return &c

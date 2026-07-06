@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type radio struct{ Base }
 
@@ -15,7 +16,7 @@ func Radio() Input {
 }
 
 // Clone creates a new Radio input.
-func (r *radio) Clone(parentID, name string) fmt.Widget {
+func (r *radio) Clone(parentID, name string) model.Widget {
 	c := *r
 	c.InitBase(parentID, name, "radio")
 	return &c

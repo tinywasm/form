@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type email struct{ Base }
 
@@ -17,7 +18,7 @@ func Email() Input {
 }
 
 // Clone creates a new Email input with the given parentID and name.
-func (e *email) Clone(parentID, name string) fmt.Widget {
+func (e *email) Clone(parentID, name string) model.Widget {
 	c := *e
 	c.InitBase(parentID, name, "email")
 	return &c

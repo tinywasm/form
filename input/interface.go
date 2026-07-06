@@ -1,12 +1,14 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import (
 	"github.com/tinywasm/fmt"
 )
 
 // Input interface defines the behavior for all form input types.
 type Input interface {
-	fmt.Widget // Type(), Validate(), Clone(parentID, name) — semantic type contract
+	model.Widget // Type(), Validate(), Clone(parentID, name) — semantic type contract
 	FieldName() string
 	SetRequired(bool)
 	AddAttribute(key, value string)

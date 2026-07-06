@@ -1,5 +1,7 @@
 package input
 
+import "github.com/tinywasm/model"
+
 import "github.com/tinywasm/fmt"
 
 type ip struct{ Base }
@@ -40,8 +42,8 @@ func (i *ip) Validate(value string) error {
 	return nil
 }
 
-// Clone satisfies fmt.Widget — IP() returns Input which implements Widget.
-func (i *ip) Clone(parentID, name string) fmt.Widget {
+// Clone satisfies model.Widget — IP() returns Input which implements Widget.
+func (i *ip) Clone(parentID, name string) model.Widget {
 	c := *i
 	c.InitBase(parentID, name, "text")
 	return &c

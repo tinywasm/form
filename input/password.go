@@ -1,6 +1,7 @@
 package input
 
-import "github.com/tinywasm/fmt"
+import "github.com/tinywasm/model"
+
 
 type password struct{ Base }
 
@@ -18,7 +19,7 @@ func Password() Input {
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Clone(parentID, name string) fmt.Widget {
+func (p *password) Clone(parentID, name string) model.Widget {
 	c := *p
 	c.InitBase(parentID, name, "password")
 	return &c

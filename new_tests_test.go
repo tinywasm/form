@@ -1,9 +1,10 @@
 package form_test
 
+import "github.com/tinywasm/model"
+
 import (
 	"testing"
 
-	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
 	"github.com/tinywasm/form/input"
 )
@@ -14,11 +15,11 @@ type testUser struct {
 	email string
 }
 
-func (u *testUser) Schema() []fmt.Field {
-	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldText, DB: &fmt.FieldDB{PK: true}, Widget: input.Text()},
-		{Name: "name", Type: fmt.FieldText, NotNull: true, Widget: input.Text()},
-		{Name: "email", Type: fmt.FieldText, NotNull: true, Widget: input.Email()},
+func (u *testUser) Schema() []model.Field {
+	return []model.Field{
+		{Name: "id", Type: model.FieldText, DB: &model.FieldDB{PK: true}, Widget: input.Text()},
+		{Name: "name", Type: model.FieldText, NotNull: true, Widget: input.Text()},
+		{Name: "email", Type: model.FieldText, NotNull: true, Widget: input.Email()},
 	}
 }
 func (u *testUser) Values() []any    { return []any{u.id, u.name, u.email} }
@@ -45,9 +46,9 @@ type autoUser struct {
 	id int64
 }
 
-func (u *autoUser) Schema() []fmt.Field {
-	return []fmt.Field{
-		{Name: "id", Type: fmt.FieldInt, DB: &fmt.FieldDB{PK: true, AutoInc: true}},
+func (u *autoUser) Schema() []model.Field {
+	return []model.Field{
+		{Name: "id", Type: model.FieldInt, DB: &model.FieldDB{PK: true, AutoInc: true}},
 	}
 }
 func (u *autoUser) Values() []any    { return []any{u.id} }
