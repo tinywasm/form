@@ -1,12 +1,48 @@
-package form
+package form_test
 
 import (
 	"testing"
 
-	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/form"
 	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/model"
 )
+
+// kindFixture is a one-field Fielder used to render a single input kind
+// through the real form pipeline.
+type kindFixture struct {
+	inp     input.Input
+	valText string
+	valInt  int64
+	valBool bool
+}
+
+func (k *kindFixture) Schema() []model.Field {
+	return []model.Field{{Name: "tfield", Type: k.inp}}
+}
+
+func (k *kindFixture) Pointers() []any {
+	switch k.inp.Storage() {
+	case model.FieldInt:
+		return []any{&k.valInt}
+	case model.FieldBool:
+		return []any{&k.valBool}
+	default:
+		return []any{&k.valText}
+	}
+}
+
+func (k *kindFixture) Values() []any {
+	switch k.inp.Storage() {
+	case model.FieldInt:
+		return []any{k.valInt}
+	case model.FieldBool:
+		return []any{k.valBool}
+	default:
+		return []any{k.valText}
+	}
+}
 
 // Test_Render verifies String output for inputs with custom rendering.
 func Test_Render(t *testing.T) {
@@ -81,8 +117,6 @@ func Test_Render(t *testing.T) {
 			contain: `hello world`,
 		},
 
-		// ── Rut ──────────────────────────────────────────────────────────────
-
 		// ── Search ───────────────────────────────────────────────────────────
 		{
 			t: "Search", name: "renders search input",
@@ -103,21 +137,19 @@ func Test_Render(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.t+"/"+c.name, func(t *testing.T) {
-			inp := buildInput(t, c.t, c.opts)
-			vSig := dom.NewString("")
+			inp := buildInput(t, c.t)
+			fx := &kindFixture{inp: inp}
+			f, err := form.New("tid", fx)
+			if err != nil {
+				t.Fatalf("form.New failed: %v", err)
+			}
+			if len(c.opts) > 0 {
+				f.SetOptions("tfield", c.opts...)
+			}
 			if len(c.values) > 0 {
-				vSig.Set(c.values[0])
-				if setter, ok := inp.(interface{ SetValues(...string) }); ok {
-					setter.SetValues(c.values...)
-				}
+				f.SetValues("tfield", c.values...)
 			}
-			fc := &fieldComponent{
-				Input: inp,
-				value: vSig,
-				err:   dom.NewString(""),
-			}
-			el := fc.Render()
-			html := el.String()
+			html := f.String()
 			if !fmt.Contains(html, c.contain) {
 				t.Errorf("RenderInput() missing %q\ngot: %s", c.contain, html)
 			}
@@ -139,9 +171,8 @@ var opts12 = []fmt.KeyValue{{Key: "1", Value: "Admin"}, {Key: "2", Value: "Edito
 var optsGender = []fmt.KeyValue{{Key: "m", Value: "Male"}, {Key: "f", Value: "Female"}}
 
 // buildInput creates a fresh input instance by kind.
-func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
+func buildInput(t *testing.T, kind string) input.Input {
 	t.Helper()
-	id, name := "tid", "tfield"
 	var inp input.Input
 	switch kind {
 	case "Address":
@@ -149,11 +180,7 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
 	case "Checkbox":
 		inp = input.Checkbox()
 	case "Datalist":
-		dl := input.Datalist()
-		if len(opts) > 0 {
-			dl.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
-		}
-		inp = dl
+		inp = input.Datalist()
 	case "Date":
 		inp = input.Date()
 	case "Email":
@@ -161,11 +188,7 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
 	case "Filepath":
 		inp = input.Filepath()
 	case "Gender":
-		g := input.Gender()
-		if len(opts) > 0 {
-			g.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
-		}
-		inp = g
+		inp = input.Gender()
 	case "Hour":
 		inp = input.Hour()
 	case "IP":
@@ -177,21 +200,13 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
 	case "Phone":
 		inp = input.Phone()
 	case "Radio":
-		r := input.Radio()
-		if len(opts) > 0 {
-			r.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
-		}
-		inp = r
+		inp = input.Radio()
 	case "Rut":
 		inp = input.Rut()
 	case "Search":
 		inp = input.Search()
 	case "Select":
-		s := input.Select()
-		if len(opts) > 0 {
-			s.(interface{ SetOptions(...fmt.KeyValue) }).SetOptions(opts...)
-		}
-		inp = s
+		inp = input.Select()
 	case "Text":
 		inp = input.Text()
 	case "Textarea":
@@ -200,5 +215,5 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
 		t.Fatalf("unknown input type: %q", kind)
 		return nil
 	}
-	return inp.Clone(id, name)
+	return inp
 }

@@ -172,6 +172,9 @@ The library ships structure, the project owns the look (CSS-first doctrine):
 3. **`form.SetGlobalClass("my-app-form")`** — adds classes to every `<form>`
    created afterwards, useful for scoping: `.my-app-form .tw-field { ... }`.
 
+4. **`f.SetClass("my-form")`** — appends classes to a specific form instance
+   on top of any global classes. Chainable.
+
 ## Built-in Input Types
 
 18 types in `input/` ([full reference](docs/STANDARD_TYPES.md)):
@@ -190,7 +193,8 @@ The library ships structure, the project owns the look (CSS-first doctrine):
 
 Need one that isn't here? **Custom inputs** live in your own package: embed
 `input.Base`, configure the `Permitted` rules, override `Validate` if needed.
-Full pattern: [input/README.md](input/README.md).
+If your input needs custom markup, implement the `form.Renderer` capability
+interface — see [input/README.md](input/README.md).
 
 ## API Reference
 
@@ -206,8 +210,10 @@ where the name comes from the optional `Namer` interface
 |--------|-------------|
 | `String() string` | Generates form HTML |
 | `Render() *dom.Element` | **WASM** — reactive DOM tree (`dom.ViewRenderer`) |
+| `Submit() error` | Runs sync + validate + OnSubmit callback programmatically; returns first validation error |
 | `SetSSR(bool) *Form` | SSR mode: adds `method`/`action` attributes |
 | `OnSubmit(func(model.Fielder, func(error))) *Form` | WASM submit callback |
+| `SetClass(...string) *Form` | Appends CSS classes to this form (on top of SetGlobalClass) |
 | `Validate() error` | Validates all inputs, returns first error |
 | `SyncValues(model.Fielder) error` | Copies input values back into the data struct |
 | `ValidateData(byte, model.Fielder) error` | Server-side validation (crudp.DataValidator) |

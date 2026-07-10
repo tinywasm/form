@@ -118,6 +118,29 @@ The custom input renders with the generic markup for its `htmlName`
 `checkbox` → bool, else text); override `Storage()` on your struct if your
 kind needs a different mapping.
 
+### Custom markup (Renderer)
+
+If your input needs a special UI (e.g. a color picker, a file uploader, or a
+composite widget), implement the `form.Renderer` interface in your struct.
+The `form` package will call this instead of its default switch:
+
+```go
+import (
+    "github.com/tinywasm/dom"
+    "github.com/tinywasm/form"
+)
+
+func (m *myInput) RenderInput(value *dom.SignalString, onInput func(string)) *dom.Element {
+    el := dom.NewElement("div").Class("my-custom-widget")
+    // ... build your UI, bind 'value' signal for updates
+    // ... call 'onInput(newValue)' when the user interacts
+    return el
+}
+```
+
+The `form.Renderer` interface lives in the root `form` package because it
+references `dom.Element`; the `input` package remains dom-free by contract.
+
 ### Base Available Methods
 
 | Method | Purpose |
