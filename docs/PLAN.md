@@ -42,6 +42,24 @@ pattern.
   (`//go:build !wasm`), `x.front_test.go` (`//go:build wasm`).
 - Do NOT touch `docs/CHECK_PLAN.md` if present; never run `gopush`/`codejob`.
 
+## Stage 0 — delete the `//ormc:storage` directives (no gate; run first)
+
+The working tree carries `//ormc:storage <type>` comment directives above
+every `input.*` constructor (unpublished phase-B work). That mechanism was
+REJECTED (harness doctrine, `tinywasm/docs/ARNES_DE_CONSTRUCCION.md`): a
+comment is prose the compiler cannot verify — it duplicates `Storage()` and
+can silently contradict it. The ormc generator now resolves storage by
+EXECUTING each kind's real `Storage()` through a temporary dependency probe
+(see `ormc/docs/PLAN.md` stage 2) — no form-side artifact is needed at all.
+
+Changes (comment/doc cleanup only — no behavior change):
+
+- DELETE every `//ormc:storage` comment in `input/*.go`
+  (`grep -rn "ormc:storage" .` must end empty).
+- `docs/IMPLEMENTATION.md` ("Adding a New Built-in Input"): remove the
+  directive step (current step 2) and renumber. Implementing `model.Kind`
+  is all a kind needs — ormc extracts storage from the compiled contract.
+
 ## Stage 1 — public `Submit() error` in `form.go`; `Render()` delegates
 
 The submit pipeline currently lives inline in the DOM event handler
@@ -352,11 +370,14 @@ All `package form_test`, public API only:
 6. `grep -rn "package form$" *.go` at module root matches only non-test files.
 7. `gotest ./...` green (native + wasm); README, docs/API.md and
    input/README.md updated per Stage 7.
+8. Stage 0: `grep -rn "ormc:storage" .` empty (code and
+   `docs/IMPLEMENTATION.md`); no other file changed by that stage.
 
 ## Stages
 
 | Stage | File(s) | Action |
 |---|---|---|
+| 0 | `input/*.go`, `docs/IMPLEMENTATION.md` | delete every `//ormc:storage` comment (mechanism rejected; ormc probes `Storage()` directly) |
 | 1 | `form.go`, `render.go` | add `Submit() error`; handler delegates |
 | 2 | `form.go` | add `SetClass(...string) *Form` (append semantics) |
 | 3 | `render_input.go` | `Renderer` interface + capability check in `fieldComponent.Render()` |
