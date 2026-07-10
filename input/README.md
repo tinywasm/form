@@ -54,31 +54,36 @@ found := fmt.Contains(haystack, needle)
 Constructors take **zero arguments** and return stateless prototypes. The form layer calls `Clone(parentID, name)` to create positioned instances that preserve all configuration.
 
 ```go
-// Schema definition (ormc generates this)
-var schema = []fmt.Field{
-    {Name: "email", Type: fmt.FieldText, Widget: input.Email()},
+// Schema definition (ormc generates this).
+// input.* kinds get a form input + validation; model.* base kinds
+// (e.g. model.Text()) validate only and are never rendered.
+var schema = []model.Field{
+    {Name: "email", Type: input.Email(), NotNull: true},
 }
 
-// form.New calls Clone internally:
-// field.Widget.Clone(formID, fieldName) → positioned input with id, name, HTML attributes
+// form.New calls Clone internally, for fields whose Type implements input.Input:
+// field.Type.(input.Input).Clone(formID, fieldName) → positioned input with id, name, HTML attributes
 ```
 
 ## Creating a Custom Input (embedding Base)
 
-All inputs share the same pattern: embed `Base`, configure `Permitted` rules, implement the `Input` interface.
+All inputs share the same pattern: embed `Base`, configure `Permitted` rules, implement the `Input` interface. Custom inputs can live in your own package — `Base`, `InitBase` and all setters are exported.
 
 ```go
-package input
+package myapp
 
-import "github.com/tinywasm/fmt"
+import (
+    "github.com/tinywasm/fmt"
+    "github.com/tinywasm/form/input"
+)
 
 // myInput is a custom input that only allows lowercase hex characters.
 type myInput struct {
-    Base
+    input.Base
 }
 
 // MyInput creates a prototype — no arguments.
-func MyInput() Input {
+func MyInput() input.Input {
     m := &myInput{}
     m.Letters = true
     m.Numbers = true
@@ -97,16 +102,21 @@ func (m *myInput) Validate(value string) error {
             return fmt.Err("Character", "Invalid")
         }
     }
-    return m.Permitted.Validate(m.name, value)
+    return m.Permitted.Validate(m.FieldName(), value)
 }
 
 // Clone creates a positioned copy preserving all configuration.
-func (m *myInput) Clone(parentID, name string) model.Kind {
+func (m *myInput) Clone(parentID, name string) input.Input {
     c := *m
     c.InitBase(parentID, name, "text")
     return &c
 }
 ```
+
+The custom input renders with the generic markup for its `htmlName`
+(`"text"` above). Storage defaults by `htmlName` (`number` → int,
+`checkbox` → bool, else text); override `Storage()` on your struct if your
+kind needs a different mapping.
 
 ### Base Available Methods
 

@@ -9,6 +9,7 @@ package input
 type address struct{ Base }
 
 // Address creates a new Address input instance.
+//ormc:storage text
 func Address() Input {
 	a := &address{}
 	a.Letters = true

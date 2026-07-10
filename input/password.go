@@ -9,6 +9,7 @@ package input
 type password struct{ Base }
 
 // Password creates a new Password input instance.
+//ormc:storage text
 func Password() Input {
 	p := &password{}
 	p.Letters = true

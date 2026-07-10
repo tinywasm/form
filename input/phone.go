@@ -9,6 +9,7 @@ package input
 type phone struct{ Base }
 
 // Phone creates a new phone input instance.
+//ormc:storage text
 func Phone() Input {
 	p := &phone{}
 	p.Numbers = true

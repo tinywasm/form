@@ -200,5 +200,5 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) input.Input {
 		t.Fatalf("unknown input type: %q", kind)
 		return nil
 	}
-	return inp.Clone(id, name).(input.Input)
+	return inp.Clone(id, name)
 }

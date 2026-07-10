@@ -9,6 +9,7 @@ package input
 type search_ struct{ Base }
 
 // Search creates a new Search input instance.
+//ormc:storage text
 func Search() Input {
 	s := &search_{}
 	s.Letters = true

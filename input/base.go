@@ -134,9 +134,6 @@ func (b *Base) Storage() model.FieldType {
 	}
 }
 
-// Type returns the semantic input type name.
-func (b *Base) Type() string { return b.htmlName }
-
 // Validate satisfies model.Kind.Validate().
 // Concrete structs embedding Base can override this to provide specialized validation.
 func (b *Base) Validate(value string) error {

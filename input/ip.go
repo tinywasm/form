@@ -10,6 +10,7 @@ import "github.com/tinywasm/fmt"
 type ip struct{ Base }
 
 // IP creates a new IP input instance.
+//ormc:storage text
 func IP() Input {
 	i := &ip{}
 	i.Numbers = true
@@ -45,7 +46,7 @@ func (i *ip) Validate(value string) error {
 	return nil
 }
 
-// Clone satisfies model.Widget — IP() returns Input which implements Widget.
+// Clone satisfies input.Input — IP() returns Input which implements it.
 func (i *ip) Clone(parentID, name string) Input {
 	c := *i
 	c.InitBase(parentID, name, "text")

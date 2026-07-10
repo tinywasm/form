@@ -10,6 +10,7 @@ import "github.com/tinywasm/fmt"
 type date struct{ Base }
 
 // Date creates a new date input instance.
+//ormc:storage text
 func Date() Input {
 	d := &date{}
 	d.Numbers = true

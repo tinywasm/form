@@ -10,6 +10,7 @@ import "github.com/tinywasm/fmt"
 type datalist struct{ Base }
 
 // Datalist creates a new datalist input instance.
+//ormc:storage text
 func Datalist() Input {
 	dl := &datalist{}
 	dl.Base.InitBase("", "", "datalist")

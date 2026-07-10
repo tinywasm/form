@@ -1,9 +1,8 @@
 package form
 
-import "github.com/tinywasm/model"
-
 import (
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/model"
 )
 
 // SyncValues copies all input values back into the bound struct

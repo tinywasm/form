@@ -10,6 +10,7 @@ import "github.com/tinywasm/fmt"
 type rut struct{ Base }
 
 // Rut creates a new RUT input instance.
+//ormc:storage text
 func Rut() Input {
 	r := &rut{}
 	r.Numbers = true
