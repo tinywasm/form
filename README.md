@@ -148,10 +148,13 @@ The library ships structure, the project owns the look (CSS-first doctrine):
    form at once.
 
 2. **`RenderCSS()`** (`!wasm`) — returns the base styles as an additive
-   `css.Stylesheet`. Aggregate it from your project's CSS entry point — by
-   convention `config/css.go` at the project root — so `assetmin` emits it
-   with the initial HTML; then override/extend the `tw-*` rules in your own
-   stylesheet:
+   `css.Stylesheet`. You don't wire it manually: the
+   [tinywasm](https://github.com/tinywasm/app) SSR pipeline discovers
+   package-level `RenderCSS()` functions in your imports and bundles them
+   into the initial HTML automatically. Your overrides live in the project's
+   CSS entry point — by convention `config/css.go` at the project root —
+   where `RootCSS()` declares token overrides and your own rules win the
+   cascade:
 
    ```go
    // config/css.go
@@ -159,15 +162,18 @@ The library ships structure, the project owns the look (CSS-first doctrine):
 
    package config
 
-   import "github.com/tinywasm/form"
+   import "github.com/tinywasm/css"
 
-   func RenderCSS() *css.Stylesheet {
-       return css.Merge(
-           form.RenderCSS(),
-           // ... other packages' contributions + your overrides
+   func RootCSS() *css.Stylesheet {
+       return css.Root(
+           css.Declare(css.ColorPrimary, "#FF6B35"),
+           // ...your theme tokens; add Rule(".tw-field", ...) overrides here too
        )
    }
    ```
+
+   See [tinywasm/css](https://github.com/tinywasm/css) for the token/theming
+   contract.
 
 3. **`form.SetGlobalClass("my-app-form")`** — adds classes to every `<form>`
    created afterwards, useful for scoping: `.my-app-form .tw-field { ... }`.
