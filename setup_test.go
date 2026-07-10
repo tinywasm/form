@@ -19,12 +19,12 @@ type User struct {
 
 func (u *User) Schema() []model.Field {
 	return []model.Field{
-		{Name: "Name", Type: model.FieldText, NotNull: true, Widget: input.Text()},
-		{Name: "Email", Type: model.FieldText, NotNull: true, Widget: input.Email()},
-		{Name: "Password", Type: model.FieldText, NotNull: true, Widget: input.Password()},
-		{Name: "Gender", Type: model.FieldText, Widget: input.Gender()},
-		{Name: "Role", Type: model.FieldText, Widget: input.Select()},
-		{Name: "Address", Type: model.FieldText, Widget: input.Address()},
+		{Name: "Name", Type: input.Text(), NotNull: true},
+		{Name: "Email", Type: input.Email(), NotNull: true},
+		{Name: "Password", Type: input.Password(), NotNull: true},
+		{Name: "Gender", Type: input.Gender()},
+		{Name: "Role", Type: input.Text()},
+		{Name: "Address", Type: input.Address()},
 	}
 }
 

@@ -14,7 +14,7 @@ type submitStruct struct {
 
 func (s *submitStruct) Schema() []model.Field {
 	return []model.Field{
-		{Name: "nombre", NotNull: true, Widget: input.Text()},
+		{Name: "nombre", NotNull: true, Type: input.Text()},
 	}
 }
 

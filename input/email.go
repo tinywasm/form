@@ -1,6 +1,9 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type email struct{ Base }
@@ -18,7 +21,7 @@ func Email() Input {
 }
 
 // Clone creates a new Email input with the given parentID and name.
-func (e *email) Clone(parentID, name string) model.Widget {
+func (e *email) Clone(parentID, name string) Input {
 	c := *e
 	c.InitBase(parentID, name, "email")
 	return &c

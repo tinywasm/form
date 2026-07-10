@@ -1,6 +1,9 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
@@ -33,7 +36,7 @@ func (h *hour) Validate(value string) error {
 }
 
 // Clone satisfies model.Widget — Hour() returns Input which implements Widget.
-func (h *hour) Clone(parentID, name string) model.Widget {
+func (h *hour) Clone(parentID, name string) Input {
 	c := *h
 	c.InitBase(parentID, name, "time")
 	return &c

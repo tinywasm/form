@@ -1,6 +1,9 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
@@ -26,8 +29,8 @@ func (dl *datalist) Validate(value string) error {
 	return fmt.Err("Value", value, "NotAllowed", "in", dl.name)
 }
 
-// Clone satisfies model.Widget — Datalist() returns Input which implements Widget.
-func (dl *datalist) Clone(parentID, name string) model.Widget {
+// Clone satisfies Input.
+func (dl *datalist) Clone(parentID, name string) Input {
 	c := *dl
 	c.InitBase(parentID, name, "datalist")
 	return &c

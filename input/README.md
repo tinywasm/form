@@ -1,7 +1,7 @@
 # Input Types
 
 This package contains all input implementations for `tinywasm/form`.
-Each input implements `fmt.Widget` (Type, Validate, Clone) plus metadata getters.
+Each input implements `model.Kind` (Type, Validate, Clone) plus metadata getters.
 Inputs are **render-free**: they carry no `dom`/`html` imports. Rendering is done by the
 `form` package via `RenderInput(input.Input)`. All inputs use **only** `tinywasm/fmt` —
 no `errors` or `strconv` from the standard library.
@@ -101,7 +101,7 @@ func (m *myInput) Validate(value string) error {
 }
 
 // Clone creates a positioned copy preserving all configuration.
-func (m *myInput) Clone(parentID, name string) fmt.Widget {
+func (m *myInput) Clone(parentID, name string) model.Kind {
     c := *m
     c.InitBase(parentID, name, "text")
     return &c

@@ -1,6 +1,9 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type number struct{ Base }
@@ -16,7 +19,7 @@ func Number() Input {
 }
 
 // Clone creates a new number input with the given parentID and name.
-func (n *number) Clone(parentID, name string) model.Widget {
+func (n *number) Clone(parentID, name string) Input {
 	c := *n
 	c.InitBase(parentID, name, "number")
 	return &c

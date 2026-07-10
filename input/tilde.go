@@ -1,5 +1,9 @@
 package input
 
+
+
+
+
 // tildeSetter is the private contract for widgets that allow toggling accented chars.
 // Unexported on purpose — it never appears in user-facing APIs.
 type tildeSetter interface{ setTilde(bool) }

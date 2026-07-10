@@ -15,7 +15,7 @@ type renderStruct struct {
 
 func (s *renderStruct) Schema() []model.Field {
 	return []model.Field{
-		{Name: "nombre", NotNull: true, Widget: input.Text()},
+		{Name: "nombre", NotNull: true, Type: input.Text()},
 	}
 }
 

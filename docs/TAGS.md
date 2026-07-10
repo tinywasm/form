@@ -1,6 +1,6 @@
 # Struct Tags
 
-Tags are parsed by `ormc` (the ORM code generator) at compile-time to populate the `fmt.Field` schema. `tinywasm/form` reads these values from the `fmt.Fielder` interface at runtime.
+Tags are parsed by `ormc` (the ORM code generator) at compile-time to populate the `model.Field` schema. `tinywasm/form` reads these values from the `model.Fielder` interface at runtime.
 
 The unified tag for all form-related metadata is `input:`.
 

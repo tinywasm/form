@@ -39,11 +39,11 @@ func (f *Form) SyncValues(data model.Fielder) error {
 
 		if val == "" {
 			// Zero the field
-			zeroField(ptr, field.Type)
+			zeroField(ptr, field.Type.Storage())
 			continue
 		}
 
-		writeField(ptr, field.Type, values)
+		writeField(ptr, field.Type.Storage(), values)
 	}
 	return nil
 }
