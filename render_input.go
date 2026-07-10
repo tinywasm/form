@@ -12,6 +12,15 @@ type fieldComponent struct {
 	err   *dom.SignalString
 }
 
+// Renderer is an optional capability for custom inputs that own their markup.
+// The form still owns the field wrapper (div.tw-field), the error span, and
+// validation: the widget must call onInput with the new value on user input —
+// the form updates the value signal and runs live validation. The value
+// signal carries the initial value and programmatic updates (SetValues).
+type Renderer interface {
+	RenderInput(value *dom.SignalString, onInput func(string)) *dom.Element
+}
+
 func (fc *fieldComponent) String() string {
 	return fc.Render().String()
 }
@@ -39,16 +48,23 @@ func (fc *fieldComponent) validate(val string) {
 func (fc *fieldComponent) Render() *dom.Element {
 	container := dom.NewElement("div").Class("tw-field")
 
-	htmlName := fc.Input.HTMLName()
-	switch htmlName {
-	case "radio":
-		fc.renderRadio(container)
-	case "select":
-		fc.renderSelect(container)
-	case "datalist":
-		fc.renderDatalist(container)
-	default:
-		fc.renderInput(container)
+	if r, ok := fc.Input.(Renderer); ok {
+		container.Child(r.RenderInput(fc.value, func(v string) {
+			fc.value.Set(v)
+			fc.validate(v)
+		}))
+	} else {
+		htmlName := fc.Input.HTMLName()
+		switch htmlName {
+		case "radio":
+			fc.renderRadio(container)
+		case "select":
+			fc.renderSelect(container)
+		case "datalist":
+			fc.renderDatalist(container)
+		default:
+			fc.renderInput(container)
+		}
 	}
 
 	errSpan := dom.NewElement("span").

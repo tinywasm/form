@@ -17,6 +17,19 @@ For each field in `data.Schema()`:
 4. `field.NotNull` → `SetRequired(true)` on the input.
 5. Current value bound via `fmt.ReadValues()` + `SetValues()`.
 
+## `(*Form).Submit()` — Submit Pipeline
+
+Runs the full submission pipeline programmatically:
+1. `SyncValues(data)` — syncs input values to the struct.
+2. `Validate()` — performs final validation.
+3. If valid and `OnSubmit` is set:
+   - Sets the `submitting` signal to `true`.
+   - Fires the `onSubmit(data, done)` callback.
+   - Resets the form on `done(nil)` unless `NoResetOnSuccess()` was called.
+
+The DOM `submit` handler delegates to this method after `PreventDefault()`.
+Returns the first validation error, or `nil` if submission was dispatched.
+
 ## `(*Form).Validate()` — Validation Detail
 
 - Skips fields with `SkipValidation` set to true in the input.
@@ -55,6 +68,20 @@ Error messages from `Permitted.Validate(name, text)`:
 - `"{name} maximum {max} chars"` — value longer than Maximum
 - `"space not allowed"` — space when Spaces=false
 - `"character {X} not allowed"` — disallowed character
+
+## `form.Renderer` — Custom Input Markup
+
+Optional capability interface for custom inputs that own their markup:
+
+```go
+type Renderer interface {
+    RenderInput(value *dom.SignalString, onInput func(string)) *dom.Element
+}
+```
+
+- **Contract**: The form still owns the field wrapper (`div.tw-field`), the error span, and validation.
+- **Wiring**: The widget must call `onInput` with the new value whenever the user interacts with the control; the form then updates the value signal and runs live validation.
+- **Location**: Defined in package `form` (not `input`) because it references `*dom.Element`.
 
 ## Namer Interface
 

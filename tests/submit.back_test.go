@@ -1,8 +1,10 @@
 //go:build !wasm
 
-package form
+package form_test
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSubmit_Back(t *testing.T) {
 	runSubmitTests(t)

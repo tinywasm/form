@@ -192,6 +192,44 @@ func (f *Form) SetOptions(fieldName string, opts ...fmt.KeyValue) *Form {
 // Reset clears all input values and error messages in the DOM and internal state.
 func (f *Form) Reset() { f.reset() }
 
+// Submit runs the full submit pipeline programmatically: syncs input values
+// into the bound struct, validates, and (if valid) fires the OnSubmit
+// callback. Returns the first validation error, or nil if the submission
+// was dispatched. The async result of the submission itself is delivered
+// through the OnSubmit callback's done function.
+func (f *Form) Submit() error {
+	// Sync all values from signals to struct
+	f.SyncValues(f.data)
+
+	// Validate all (final check)
+	if err := f.Validate(); err != nil {
+		return err
+	}
+
+	if f.onSubmit != nil {
+		f.submitting.Set(true)
+		f.onSubmit(f.data, func(err error) {
+			f.submitting.Set(false)
+			if err == nil && !f.noResetOnSuccess {
+				f.reset()
+			}
+		})
+	}
+	return nil
+}
+
+// SetClass appends CSS classes to this form (on top of any global classes
+// set via SetGlobalClass). Chainable.
+func (f *Form) SetClass(classes ...string) *Form {
+	for _, c := range classes {
+		if f.class != "" {
+			f.class += " "
+		}
+		f.class += c
+	}
+	return f
+}
+
 func (f *Form) resolveSubmitLabel() string {
 	label := f.submitLabel
 	if label == "" {
