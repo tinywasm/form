@@ -17,9 +17,9 @@ type testUser struct {
 
 func (u *testUser) Schema() []model.Field {
 	return []model.Field{
-		{Name: "id", Type: model.FieldText, DB: &model.FieldDB{PK: true}, Widget: input.Text()},
-		{Name: "name", Type: model.FieldText, NotNull: true, Widget: input.Text()},
-		{Name: "email", Type: model.FieldText, NotNull: true, Widget: input.Email()},
+		{Name: "id", Type: input.Text(), DB: &model.FieldDB{PK: true}},
+		{Name: "name", Type: input.Text(), NotNull: true},
+		{Name: "email", Type: input.Email(), NotNull: true},
 	}
 }
 func (u *testUser) Values() []any    { return []any{u.id, u.name, u.email} }
@@ -48,7 +48,7 @@ type autoUser struct {
 
 func (u *autoUser) Schema() []model.Field {
 	return []model.Field{
-		{Name: "id", Type: model.FieldInt, DB: &model.FieldDB{PK: true, AutoInc: true}},
+		{Name: "id", Type: model.Int(), DB: &model.FieldDB{PK: true, AutoInc: true}},
 	}
 }
 func (u *autoUser) Values() []any    { return []any{u.id} }

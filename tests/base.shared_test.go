@@ -102,7 +102,7 @@ type CustomUser struct {
 }
 
 func (u *CustomUser) Schema() []model.Field {
-	return []model.Field{{Name: "Special", Type: model.FieldText, Widget: input.Text()}}
+	return []model.Field{{Name: "Special", Type: input.Text()}}
 }
 func (u *CustomUser) Values() []any    { return []any{u.Special} }
 func (u *CustomUser) Pointers() []any  { return []any{&u.Special} }

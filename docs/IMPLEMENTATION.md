@@ -1,35 +1,59 @@
 # Implementation Notes
 
-> See [README.md](../README.md) for the full API reference.
-> See [DESIGN.md](DESIGN.md) for architecture.
+> Contributor-facing. See [README.md](../README.md) for usage,
+> [DESIGN.md](DESIGN.md) for architecture.
+
+## Library Rules (Non-Negotiable)
+
+- **No stdlib imports** in library code. Never `errors`, `strconv`, `strings`, `reflect`.
+- **Use `github.com/tinywasm/fmt`**: `fmt.Err("Noun", "Adjective")` for errors,
+  `fmt.Convert(s).Int()` instead of `strconv.Atoi`, `fmt.Contains(s, sub)`
+  instead of `strings.Contains`.
+- **No maps in inputs**: use slices — maps increase WASM binary size.
+- **No `any`/`map` in public APIs.** No `reflect` at runtime.
+- **The `input` package must stay free of `dom` imports** (edge-safe):
+  HTML rendering lives in the `form` package.
 
 ## File Map
 
 | File | Responsibility |
 |------|---------------|
-| `form.go` | `Form` struct, `New()`, `Input()`, `SetOptions()`, `SetValues()`, `Namer` |
+| `form.go` | `Form` struct, `New()`, `Input()`, `SetOptions()`, `SetValues()`, `Reset()`, `Namer` |
 | `sync.go` | `SyncValues()`, pointer-based field sync |
-| `registry.go` | `SetGlobalClass()` |
-| `render.go` | `Form.String()`, `Form.SetSSR()` |
-| `validate.go` | `Form.Validate()` |
-| `validate_struct.go` | `Form.ValidateData()` (crudp.DataValidator) |
-| `words.go` | Registers form UI words into fmt dictionary |
-| `render_input.go` | `RenderInput(input.Input) *dom.Element` — HTML rendering; owns `dom` import |
-| `input/interface.go` | `Input` interface (embeds `fmt.Widget` + metadata getters; no `dom.Component`) |
+| `forms.go` | `SetGlobalClass()`, global forms state |
+| `render.go` | `Render()`, `String()`, `SetSSR()`, submit event wiring |
+| `render_input.go` | Field rendering (input + error span; owns `dom` imports); `RenderInput()` helper |
+| `css.go` | `RenderCSS()` — base `tw-*` styles (`!wasm`, additive `css.Stylesheet`) |
+| `validate.go` | `Validate()` |
+| `validate_struct.go` | `ValidateData()` (crudp.DataValidator) |
+| `input/interface.go` | `Input` interface (embeds `model.Kind` + metadata getters; no `dom.Component`) |
 | `input/base.go` | `Base` struct embedded by all inputs |
-| `input/*.go` | 17 concrete input implementations |
+| `input/*.go` | 18 concrete input implementations |
+| `tests/` | Black-box tests (`package form_test`, public API only) |
 
-## Adding a New Input
+White-box tests (unexported internals) stay next to the code they test
+(`render_input_test.go`, `submit.*_test.go`); everything testable through the
+public API belongs in `tests/`.
 
-1. Create `input/mytype.go` — embed `Base`, configure `fmt.Permitted` rules, implement rendering.
-2. Add `NewMyType() fmt.Widget` constructor (template, no position).
-3. Add `Clone(parentID, name string) fmt.Widget` method on the concrete type.
-4. `Type()` and `Validate()` are inherited from `Base` — no need to implement.
-5. Add test cases in `input/inputs_test.go`.
-6. Use `input.NewMyType()` in `ormc` schema generation to assign the widget to fields.
+## Adding a New Built-in Input
 
-## Key Constraints
+1. Create `input/mytype.go` — embed `Base`, configure `model.Permitted` rules.
+2. Add the `//ormc:storage <text|int|bool>` directive immediately above the
+   constructor.
+3. Constructor `MyType() Input` returns a stateless prototype (no arguments).
+4. Add `Clone(parentID, name string) Input` on the concrete type
+   (copy + `InitBase`).
+5. `Name()`, `Storage()`, `Validate()` are inherited from `Base`; override
+   `Validate` only for specialized rules (delegate the baseline to
+   `m.Permitted.Validate(m.FieldName(), value)`).
+6. Add validation cases in `input/validation_test.go` and the compile-time
+   assertion in `input/assertions_test.go`.
 
-- Only `github.com/tinywasm/fmt` — no `errors`, `strconv`, `strings`
-- No maps in WASM-facing code (increases binary size) — use slices
-- No `reflect` at runtime
+## Test Layout
+
+- `tests/` — black-box (`package form_test`): binding, rendering contract,
+  submit-adjacent behavior via public API.
+- Module root / `input/` — white-box tests only, for unexported internals.
+- Shared native/wasm cases use the three-file pattern: `x.shared_test.go`
+  (helpers), `x.back_test.go` (`//go:build !wasm`), `x.front_test.go`
+  (`//go:build wasm`). Run with `gotest ./...` (native + wasm).

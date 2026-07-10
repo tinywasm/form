@@ -1,6 +1,9 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
@@ -8,6 +11,7 @@ import "github.com/tinywasm/fmt"
 type checkbox struct{ Base }
 
 // Checkbox creates a new checkbox input instance.
+//ormc:storage bool
 func Checkbox() Input {
 	c := &checkbox{}
 	c.InitBase("", "", "checkbox")
@@ -26,8 +30,8 @@ func (c *checkbox) Validate(value string) error {
 	return fmt.Err("Format", "Invalid")
 }
 
-// Clone satisfies model.Widget — Checkbox() returns Input which implements Widget.
-func (c *checkbox) Clone(parentID, name string) model.Widget {
+// Clone satisfies input.Input — Checkbox() returns Input which implements it.
+func (c *checkbox) Clone(parentID, name string) Input {
 	c2 := *c
 	c2.InitBase(parentID, name, "checkbox")
 	return &c2

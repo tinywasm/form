@@ -1,12 +1,16 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
 type hour struct{ Base }
 
 // Hour creates a new time input instance.
+//ormc:storage text
 func Hour() Input {
 	h := &hour{}
 	h.Numbers = true
@@ -32,8 +36,8 @@ func (h *hour) Validate(value string) error {
 	return h.Permitted.Validate(h.name, value)
 }
 
-// Clone satisfies model.Widget — Hour() returns Input which implements Widget.
-func (h *hour) Clone(parentID, name string) model.Widget {
+// Clone satisfies input.Input — Hour() returns Input which implements it.
+func (h *hour) Clone(parentID, name string) Input {
 	c := *h
 	c.InitBase(parentID, name, "time")
 	return &c

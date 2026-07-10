@@ -5,7 +5,7 @@ See `README.md` for the consolidated API. This file contains additional detail.
 ## `form.New` — Widget Resolution Detail
 
 ```go
-f, err := form.New("content", data) // data implements fmt.Fielder
+f, err := form.New("content", data) // data implements model.Fielder
 // -> f.GetID() == "content." + resolveStructName(data)
 // -> f.String() renders all fields that have a Widget in data.Schema()
 ```
@@ -21,15 +21,15 @@ For each field in `data.Schema()`:
 
 - Skips fields with `SkipValidation` set to true in the input.
 - Pulls values from reactive signals.
-- Calls `inp.Validate(val)` (promoted from `fmt.Widget`).
+- Calls `inp.Validate(val)` (promoted from `model.Kind`).
 - Returns the **first** error encountered.
 
-## `(*Form).SyncValues(data fmt.Fielder)` — Binding Detail
+## `(*Form).SyncValues(data model.Fielder)` — Binding Detail
 
 Synchronizes input values back to the struct pointers provided by `data.Pointers()`.
-Supports `fmt.FieldText`, `fmt.FieldInt`, `fmt.FieldFloat`, and `fmt.FieldBool`.
+Supports `model.FieldText`, `model.FieldInt`, `model.FieldFloat`, and `model.FieldBool`.
 
-## `(*Form).ValidateData(action byte, data fmt.Fielder)` — Server-side Validation
+## `(*Form).ValidateData(action byte, data model.Fielder)` — Server-side Validation
 
 Validates the provided `data` using the form's input rules. Satisfies `crudp.DataValidator`.
 

@@ -1,12 +1,16 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
 type date struct{ Base }
 
 // Date creates a new date input instance.
+//ormc:storage text
 func Date() Input {
 	d := &date{}
 	d.Numbers = true
@@ -59,7 +63,7 @@ func (d *date) monthDays(year int) [13]int {
 }
 
 // Clone creates a new date input with the given parentID and name.
-func (d *date) Clone(parentID, name string) model.Widget {
+func (d *date) Clone(parentID, name string) Input {
 	c := *d
 	c.InitBase(parentID, name, "date")
 	return &c

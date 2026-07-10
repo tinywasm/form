@@ -129,15 +129,13 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 
 		fieldName := field.Name
 
-		// Resolve input: use Field.Widget directly.
-		if field.Widget == nil {
+		// Resolve input: use Field.Type asserting to input.Input.
+		inpKind, ok := field.Type.(input.Input)
+		if !ok {
 			continue // skip fields with no UI binding
 		}
 
-		inp, ok := field.Widget.Clone(formID, fieldName).(input.Input)
-		if !ok {
-			continue // skip widgets that do not implement input.Input
-		}
+		inp := inpKind.Clone(formID, fieldName)
 
 		// Apply constraint-based defaults from schema
 		if field.NotNull {

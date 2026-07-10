@@ -1,12 +1,16 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
 type filepath struct{ Base }
 
 // Filepath creates a new filepath input instance.
+//ormc:storage text
 func Filepath() Input {
 	fp := &filepath{}
 	fp.Letters = true
@@ -33,7 +37,7 @@ func (fp *filepath) Validate(value string) error {
 }
 
 // Clone creates a new filepath input with the given parentID and name.
-func (fp *filepath) Clone(parentID, name string) model.Widget {
+func (fp *filepath) Clone(parentID, name string) Input {
 	c := *fp
 	c.InitBase(parentID, name, "text")
 	return &c

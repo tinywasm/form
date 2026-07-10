@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type text struct{ Base }
 
 // Text creates a new Text input instance.
+//ormc:storage text
 func Text() Input {
 	t := &text{}
 	t.Letters = true
@@ -20,7 +24,7 @@ func Text() Input {
 }
 
 // Clone creates a new Text input with the given parentID and name.
-func (t *text) Clone(parentID, name string) model.Widget {
+func (t *text) Clone(parentID, name string) Input {
 	c := *t
 	c.InitBase(parentID, name, "text")
 	return &c

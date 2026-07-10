@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type number struct{ Base }
 
 // Number creates a new number input instance.
+//ormc:storage int
 func Number() Input {
 	n := &number{}
 	n.Numbers = true
@@ -16,7 +20,7 @@ func Number() Input {
 }
 
 // Clone creates a new number input with the given parentID and name.
-func (n *number) Clone(parentID, name string) model.Widget {
+func (n *number) Clone(parentID, name string) Input {
 	c := *n
 	c.InitBase(parentID, name, "number")
 	return &c

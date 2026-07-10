@@ -1,6 +1,6 @@
 //go:build !wasm
 
-package form
+package form_test
 
 import "testing"
 

@@ -1,9 +1,8 @@
 package form
 
-import "github.com/tinywasm/model"
-
 import (
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/model"
 )
 
 // SyncValues copies all input values back into the bound struct
@@ -39,11 +38,11 @@ func (f *Form) SyncValues(data model.Fielder) error {
 
 		if val == "" {
 			// Zero the field
-			zeroField(ptr, field.Type)
+			zeroField(ptr, field.Type.Storage())
 			continue
 		}
 
-		writeField(ptr, field.Type, values)
+		writeField(ptr, field.Type.Storage(), values)
 	}
 	return nil
 }

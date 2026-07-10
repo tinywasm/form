@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type password struct{ Base }
 
 // Password creates a new Password input instance.
+//ormc:storage text
 func Password() Input {
 	p := &password{}
 	p.Letters = true
@@ -19,7 +23,7 @@ func Password() Input {
 }
 
 // Clone creates a new Password input with the given parentID and name.
-func (p *password) Clone(parentID, name string) model.Widget {
+func (p *password) Clone(parentID, name string) Input {
 	c := *p
 	c.InitBase(parentID, name, "password")
 	return &c

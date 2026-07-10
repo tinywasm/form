@@ -1,6 +1,6 @@
 package input
-
 import "github.com/tinywasm/model"
+
 
 import (
 	"github.com/tinywasm/fmt"
@@ -119,10 +119,22 @@ func (b *Base) SetID(id string) {
 	b.id = id
 }
 
-// Type satisfies model.Widget.Type(). Returns the semantic input type name.
-func (b *Base) Type() string { return b.htmlName }
+// Name satisfies model.Kind.Name(). Returns the semantic input type name.
+func (b *Base) Name() string { return b.htmlName }
 
-// Validate satisfies model.Widget.Validate().
+// Storage satisfies model.Kind.Storage().
+func (b *Base) Storage() model.FieldType {
+	switch b.htmlName {
+	case "number":
+		return model.FieldInt
+	case "checkbox":
+		return model.FieldBool
+	default:
+		return model.FieldText
+	}
+}
+
+// Validate satisfies model.Kind.Validate().
 // Concrete structs embedding Base can override this to provide specialized validation.
 func (b *Base) Validate(value string) error {
 	if value == "" && b.Required {

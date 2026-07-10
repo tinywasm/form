@@ -1,10 +1,13 @@
-// Package input tests.
+package input
+
+
+
+
 // This file contains the shared registry and helpers used by all test files.
 // To add a new input:
 //  1. Add a case in buildInput()
 //  2. Add validation cases in validation_test.go
 //  3. Add render cases in render_test.go (if it has custom String())
-package input
 
 import (
 	"testing"

@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type email struct{ Base }
 
 // Email creates a new Email input instance.
+//ormc:storage text
 func Email() Input {
 	e := &email{}
 	e.Letters = true
@@ -18,7 +22,7 @@ func Email() Input {
 }
 
 // Clone creates a new Email input with the given parentID and name.
-func (e *email) Clone(parentID, name string) model.Widget {
+func (e *email) Clone(parentID, name string) Input {
 	c := *e
 	c.InitBase(parentID, name, "email")
 	return &c

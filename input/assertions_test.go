@@ -1,0 +1,45 @@
+package input
+
+import "github.com/tinywasm/model"
+
+// Compile-time proof that every constructor returns a value fully
+// implementing model.Kind + Input (Kind unification phase B, Stage 2).
+var (
+	_ Input = Text()
+	_ Input = Email()
+	_ Input = Password()
+	_ Input = Phone()
+	_ Input = Number()
+	_ Input = Date()
+	_ Input = Hour()
+	_ Input = Textarea()
+	_ Input = Search()
+	_ Input = Rut()
+	_ Input = IP()
+	_ Input = Address()
+	_ Input = Gender()
+	_ Input = Datalist()
+	_ Input = Select()
+	_ Input = Radio()
+	_ Input = Checkbox()
+	_ Input = Filepath()
+
+	_ model.Kind = Text()
+	_ model.Kind = Email()
+	_ model.Kind = Password()
+	_ model.Kind = Phone()
+	_ model.Kind = Number()
+	_ model.Kind = Date()
+	_ model.Kind = Hour()
+	_ model.Kind = Textarea()
+	_ model.Kind = Search()
+	_ model.Kind = Rut()
+	_ model.Kind = IP()
+	_ model.Kind = Address()
+	_ model.Kind = Gender()
+	_ model.Kind = Datalist()
+	_ model.Kind = Select()
+	_ model.Kind = Radio()
+	_ model.Kind = Checkbox()
+	_ model.Kind = Filepath()
+)

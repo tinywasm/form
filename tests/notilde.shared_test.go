@@ -1,4 +1,4 @@
-package form
+package form_test
 
 import (
 	"testing"

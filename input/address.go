@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type address struct{ Base }
 
 // Address creates a new Address input instance.
+//ormc:storage text
 func Address() Input {
 	a := &address{}
 	a.Letters = true
@@ -20,7 +24,7 @@ func Address() Input {
 }
 
 // Clone creates a new Address input with the given parentID and name.
-func (a *address) Clone(parentID, name string) model.Widget {
+func (a *address) Clone(parentID, name string) Input {
 	c := *a
 	c.InitBase(parentID, name, "text")
 	return &c

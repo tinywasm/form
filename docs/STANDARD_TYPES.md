@@ -1,6 +1,6 @@
 # Standard Input Types
 
-18 built-in types in `input/`. Each provides `Xxx() fmt.Widget` and `Clone(parentID, name) fmt.Widget`.
+18 built-in types in `input/`. Each provides `Xxx() model.Kind` and `Clone(parentID, name) model.Kind`.
 
 | Input | HTML type | Constructor | Key Aliases |
 |-------|-----------|-------------|-------------|

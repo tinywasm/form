@@ -1,12 +1,16 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 import "github.com/tinywasm/fmt"
 
 type rut struct{ Base }
 
 // Rut creates a new RUT input instance.
+//ormc:storage text
 func Rut() Input {
 	r := &rut{}
 	r.Numbers = true
@@ -74,7 +78,7 @@ func (r *rut) dvRut(rut int) string {
 }
 
 // Clone creates a new rut input with the given parentID and name.
-func (r *rut) Clone(parentID, name string) model.Widget {
+func (r *rut) Clone(parentID, name string) Input {
 	c := *r
 	c.InitBase(parentID, name, "text")
 	return &c

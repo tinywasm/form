@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type search_ struct{ Base }
 
 // Search creates a new Search input instance.
+//ormc:storage text
 func Search() Input {
 	s := &search_{}
 	s.Letters = true
@@ -18,7 +22,7 @@ func Search() Input {
 }
 
 // Clone creates a new Search input with the given parentID and name.
-func (s *search_) Clone(parentID, name string) model.Widget {
+func (s *search_) Clone(parentID, name string) Input {
 	c := *s
 	c.InitBase(parentID, name, "search")
 	return &c

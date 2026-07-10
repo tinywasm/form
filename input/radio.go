@@ -1,11 +1,15 @@
 package input
 
-import "github.com/tinywasm/model"
+
+
+
+
 
 
 type radio struct{ Base }
 
 // Radio creates a new Radio input instance.
+//ormc:storage text
 func Radio() Input {
 	r := &radio{}
 	r.Letters = true
@@ -16,7 +20,7 @@ func Radio() Input {
 }
 
 // Clone creates a new Radio input.
-func (r *radio) Clone(parentID, name string) model.Widget {
+func (r *radio) Clone(parentID, name string) Input {
 	c := *r
 	c.InitBase(parentID, name, "radio")
 	return &c

@@ -1,20 +1,19 @@
 package form
 
-import "github.com/tinywasm/model"
-
 import (
 	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/model"
 	"testing"
 )
 
 type submitStruct struct {
 	model.Fielder
-	Nombre string `input:"required"`
+	Nombre string
 }
 
 func (s *submitStruct) Schema() []model.Field {
 	return []model.Field{
-		{Name: "nombre", NotNull: true, Widget: input.Text()},
+		{Name: "nombre", NotNull: true, Type: input.Text()},
 	}
 }
 
