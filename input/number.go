@@ -9,7 +9,6 @@ package input
 type number struct{ Base }
 
 // Number creates a new number input instance.
-//ormc:storage int
 func Number() Input {
 	n := &number{}
 	n.Numbers = true

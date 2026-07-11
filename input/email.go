@@ -9,7 +9,6 @@ package input
 type email struct{ Base }
 
 // Email creates a new Email input instance.
-//ormc:storage text
 func Email() Input {
 	e := &email{}
 	e.Letters = true

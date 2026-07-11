@@ -9,7 +9,6 @@ package input
 type radio struct{ Base }
 
 // Radio creates a new Radio input instance.
-//ormc:storage text
 func Radio() Input {
 	r := &radio{}
 	r.Letters = true

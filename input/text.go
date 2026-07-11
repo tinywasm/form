@@ -9,7 +9,6 @@ package input
 type text struct{ Base }
 
 // Text creates a new Text input instance.
-//ormc:storage text
 func Text() Input {
 	t := &text{}
 	t.Letters = true

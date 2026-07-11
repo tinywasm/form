@@ -55,24 +55,7 @@ func (f *Form) Render() *dom.Element {
 	// Bind submit event
 	el.On("submit", func(e dom.Event) {
 		e.PreventDefault()
-
-		// Sync all values from signals to struct
-		f.SyncValues(f.data)
-
-		// Validate all (final check)
-		if err := f.Validate(); err != nil {
-			return
-		}
-
-		if f.onSubmit != nil {
-			f.submitting.Set(true)
-			f.onSubmit(f.data, func(err error) {
-				f.submitting.Set(false)
-				if err == nil && !f.noResetOnSuccess {
-					f.reset()
-				}
-			})
-		}
+		f.Submit()
 	})
 
 	return el

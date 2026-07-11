@@ -10,7 +10,6 @@ import "github.com/tinywasm/fmt"
 type gender struct{ Base }
 
 // Gender creates a new Gender input instance with default Male/Female options.
-//ormc:storage text
 func Gender() Input {
 	g := &gender{}
 	g.Letters = true

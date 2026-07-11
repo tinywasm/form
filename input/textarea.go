@@ -9,7 +9,6 @@ package input
 type textarea struct{ Base }
 
 // Textarea creates a new textarea input instance.
-//ormc:storage text
 func Textarea() Input {
 	t := &textarea{}
 	t.Letters = true

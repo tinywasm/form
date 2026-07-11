@@ -175,8 +175,14 @@ The library ships structure, the project owns the look (CSS-first doctrine):
    See [tinywasm/css](https://github.com/tinywasm/css) for the token/theming
    contract.
 
-3. **`form.SetGlobalClass("my-app-form")`** — adds classes to every `<form>`
-   created afterwards, useful for scoping: `.my-app-form .tw-field { ... }`.
+3. **`form.SetGlobalClass("my-app-form")`** and **`f.SetClass("local-class")`**
+   — adds classes to the `<form>`, useful for scoping:
+   `.my-app-form .tw-field { ... }`.
+
+## Custom Inputs
+
+Custom markup for custom inputs is possible by implementing `form.Renderer`;
+see [input/README.md](input/README.md).
 
 ## Built-in Input Types
 
@@ -220,11 +226,13 @@ where the name comes from the optional `Namer` interface
 | `Input(fieldName string) input.Input` | Returns the input for a field name |
 | `SetOptions(fieldName, ...fmt.KeyValue) *Form` | Options for select/radio/datalist |
 | `SetValues(fieldName, ...string) *Form` | Sets a value programmatically |
+| `Submit() error` | Runs sync + validate + OnSubmit callback programmatically; returns first validation error |
 | `Reset()` | Clears all values and error messages |
 | `NoResetOnSuccess() *Form` | Keeps values after a successful submit |
 | `SubmitLabel(string) *Form` | Submit button text (default "Submit") |
 | `SubmitLoadingLabel(string) *Form` | Button text while submitting (default label + "...") |
 | `HideSubmit() *Form` | Renders without a submit button |
+| `SetClass(...string) *Form` | Appends CSS classes to this form (on top of SetGlobalClass) |
 | `GetID() string` | Form's HTML id |
 
 Package-level: `form.SetGlobalClass(classes ...string)` — CSS classes for all

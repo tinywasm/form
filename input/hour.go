@@ -10,7 +10,6 @@ import "github.com/tinywasm/fmt"
 type hour struct{ Base }
 
 // Hour creates a new time input instance.
-//ormc:storage text
 func Hour() Input {
 	h := &hour{}
 	h.Numbers = true
