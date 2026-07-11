@@ -10,7 +10,6 @@ import "github.com/tinywasm/fmt"
 type filepath struct{ Base }
 
 // Filepath creates a new filepath input instance.
-//ormc:storage text
 func Filepath() Input {
 	fp := &filepath{}
 	fp.Letters = true

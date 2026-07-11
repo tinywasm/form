@@ -11,7 +11,6 @@ import "github.com/tinywasm/fmt"
 type checkbox struct{ Base }
 
 // Checkbox creates a new checkbox input instance.
-//ormc:storage bool
 func Checkbox() Input {
 	c := &checkbox{}
 	c.InitBase("", "", "checkbox")

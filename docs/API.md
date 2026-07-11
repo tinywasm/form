@@ -33,6 +33,35 @@ Supports `model.FieldText`, `model.FieldInt`, `model.FieldFloat`, and `model.Fie
 
 Validates the provided `data` using the form's input rules. Satisfies `crudp.DataValidator`.
 
+## `(*Form).Submit()`
+
+Runs the full submit pipeline programmatically:
+1. `SyncValues(f.data)`: copies values from signals to struct.
+2. `Validate()`: final validation check.
+3. If valid and `OnSubmit` is set:
+   - Sets `submitting` signal to true.
+   - Calls the `OnSubmit` callback.
+   - When the callback's `done` function is called:
+     - Sets `submitting` signal back to false.
+     - Resets the form (unless `NoResetOnSuccess` was called).
+
+Returns the first validation error, or nil if the submission was dispatched.
+The DOM `submit` event handler delegates to this method.
+
+## `form.Renderer`
+
+Optional capability interface for custom inputs that own their markup.
+
+```go
+type Renderer interface {
+    RenderInput(value *dom.SignalString, onInput func(string)) *dom.Element
+}
+```
+
+- **Markup ownership**: The form still owns the field wrapper (`div.tw-field`), the error span, and the field ID. The widget provides the inner control.
+- **Contract**: The widget must call `onInput` with the new value on user input. The form updates the value signal and runs live validation.
+- **Location**: Lives in package `form` because it references `*dom.Element` (the `input` package is dom-free).
+
 ## `fmt.Permitted` — Validation Engine
 
 ```go

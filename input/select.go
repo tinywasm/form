@@ -9,7 +9,6 @@ package input
 type select_ struct{ Base }
 
 // Select creates a new Select input instance.
-//ormc:storage text
 func Select() Input {
 	s := &select_{}
 	s.Letters = true

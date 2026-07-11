@@ -38,15 +38,13 @@ public API belongs in `tests/`.
 ## Adding a New Built-in Input
 
 1. Create `input/mytype.go` — embed `Base`, configure `model.Permitted` rules.
-2. Add the `//ormc:storage <text|int|bool>` directive immediately above the
-   constructor.
-3. Constructor `MyType() Input` returns a stateless prototype (no arguments).
-4. Add `Clone(parentID, name string) Input` on the concrete type
+2. Constructor `MyType() Input` returns a stateless prototype (no arguments).
+3. Add `Clone(parentID, name string) Input` on the concrete type
    (copy + `InitBase`).
-5. `Name()`, `Storage()`, `Validate()` are inherited from `Base`; override
+4. `Name()`, `Storage()`, `Validate()` are inherited from `Base`; override
    `Validate` only for specialized rules (delegate the baseline to
    `m.Permitted.Validate(m.FieldName(), value)`).
-6. Add validation cases in `input/validation_test.go` and the compile-time
+5. Add validation cases in `input/validation_test.go` and the compile-time
    assertion in `input/assertions_test.go`.
 
 ## Test Layout

@@ -118,6 +118,10 @@ The custom input renders with the generic markup for its `htmlName`
 `checkbox` → bool, else text); override `Storage()` on your struct if your
 kind needs a different mapping.
 
+### Custom markup
+
+Custom inputs can provide their own HTML markup by implementing `form.Renderer` (see `docs/API.md`). This allows for complex widgets (color pickers, composite fields) while the form still manages the field container, ID, and validation state.
+
 ### Base Available Methods
 
 | Method | Purpose |

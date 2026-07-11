@@ -10,7 +10,6 @@ import "github.com/tinywasm/fmt"
 type ip struct{ Base }
 
 // IP creates a new IP input instance.
-//ormc:storage text
 func IP() Input {
 	i := &ip{}
 	i.Numbers = true
