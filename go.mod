@@ -6,5 +6,5 @@ require (
 	github.com/tinywasm/css v0.1.4
 	github.com/tinywasm/dom v0.11.2
 	github.com/tinywasm/fmt v0.25.3
-	github.com/tinywasm/model v0.0.10
+	github.com/tinywasm/model v0.0.11
 )
