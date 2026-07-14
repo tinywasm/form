@@ -174,6 +174,13 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		f.fieldIndices = append(f.fieldIndices, i)
 	}
 
+	if len(f.Inputs) == 0 {
+		return nil, fmt.Errf("form.New: %s has no renderable field — every Field.Type is a "+
+			"plain model.Kind, not a form input.Input. Declare the widget in the model "+
+			"Definition (input.Text(), input.Number(), …) instead of model.Text()/model.Int()",
+			structName)
+	}
+
 	forms = append(forms, f)
 	return f, nil
 }

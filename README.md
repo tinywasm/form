@@ -116,6 +116,10 @@ html := f.String()          // SSR: render to HTML string
 ```go
 import "github.com/tinywasm/dom"
 
+f.LoadValues(record) // registro → formulario (el usuario selecciona)
+f.Validate()         // el usuario edita y guarda
+f.SyncValues(record) // formulario → registro (listo para enviar)
+
 f.OnSubmit(func(data model.Fielder, done func(error)) {
     // send data to your API, then:
     done(nil) // nil = success → form resets (see NoResetOnSuccess)
@@ -221,6 +225,7 @@ where the name comes from the optional `Namer` interface
 | `SetSSR(bool) *Form` | SSR mode: adds `method`/`action` attributes |
 | `OnSubmit(func(model.Fielder, func(error))) *Form` | WASM submit callback |
 | `Validate() error` | Validates all inputs, returns first error |
+| `LoadValues(model.Fielder) error` | Populates every input from data, the inverse of SyncValues |
 | `SyncValues(model.Fielder) error` | Copies input values back into the data struct |
 | `ValidateData(byte, model.Fielder) error` | Server-side validation (crudp.DataValidator) |
 | `Input(fieldName string) input.Input` | Returns the input for a field name |
