@@ -43,26 +43,31 @@ func TestNewWithFielder(t *testing.T) {
 }
 
 type autoUser struct {
-	id int64
+	id   int64
+	name string
 }
 
 func (u *autoUser) Schema() []model.Field {
 	return []model.Field{
 		{Name: "id", Type: model.Int(), DB: &model.FieldDB{PK: true, AutoInc: true}},
+		{Name: "name", Type: input.Text()},
 	}
 }
-func (u *autoUser) Values() []any    { return []any{u.id} }
-func (u *autoUser) Pointers() []any  { return []any{&u.id} }
+func (u *autoUser) Values() []any    { return []any{u.id, u.name} }
+func (u *autoUser) Pointers() []any  { return []any{&u.id, &u.name} }
 func (u *autoUser) FormName() string { return "auto" }
 
 func TestNewAutoIncPKExcludedReal(t *testing.T) {
-	u := &autoUser{id: 1}
+	u := &autoUser{id: 1, name: "test"}
 	f, err := form.New("parent", u)
 	if err != nil {
 		t.Fatalf("New failed: %v", err)
 	}
-	if len(f.Inputs) != 0 {
-		t.Errorf("Expected 0 inputs (PK+AutoInc should be skipped), got %d", len(f.Inputs))
+	if len(f.Inputs) != 1 {
+		t.Errorf("Expected 1 input (PK+AutoInc should be skipped), got %d", len(f.Inputs))
+	}
+	if f.Input("id") != nil {
+		t.Errorf("Expected 'id' input to be nil (skipped), but got non-nil")
 	}
 }
 
