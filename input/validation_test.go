@@ -45,6 +45,13 @@ func Test_Validation(t *testing.T) {
 		{"Date", "empty", "", "chars", nil, false},
 		{"Date", "year too short", "200-01-01", "chars", nil, false},
 
+		// ── Decimal ──────────────────────────────────────────────────────────
+		{"Decimal", "valid fraction", "49.99", "", nil, false},
+		{"Decimal", "valid negative", "-10.5", "", nil, false},
+		{"Decimal", "valid integer", "100", "", nil, false},
+		{"Decimal", "letters", "abc", "not allowed", nil, false},
+		{"Decimal", "empty", "", "chars", nil, false},
+
 		// ── Email ────────────────────────────────────────────────────────────
 		{"Email", "valid", "user@example.com", "", nil, false},
 		{"Email", "dots and dashes", "my.name-test@sub.domain.org", "", nil, false},

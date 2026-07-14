@@ -14,6 +14,7 @@ no `errors` or `strconv` from the standard library.
 | `Checkbox` | `checkbox` | `true`, `false`, `on`, `1`, `0` or empty |
 | `Date` | `date` | `YYYY-MM-DD` format, leap year + month/day range check |
 | `Datalist` | `text` | Value must match one of the registered `Options.Key` |
+| `Decimal` | `number` | Digits, `.`, `-`, Min: 1, Max: 20 chars — storage `FieldFloat` (see note) |
 | `Email` | `email` | Letters, Numbers, `@ . _ -`, Min: 5, Max: 100 |
 | `Filepath` | `text` | Letters, digits, `.\/- _`, no whitespace, Min: 1 |
 | `Gender` | `radio` | `m`/`f` pre-wired options |
@@ -28,6 +29,11 @@ no `errors` or `strconv` from the standard library.
 | `Select` | `select` | Value must match one of the registered `Options.Key` |
 | `Text` | `text` | Letters, Numbers, `. , ( )`, Min: 2, Max: 100 |
 | `Textarea` | `textarea` | Wide char set incl. `\n`, Min: 5, Max: 2000 |
+
+**`Number` vs `Decimal`:** both render the same `<input type="number">`. The difference is
+`Storage()` — `Number()` reports `model.FieldInt` (int64), `Decimal()` reports `model.FieldFloat`
+(float64). Use `Decimal` for any field with fractional precision (price, measurements,
+percentages, ...); using `Number` there silently truncates the value to a whole number.
 
 ## No Standard Library
 

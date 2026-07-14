@@ -56,6 +56,8 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 		inp = dl
 	case "Date":
 		inp = Date()
+	case "Decimal":
+		inp = Decimal()
 	case "Email":
 		inp = Email()
 	case "Filepath":
@@ -100,7 +102,7 @@ func buildInput(t *testing.T, kind string, opts []fmt.KeyValue) Input {
 		t.Fatalf("unknown input type: %q — add it to buildInput()", kind)
 		return nil
 	}
-	return inp.Clone(id, name).(Input)
+	return inp.Clone(id, name)
 }
 
 // checkErr asserts the error matches the expected substring (case-insensitive).
@@ -136,7 +138,7 @@ func TestClone_Preservation(t *testing.T) {
 	proto.SetRequired(true)
 
 	// Clone it
-	cloned := proto.Clone("parent", "field").(Input)
+	cloned := proto.Clone("parent", "field")
 
 	// Verify ID and name are updated
 	if cloned.GetID() != "parent.field" {
