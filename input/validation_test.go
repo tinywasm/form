@@ -68,9 +68,12 @@ func Test_Validation(t *testing.T) {
 		{"Filepath", "empty", "", "chars", nil, false},
 
 		// ── Gender ───────────────────────────────────────────────────────────
+		// Gender() bakes in m/f options at construction — always a closed enum.
 		{"Gender", "male", "m", "", nil, false},
 		{"Gender", "female", "f", "", nil, false},
-		{"Gender", "empty", "", "chars", nil, false},
+		{"Gender", "invalid value", "x", "notallowed", nil, false},
+		{"Gender", "empty not required", "", "", nil, false},
+		{"Gender", "empty required", "", "is required", nil, true},
 
 		// ── Hour ─────────────────────────────────────────────────────────────
 		{"Hour", "valid 12:30", "12:30", "", nil, false},
@@ -109,9 +112,15 @@ func Test_Validation(t *testing.T) {
 		{"Phone", "letter after min length", "+56-abc-123-456", "not allowed", nil, false},
 
 		// ── Radio ────────────────────────────────────────────────────────────
+		// No options set: falls back to Permitted (Letters/Numbers, Minimum 1).
 		{"Radio", "valid key m", "m", "", nil, false},
 		{"Radio", "valid key f", "f", "", nil, false},
 		{"Radio", "empty", "", "chars", nil, false},
+		// With options set: closed enum — membership in Options.Key is required.
+		{"Radio", "closed valid m", "m", "", optsGender, false},
+		{"Radio", "closed valid f", "f", "", optsGender, false},
+		{"Radio", "closed invalid", "x", "notallowed", optsGender, false},
+		{"Radio", "closed empty not required", "", "", optsGender, false},
 
 		// ── Rut ──────────────────────────────────────────────────────────────
 		{"Rut", "valid 7863697-1", "7863697-1", "", nil, false},
@@ -128,8 +137,14 @@ func Test_Validation(t *testing.T) {
 		{"Search", "empty search", "", "", nil, false},
 
 		// ── Select ───────────────────────────────────────────────────────────
+		// No options set: falls back to Permitted (Letters/Numbers, Minimum 1).
 		{"Select", "valid", "admin", "", nil, false},
 		{"Select", "empty", "", "chars", nil, false},
+		// With options set: closed enum — membership in Options.Key is required.
+		{"Select", "closed valid key 1", "1", "", opts12, false},
+		{"Select", "closed valid key 2", "2", "", opts12, false},
+		{"Select", "closed invalid key", "0", "notallowed", opts12, false},
+		{"Select", "closed empty not required", "", "", opts12, false},
 
 		// ── Text ─────────────────────────────────────────────────────────────
 		{"Text", "valid with tilde", "Juan Pérez", "", nil, false},

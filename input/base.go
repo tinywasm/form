@@ -136,9 +136,24 @@ func (b *Base) Storage() model.FieldType {
 
 // Validate satisfies model.Kind.Validate().
 // Concrete structs embedding Base can override this to provide specialized validation.
+// When Options are declared the widget is a CLOSED enum: the value must match one of the
+// option Keys exactly (an exact key match needs no further charset validation — the option
+// list IS the whitelist). Empty + not Required passes: absence is handled by Required, it is
+// not an invalid choice.
 func (b *Base) Validate(value string) error {
 	if value == "" && b.Required {
 		return fmt.Err("field", b.name, "is required")
+	}
+	if len(b.Options) > 0 {
+		if value == "" {
+			return nil
+		}
+		for _, opt := range b.Options {
+			if opt.Key == value {
+				return nil
+			}
+		}
+		return fmt.Err("Value", value, "NotAllowed", "in", b.name)
 	}
 	return b.Permitted.Validate(b.name, value)
 }
