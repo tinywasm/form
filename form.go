@@ -30,6 +30,7 @@ type Form struct {
 	errorSignals       []*dom.SignalString              // One per input
 	submitting         *dom.SignalBool                  // Global form submitting state
 	locked             *dom.SignalBool                  // Whole-form read-only gate (see SetLocked)
+	focused            string                           // id Focus() last targeted (see FocusedFieldID)
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -93,6 +94,30 @@ func (f *Form) SetLocked(v bool) *Form {
 	f.locked.Set(v)
 	return f
 }
+
+// Focus moves keyboard focus to the form's first field — a host UI calls this
+// when entering an editable state (e.g. crudview's "+" / ⋮ Editar) so the user
+// can start typing immediately instead of having to click into the form. A
+// no-op if the form has no fields. Imperative, not reactive: the form's DOM
+// already exists by the time a host unlocks it (this never runs on first
+// mount), so a direct dom.Get+Focus is enough — no binding needed.
+func (f *Form) Focus() *Form {
+	if len(f.Inputs) == 0 {
+		return f
+	}
+	f.focused = f.Inputs[0].GetID()
+	if ref, ok := dom.Get(f.focused); ok {
+		ref.Focus()
+	}
+	return f
+}
+
+// FocusedFieldID returns the id Focus() last targeted (empty if never called,
+// or the form has no fields). Real focus movement is a WASM-only DOM side
+// effect (a no-op in the backend/SSR stub); this makes the INTENT observable
+// in any build, e.g. for the view/conformance "New/Edit focuses the first
+// field" clause to assert against without a live DOM.
+func (f *Form) FocusedFieldID() string { return f.focused }
 
 // OnFieldChange registers a callback fired every time a field is committed by the
 // user: blur for text/textarea/datalist, change for select/radio. This is the
