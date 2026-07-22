@@ -10,24 +10,26 @@ import (
 
 // Form represents a form instance.
 type Form struct {
-	id           string
-	parentID     string // Parent element ID where the form is mounted
-	data         model.Fielder
-	Inputs       []input.Input
-	fieldIndices []int                   // Pre-computed struct field index per Input (-1 if not found)
-	class        string                  // CSS class(es)
-	method       string                  // HTTP method (default POST)
-	action       string                  // Form action URL (default: struct name)
-	ssrMode      bool                    // Per-form SSR mode (default false)
-	submitLabel        string                            // Submit button label (empty = "Submit")
-	submitLoadingLabel string                            // Label while submitting (default: label + "...")
-	noResetOnSuccess   bool                              // Disable auto-reset after successful submit
-	noSubmit           bool                              // True when the form should NOT render a submit button
-	onSubmit           func(model.Fielder, func(error))    // WASM submit callback
-	children           []dom.Component                   // Cached dom components (zero-alloc)
-	valueSignals       []*dom.SignalString               // One per input
-	errorSignals       []*dom.SignalString               // One per input
-	submitting         *dom.SignalBool                   // Global form submitting state
+	id                 string
+	parentID           string // Parent element ID where the form is mounted
+	data               model.Fielder
+	Inputs             []input.Input
+	fieldIndices       []int                            // Pre-computed struct field index per Input (-1 if not found)
+	class              string                           // CSS class(es)
+	method             string                           // HTTP method (default POST)
+	action             string                           // Form action URL (default: struct name)
+	ssrMode            bool                             // Per-form SSR mode (default false)
+	submitLabel        string                           // Submit button label (empty = "Submit")
+	submitLoadingLabel string                           // Label while submitting (default: label + "...")
+	noResetOnSuccess   bool                             // Disable auto-reset after successful submit
+	noSubmit           bool                             // True when the form should NOT render a submit button
+	onSubmit           func(model.Fielder, func(error)) // WASM submit callback
+	onFieldChange      func()                           // fires when a field is committed (blur/change) — auto-save hook
+	children           []dom.Component                  // Cached dom components (zero-alloc)
+	valueSignals       []*dom.SignalString              // One per input
+	errorSignals       []*dom.SignalString              // One per input
+	submitting         *dom.SignalBool                  // Global form submitting state
+	locked             *dom.SignalBool                  // Whole-form read-only gate (see SetLocked)
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -83,6 +85,24 @@ func (f *Form) HideSubmit() *Form {
 	return f
 }
 
+// SetLocked gates every field to read-only/disabled (whole-form, not per-field)
+// without discarding their values — used by a host UI to show an existing
+// record before an explicit "edit" action unlocks it. Reactive: takes effect
+// immediately on an already-rendered form.
+func (f *Form) SetLocked(v bool) *Form {
+	f.locked.Set(v)
+	return f
+}
+
+// OnFieldChange registers a callback fired every time a field is committed by the
+// user: blur for text/textarea/datalist, change for select/radio. This is the
+// hook a host uses for auto-save (no explicit Save button) — the callback runs
+// AFTER the field's own value/validate update, so the form's data is current.
+func (f *Form) OnFieldChange(fn func()) *Form {
+	f.onFieldChange = fn
+	return f
+}
+
 // SetClass appends CSS classes to this form (on top of any global classes
 // set via SetGlobalClass). Chainable.
 func (f *Form) SetClass(classes ...string) *Form {
@@ -131,6 +151,7 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		valueSignals: make([]*dom.SignalString, 0, len(schema)),
 		errorSignals: make([]*dom.SignalString, 0, len(schema)),
 		submitting:   dom.NewBool(false),
+		locked:       dom.NewBool(false),
 	}
 
 	for i, field := range schema {
@@ -170,7 +191,15 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		f.Inputs = append(f.Inputs, inp)
 		f.valueSignals = append(f.valueSignals, vSig)
 		f.errorSignals = append(f.errorSignals, eSig)
-		f.children = append(f.children, &fieldComponent{inp, vSig, eSig})
+		// A closure, not f.onFieldChange by value: OnFieldChange is meant to be
+		// called AFTER New() returns (chainable, like HideSubmit) — capturing the
+		// field directly here would freeze it at nil since registration happens
+		// later. The closure re-reads f.onFieldChange at commit time instead.
+		f.children = append(f.children, &fieldComponent{inp, vSig, eSig, f.locked, func() {
+			if f.onFieldChange != nil {
+				f.onFieldChange()
+			}
+		}})
 		f.fieldIndices = append(f.fieldIndices, i)
 	}
 

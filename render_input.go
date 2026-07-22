@@ -10,14 +10,31 @@ type fieldComponent struct {
 	input.Input
 	value *dom.SignalString
 	err   *dom.SignalString
+	// locked mirrors the owning Form's whole-form read-only gate (Form.SetLocked).
+	// Shared across every field, so toggling it re-locks/unlocks the entire form.
+	locked *dom.SignalBool
+	// onCommit fires when the user finishes editing this field (blur for
+	// text/textarea/datalist, change for select/radio) — the auto-save hook set
+	// via Form.OnFieldChange. Nil when the form has none registered.
+	onCommit func()
+}
+
+// isDisabledOrLocked combines the field's own static disabled flag with the
+// form-wide locked signal — either one disables the rendered control.
+func (fc *fieldComponent) isDisabledOrLocked() bool {
+	return fc.Input.IsDisabled() || (fc.locked != nil && fc.locked.Get())
 }
 
 func (fc *fieldComponent) String() string {
 	return fc.Render().String()
 }
 
+// GetID must differ from the input's own id. The framework injects a component's
+// id onto its root element (here the .tw-field wrapper div); if that equalled the
+// input's id, getElementById would resolve the wrapper instead of the input and
+// the value binding would write to the div, leaving the input empty.
 func (fc *fieldComponent) GetID() string {
-	return fc.Input.GetID()
+	return fc.Input.GetID() + ".field"
 }
 
 func (fc *fieldComponent) SetID(id string) {
@@ -45,8 +62,30 @@ func (fc *fieldComponent) validate(val string) {
 	}
 }
 
+// labelText picks the human label for the field's chip: the title first, then
+// the placeholder, then the raw field name as a last resort.
+func (fc *fieldComponent) labelText() string {
+	if t := fc.Input.GetTitle(); t != "" {
+		return t
+	}
+	if p := fc.Input.GetPlaceholder(); p != "" {
+		return p
+	}
+	return fc.Input.FieldName()
+}
+
 func (fc *fieldComponent) Render() *dom.Element {
 	container := dom.NewElement("div").Class("tw-field")
+
+	// Field label. Rendered structurally for every titled field so a global form
+	// skin (e.g. components/fieldset) can present it as a chip/legend; `for` ties
+	// it to the input for click-to-focus. Form ships no styling for it — the look
+	// is the consumer's skin.
+	if lbl := fc.labelText(); lbl != "" {
+		container.Child(dom.NewElement("label").
+			Attr("for", fc.Input.GetID()).
+			Text(lbl))
+	}
 
 	if r, ok := fc.Input.(Renderer); ok {
 		container.Child(r.RenderInput(fc.value, func(v string) {
@@ -112,8 +151,11 @@ func (fc *fieldComponent) renderInput(container *dom.Element) {
 		fc.value.Set(val)
 		fc.validate(val)
 	})
+	if fc.onCommit != nil {
+		el.On("blur", func(dom.Event) { fc.onCommit() })
+	}
 
-	applyCommonAttrs(el, fc.Input)
+	applyCommonAttrs(el, fc)
 	container.Child(el)
 }
 
@@ -125,6 +167,7 @@ func (fc *fieldComponent) renderSelect(container *dom.Element) {
 	if fc.Input.IsRequired() {
 		el.Attr("required", "")
 	}
+	el.BindAttrBoolFunc("disabled", fc.isDisabledOrLocked)
 
 	val := fc.value.Get()
 
@@ -134,6 +177,9 @@ func (fc *fieldComponent) renderSelect(container *dom.Element) {
 		val := e.TargetValue()
 		fc.value.Set(val)
 		fc.validate(val)
+		if fc.onCommit != nil {
+			fc.onCommit()
+		}
 	})
 
 	for _, opt := range fc.Input.GetOptions() {
@@ -167,11 +213,15 @@ func (fc *fieldComponent) renderRadio(container *dom.Element) {
 		radio.BindAttrBoolFunc("checked", func() bool {
 			return fc.value.Get() == opt.Key
 		})
+		radio.BindAttrBoolFunc("disabled", fc.isDisabledOrLocked)
 
 		radio.On("change", func(e dom.Event) {
 			if e.TargetChecked() {
 				fc.value.Set(opt.Key)
 				fc.validate(opt.Key)
+				if fc.onCommit != nil {
+					fc.onCommit()
+				}
 			}
 		})
 
@@ -198,8 +248,11 @@ func (fc *fieldComponent) renderDatalist(container *dom.Element) {
 		fc.value.Set(val)
 		fc.validate(val)
 	})
+	if fc.onCommit != nil {
+		el.On("blur", func(dom.Event) { fc.onCommit() })
+	}
 
-	applyCommonAttrs(el, fc.Input)
+	applyCommonAttrs(el, fc)
 	container.Child(el)
 
 	datalist := dom.NewElement("datalist").ID(listID)
@@ -209,7 +262,8 @@ func (fc *fieldComponent) renderDatalist(container *dom.Element) {
 	container.Child(datalist)
 }
 
-func applyCommonAttrs(el *dom.Element, inp input.Input) {
+func applyCommonAttrs(el *dom.Element, fc *fieldComponent) {
+	inp := fc.Input
 	if ph := inp.GetPlaceholder(); ph != "" {
 		el.Attr("placeholder", ph)
 	}
@@ -224,9 +278,7 @@ func applyCommonAttrs(el *dom.Element, inp input.Input) {
 	if inp.IsRequired() {
 		el.Attr("required", "")
 	}
-	if inp.IsDisabled() {
-		el.Attr("disabled", "")
-	}
+	el.BindAttrBoolFunc("disabled", fc.isDisabledOrLocked)
 	if inp.IsReadonly() {
 		el.Attr("readonly", "")
 	}
