@@ -64,11 +64,13 @@ func TestForm_String_SSR_Shared(t *testing.T) {
 func TestForm_AutoDefaults_Shared(t *testing.T) {
 	f := createTestForm()
 
-	// Placeholder and title default to the raw field name.
+	// Title defaults to the raw field name. Placeholder does NOT — a host UI
+	// already shows the field name as a label chip (components/fieldset), so
+	// defaulting the placeholder to the same text would just repeat it.
 	nameInp := f.Input("Name")
 	if p, ok := nameInp.(interface{ GetPlaceholder() string }); ok {
-		if p.GetPlaceholder() != "Name" {
-			t.Errorf("Expected 'Name', got '%s'", p.GetPlaceholder())
+		if p.GetPlaceholder() != "" {
+			t.Errorf("Expected no default placeholder, got %q", p.GetPlaceholder())
 		}
 	}
 

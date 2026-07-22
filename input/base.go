@@ -1,6 +1,6 @@
 package input
-import "github.com/tinywasm/model"
 
+import "github.com/tinywasm/model"
 
 import (
 	"github.com/tinywasm/fmt"
@@ -9,19 +9,19 @@ import (
 // Base contains common logic and fields (State) for all inputs.
 // It is intended to be embedded in concrete input structs.
 type Base struct {
-	id             string
-	name           string
-	htmlName       string         // The HTML type (e.g., "text", "email")
-	Values         []string       // Multiple values support (for select/checkbox/etc)
-	Options        []fmt.KeyValue // Multiple options for select/checkbox/etc
-	Placeholder    string
-	Title          string
-	Required       bool // HTML required attribute
-	Disabled       bool // HTML disabled attribute
-	Readonly       bool // HTML readonly attribute
-	SkipValidation bool // Whether to skip validation for this input
-	Attributes     []fmt.KeyValue
-	model.Permitted  // anonymous embed: promotes Letters, Numbers, Validate(), etc.
+	id              string
+	name            string
+	htmlName        string         // The HTML type (e.g., "text", "email")
+	Values          []string       // Multiple values support (for select/checkbox/etc)
+	Options         []fmt.KeyValue // Multiple options for select/checkbox/etc
+	Placeholder     string
+	Title           string
+	Required        bool // HTML required attribute
+	Disabled        bool // HTML disabled attribute
+	Readonly        bool // HTML readonly attribute
+	SkipValidation  bool // Whether to skip validation for this input
+	Attributes      []fmt.KeyValue
+	model.Permitted // anonymous embed: promotes Letters, Numbers, Validate(), etc.
 }
 
 // InitBase initializes the base fields and constructs the unique ID.
@@ -34,10 +34,12 @@ func (b *Base) InitBase(parentID, name, htmlName string) {
 	b.name = name
 	b.htmlName = htmlName
 
-	// Only apply defaults if not already set (preserves values during Clone)
-	if b.Placeholder == "" {
-		b.Placeholder = name
-	}
+	// Only apply defaults if not already set (preserves values during Clone).
+	// Placeholder is NOT defaulted to name: a host UI (e.g. components/fieldset)
+	// already shows the field name as a label chip, so a placeholder mirroring
+	// it would just repeat the same text with no added information. Leave it
+	// empty unless a widget explicitly sets one for a real example value (see
+	// input/address.go, input/rut.go).
 	if b.Title == "" {
 		b.Title = name
 	}

@@ -310,6 +310,9 @@ func (f *Form) reset() {
 			setter.SetValues("")
 		}
 	}
+	// A full reset also drops any pending focus intent — a host cancelling a
+	// draft (see crudview.undoAction) must leave nothing tracked as focused.
+	f.focused = ""
 }
 
 // SetValues sets values for the input matching the given field name.
