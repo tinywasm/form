@@ -31,6 +31,7 @@ type Form struct {
 	submitting         *dom.SignalBool                  // Global form submitting state
 	locked             *dom.SignalBool                  // Whole-form read-only gate (see SetLocked)
 	focused            string                           // id Focus() last targeted (see FocusedFieldID)
+	baseline           []string                         // last loaded/reset value per input — see IsDirty
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -119,6 +120,31 @@ func (f *Form) Focus() *Form {
 // field" clause to assert against without a live DOM.
 func (f *Form) FocusedFieldID() string { return f.focused }
 
+// IsDirty reports whether any field's current value differs from the
+// baseline captured at the last load/reset (New, LoadValues, Reset). A host
+// uses this to gate persistence — e.g. crudview's auto-save on field commit
+// — so moving focus through a field without changing it never triggers a
+// write. Comparing valueSignals directly (not a struct diff) keeps this
+// exact and dependency-free: the signals are already the form's single
+// source of truth for "current value" everywhere else in this package.
+func (f *Form) IsDirty() bool {
+	for i, sig := range f.valueSignals {
+		if sig.Get() != f.baseline[i] {
+			return true
+		}
+	}
+	return false
+}
+
+// MarkPristine re-snapshots the baseline to the form's CURRENT values. A host
+// calls this right after a successful save so a later field commit, with
+// nothing further changed since that save, is not considered dirty again.
+func (f *Form) MarkPristine() {
+	for i, sig := range f.valueSignals {
+		f.baseline[i] = sig.Get()
+	}
+}
+
 // OnFieldChange registers a callback fired every time a field is committed by the
 // user: blur for text/textarea/datalist, change for select/radio. This is the
 // hook a host uses for auto-save (no explicit Save button) — the callback runs
@@ -177,6 +203,7 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		errorSignals: make([]*dom.SignalString, 0, len(schema)),
 		submitting:   dom.NewBool(false),
 		locked:       dom.NewBool(false),
+		baseline:     make([]string, 0, len(schema)),
 	}
 
 	for i, field := range schema {
@@ -216,6 +243,7 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		f.Inputs = append(f.Inputs, inp)
 		f.valueSignals = append(f.valueSignals, vSig)
 		f.errorSignals = append(f.errorSignals, eSig)
+		f.baseline = append(f.baseline, val)
 		// A closure, not f.onFieldChange by value: OnFieldChange is meant to be
 		// called AFTER New() returns (chainable, like HideSubmit) — capturing the
 		// field directly here would freeze it at nil since registration happens
@@ -304,6 +332,7 @@ func (f *Form) reset() {
 		// Reset signals
 		f.valueSignals[i].Set("")
 		f.errorSignals[i].Set("")
+		f.baseline[i] = "" // a reset form is pristine — see IsDirty
 
 		// Clear internal state (used by SSR/SyncValues if signals not available)
 		if setter, ok := inp.(interface{ SetValues(...string) }); ok {

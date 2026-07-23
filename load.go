@@ -30,6 +30,7 @@ func (f *Form) LoadValues(data model.Fielder) error {
 		// Signal is the source of truth in WASM mode.
 		f.valueSignals[i].Set(val)
 		f.errorSignals[i].Set("") // loading a record clears stale validation errors
+		f.baseline[i] = val       // a freshly loaded record is pristine — see IsDirty
 
 		// Keep input internal state in sync for SSR mode.
 		if setter, ok := inp.(interface{ SetValues(...string) }); ok {
