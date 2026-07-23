@@ -1,5 +1,7 @@
 ---
 PLAN: "`tinywasm/form`: input.IP() doesn't validate real IP shape (accepts pure letters)"
+STATUS: running
+SESSION: 3900937861547312379
 ---
 > This plan is dispatched via the CodeJob workflow. See skill: agents-workflow.
 > Repo rules: `AGENTS.md` at this repo's root — read it first (especially
