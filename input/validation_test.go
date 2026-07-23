@@ -89,6 +89,15 @@ func Test_Validation(t *testing.T) {
 		{"IP", "all zeros", "0.0.0.0", "invalid", nil, false},
 		{"IP", "mixed dot and colon", "192.168:1.1", "invalid", nil, false},
 		{"IP", "empty", "", "chars", nil, false},
+		{"IP", "invalid plain chars", "uiuiuiu", "invalid", nil, false},
+		{"IP", "invalid ipv4 numeric range", "256.100.100.100", "invalid", nil, false},
+		{"IP", "invalid ipv4 too many groups", "192.168.1.1.1", "invalid", nil, false},
+		{"IP", "invalid ipv4 too few groups", "192.168.1", "invalid", nil, false},
+		{"IP", "invalid ipv6 too many groups", "2001:db8:1:2:3:4:5:6:7", "invalid", nil, false},
+		{"IP", "invalid ipv6 bad chars", "2001:0db8:85a3:0000:0000:8a2e:0370:zzzz", "invalid", nil, false},
+		{"IP", "valid ipv6 compressed", "2001:db8::1", "", nil, false},
+		{"IP", "valid ipv6 double colon start", "::1", "", nil, false},
+		{"IP", "valid ipv6 double colon end", "2001:db8::", "", nil, false},
 
 		// ── Number ───────────────────────────────────────────────────────────
 		{"Number", "valid 100", "100", "", nil, false},
