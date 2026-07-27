@@ -32,8 +32,7 @@ node — the `<input>` is never re-rendered, so focus/cursor and IME composition
 ```go
 in := dom.Input("email").Bind(field.value).         // two-way: input <-> SignalString (cursor/IME safe)
     On("input", func(dom.Event){ field.err.Set(validate(field.value.Get())) })
-errSpan := dom.Span().BindText(field.err).            // only this text node patches on error change
-    BindClassFunc("tw-field-error--visible", func() bool { return field.err.Get() != "" }) // auto-tracked; no deps
+errSpan := dom.Span().BindText(field.err)            // only this text node patches on error change
 ```
 
 Do **not** re-introduce delegated `dom.Get(id).SetText(...)` listener wiring in a lifecycle hook —

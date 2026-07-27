@@ -1,8 +1,10 @@
 ---
 PLAN: "form: emitir la anatomía de campo de widget y los estados data-* en vez de clases propias"
+TAG: "v0.3.0"
 EXECUTOR: jules
-STATUS: running
+STATUS: review
 SESSION: 17479739945752936895
+PR: https://github.com/tinywasm/form/pull/18
 ---
 
 > Este plan se despacha con el flujo CodeJob. Ver skill: **agents-workflow**.
