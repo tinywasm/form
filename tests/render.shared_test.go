@@ -30,7 +30,7 @@ func runRenderTests(t *testing.T) {
 		html := f.String()
 
 		// Note: html.Span().String() uses single quotes for attributes
-		expectedSpan := `id='app.form.nombre.error' class='tw-field-error' aria-live='polite'`
+		expectedSpan := `id='app.form.nombre.error' class='tw-field__error' aria-live='polite'`
 		if !strings.Contains(html, expectedSpan) {
 			t.Errorf("Expected error span not found in HTML: %s", html)
 		}

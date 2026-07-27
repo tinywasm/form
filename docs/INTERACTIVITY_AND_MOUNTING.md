@@ -22,10 +22,7 @@ in := dom.NewElement("input").
     })
 
 errSpan := dom.NewElement("span").
-    BindText(field.err).
-    BindClassFunc("tw-field-error--visible", func() bool {
-        return field.err.Get() != ""
-    })
+    BindText(field.err)
 ```
 
 ## Advantages of Reactive Binding

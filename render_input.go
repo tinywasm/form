@@ -3,6 +3,7 @@ package form
 import (
 	"github.com/tinywasm/dom"
 	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/widget"
 )
 
 // fieldComponent wraps an input.Input to implement dom.Component.
@@ -75,7 +76,20 @@ func (fc *fieldComponent) labelText() string {
 }
 
 func (fc *fieldComponent) Render() *dom.Element {
-	container := dom.NewElement("div").Class("tw-field")
+	container := dom.NewElement("div").
+		Class(widget.NameField.Root().String()).
+		BindAttrFunc(attrInvalid.Key, func() string {
+			if fc.err.Get() != "" {
+				return attrInvalid.Value
+			}
+			return ""
+		}).
+		BindAttrFunc(attrLocked.Key, func() string {
+			if fc.isDisabledOrLocked() {
+				return attrLocked.Value
+			}
+			return ""
+		})
 
 	// Field label. Rendered structurally for every titled field so a global form
 	// skin (e.g. components/fieldset) can present it as a chip/legend; `for` ties
@@ -84,6 +98,7 @@ func (fc *fieldComponent) Render() *dom.Element {
 	if lbl := fc.labelText(); lbl != "" {
 		container.Child(dom.NewElement("label").
 			Attr("for", fc.Input.GetID()).
+			Class(widget.NameField.Class(widget.PartLabel).String()).
 			Text(lbl))
 	}
 
@@ -108,12 +123,9 @@ func (fc *fieldComponent) Render() *dom.Element {
 
 	errSpan := dom.NewElement("span").
 		ID(fc.Input.ErrorID()).
-		Class("tw-field-error").
+		Class(widget.NameField.Class(widget.PartError).String()).
 		Attr("aria-live", "polite").
-		BindText(fc.err).
-		BindClassFunc("tw-field-error--visible", func() bool {
-			return fc.err.Get() != ""
-		})
+		BindText(fc.err)
 
 	container.Child(errSpan)
 	return container
@@ -128,6 +140,7 @@ func (fc *fieldComponent) renderInput(container *dom.Element) {
 
 	el := dom.NewElement(tag).
 		ID(fc.Input.GetID()).
+		Class(widget.NameField.Class(widget.PartInput).String()).
 		Attr("name", fc.Input.FieldName())
 
 	if tag == "input" {
@@ -162,6 +175,7 @@ func (fc *fieldComponent) renderInput(container *dom.Element) {
 func (fc *fieldComponent) renderSelect(container *dom.Element) {
 	el := dom.NewElement("select").
 		ID(fc.Input.HandlerName()).
+		Class(widget.NameField.Class(widget.PartInput).String()).
 		Attr("name", fc.Input.FieldName())
 
 	if fc.Input.IsRequired() {
@@ -193,7 +207,7 @@ func (fc *fieldComponent) renderSelect(container *dom.Element) {
 }
 
 func (fc *fieldComponent) renderRadio(container *dom.Element) {
-	group := dom.NewElement("div").Class("tw-radio-group")
+	group := dom.NewElement("div").Class(widget.NameField.Class(widget.PartRadioGroup).String())
 	val := fc.value.Get()
 	for _, opt := range fc.Input.GetOptions() {
 		optID := fc.Input.HandlerName() + "." + opt.Key
@@ -238,6 +252,7 @@ func (fc *fieldComponent) renderDatalist(container *dom.Element) {
 	el := dom.NewElement("input").
 		Attr("type", "text").
 		ID(fc.Input.GetID()).
+		Class(widget.NameField.Class(widget.PartInput).String()).
 		Attr("name", fc.Input.FieldName()).
 		Attr("list", listID)
 

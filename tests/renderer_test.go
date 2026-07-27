@@ -36,8 +36,8 @@ func TestForm_Renderer(t *testing.T) {
 	}
 
 	// Must still contain the standard error span
-	if !fmt.Contains(html, "class='tw-field-error'") {
-		t.Errorf("Expected html to contain 'class='tw-field-error'', got: %s", html)
+	if !fmt.Contains(html, "class='tw-field__error'") {
+		t.Errorf("Expected html to contain 'class='tw-field__error'', got: %s", html)
 	}
 }
 

@@ -136,48 +136,21 @@ Runtime tweaks: `f.Input("Field").SetPlaceholder(...)`,
 
 ## Styling
 
-The library ships structure, the project owns the look (CSS-first doctrine):
+The library ships structure, the project owns the look (CSS-first doctrine).
+The forms do not embed CSS or rely on custom styling libraries, but instead emit a standard semantic anatomy defined by `tinywasm/widget`:
 
-1. **Stable class contract** — every bound field renders as:
+1. **Stable anatomy and class contract** — every bound field renders with the classes:
+   - Root container: `tw-field`
+   - Label: `tw-field__label`
+   - Inputs/Textareas/Selects/Datalists: `tw-field__input`
+   - Error spans: `tw-field__error`
+   - Radio group wrappers: `tw-field__radio-group`
 
-   ```html
-   <div class='tw-field'>
-     <input ... />
-     <span class='tw-field-error' aria-live='polite'></span>
-   </div>
-   ```
+2. **State attributes** — validation and lock states are published as standard reactive `data-*` attributes on the root container of each field:
+   - Invalid state: `data-invalid="true"`
+   - Locked / Read-only state: `data-locked="true"`
 
-   Hook classes: `tw-field`, `tw-field-error`, `tw-field-error--visible`,
-   `tw-radio-group`. Override them in your project stylesheet to theme every
-   form at once.
-
-2. **`RenderCSS()`** (`!wasm`) — returns the base styles as an additive
-   `css.Stylesheet`. You don't wire it manually: the
-   [tinywasm](https://github.com/tinywasm/app) SSR pipeline discovers
-   package-level `RenderCSS()` functions in your imports and bundles them
-   into the initial HTML automatically. Your overrides live in the project's
-   CSS entry point — by convention `config/css.go` at the project root —
-   where `RootCSS()` declares token overrides and your own rules win the
-   cascade:
-
-   ```go
-   // config/css.go
-   //go:build !wasm
-
-   package config
-
-   import "github.com/tinywasm/css"
-
-   func RootCSS() *css.Stylesheet {
-       return css.Root(
-           css.Declare(css.ColorPrimary, "#FF6B35"),
-           // ...your theme tokens; add Rule(".tw-field", ...) overrides here too
-       )
-   }
-   ```
-
-   See [tinywasm/css](https://github.com/tinywasm/css) for the token/theming
-   contract.
+   Global form skins (e.g., `components/fieldset`) use these selectors to style fields dynamically, e.g., `.tw-field[data-invalid="true"] .tw-field__error { ... }`.
 
 3. **`form.SetGlobalClass("my-app-form")`** and **`f.SetClass("local-class")`**
    — adds classes to the `<form>`, useful for scoping:
