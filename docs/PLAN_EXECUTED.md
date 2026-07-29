@@ -1,5 +1,7 @@
 # form — PLAN: Eliminar dependencia i18n del core (opt-in real)
 
+**Ejecutado** y verificado de manera satisfactoria. Se confirma que todas las etapas han sido completadas con éxito, eliminando cualquier rastro de la dependencia global i18n (`Translate`, `RegisterWords`, `DictEntry`) en el core del paquete, logrando que el soporte de traducción sea de tipo opt-in real mediante `fmt/lang` importado desde el lado del consumidor de la aplicación.
+
 ## Contexto
 
 `tinywasm/fmt` v0.24.1 movió `Translate`, `RegisterWords`, `DictEntry` a `fmt/lang` (opt-in).
