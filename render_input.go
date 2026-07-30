@@ -2,9 +2,20 @@ package form
 
 import (
 	"github.com/tinywasm/dom"
+	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form/input"
 	"github.com/tinywasm/widget"
 )
+
+// labelChars is the label's budget, calibrated against the --chip-width the
+// form skin gives the chip. Truncate counts the three-byte ellipsis inside this
+// number, so the visible text is labelChars-3 at most.
+//
+// The count is BYTES, not runes: an accented character costs two, and a cut can
+// land mid-character. Field names are identifiers in practice, so this is
+// tolerable here; a title with accents long enough to trip it belongs in the
+// input's title, not its label.
+const labelChars = 14
 
 // fieldComponent wraps an input.Input to implement dom.Component.
 type fieldComponent struct {
@@ -99,7 +110,8 @@ func (fc *fieldComponent) Render() *dom.Element {
 		container.Child(dom.NewElement("label").
 			Attr("for", fc.Input.GetID()).
 			Class(widget.NameField.Class(widget.PartLabel).String()).
-			Text(lbl))
+			Attr("title", lbl). // the untruncated text stays reachable
+			Text(fmt.Convert(lbl).Truncate(labelChars).String()))
 	}
 
 	if r, ok := fc.Input.(Renderer); ok {
