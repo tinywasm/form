@@ -89,18 +89,8 @@ func (fc *fieldComponent) labelText() string {
 func (fc *fieldComponent) Render() *dom.Element {
 	container := dom.NewElement("div").
 		Class(widget.NameField.Root().String()).
-		BindAttrFunc(attrInvalid.Key, func() string {
-			if fc.err.Get() != "" {
-				return attrInvalid.Value
-			}
-			return ""
-		}).
-		BindAttrFunc(attrLocked.Key, func() string {
-			if fc.isDisabledOrLocked() {
-				return attrLocked.Value
-			}
-			return ""
-		})
+		BindStateFunc(widget.Invalid, func() bool { return fc.err.Get() != "" }).
+		BindStateFunc(widget.Locked, fc.isDisabledOrLocked)
 
 	// Field label. Rendered structurally for every titled field so a global form
 	// skin (e.g. components/fieldset) can present it as a chip/legend; `for` ties
