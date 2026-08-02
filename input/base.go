@@ -4,6 +4,7 @@ import "github.com/tinywasm/model"
 
 import (
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/fmt/lang"
 )
 
 // Base contains common logic and fields (State) for all inputs.
@@ -14,7 +15,7 @@ type Base struct {
 	htmlName        string         // The HTML type (e.g., "text", "email")
 	Values          []string       // Multiple values support (for select/checkbox/etc)
 	Options         []fmt.KeyValue // Multiple options for select/checkbox/etc
-	Placeholder     string
+	Placeholder     []string // raw, untranslated words; resolved live by GetPlaceholder
 	Title           string
 	Required        bool // HTML required attribute
 	Disabled        bool // HTML disabled attribute
@@ -63,14 +64,19 @@ func (b *Base) GetValues() []string {
 	return b.Values
 }
 
-// SetPlaceholder sets the input placeholder.
-func (b *Base) SetPlaceholder(ph string) {
+// SetPlaceholder sets the input placeholder's translatable words.
+func (b *Base) SetPlaceholder(ph ...string) {
 	b.Placeholder = ph
 }
 
-// GetPlaceholder returns the input placeholder.
+// GetPlaceholder returns the input placeholder, translated for the
+// currently active language (resolved live — see fmt/lang.OutLang).
 func (b *Base) GetPlaceholder() string {
-	return b.Placeholder
+	args := make([]any, len(b.Placeholder))
+	for i, p := range b.Placeholder {
+		args[i] = p
+	}
+	return lang.Translate(args...).String()
 }
 
 // SetTitle sets the input title (tooltip).

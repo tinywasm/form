@@ -18,7 +18,7 @@ func Address() Input {
 	a.Minimum = 5
 	a.Maximum = 200
 	a.InitBase("", "", "text")
-	a.SetPlaceholder("Enter Address")
+	a.SetPlaceholder("Enter", "Address")
 	return a
 }
 

@@ -1,10 +1,5 @@
 package input
 
-
-
-
-
-
 import "github.com/tinywasm/fmt"
 
 type rut struct{ Base }
@@ -17,7 +12,7 @@ func Rut() Input {
 	r.Minimum = 3
 	r.Maximum = 12
 	r.InitBase("", "", "text")
-	r.SetPlaceholder("12345678-9")
+	r.SetPlaceholder("example:", "12345678-9")
 	return r
 }
 

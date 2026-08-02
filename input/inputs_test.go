@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/tinywasm/fmt"
+	"github.com/tinywasm/fmt/lang"
 )
 
 // tc is a compact validation test case.
@@ -125,10 +126,40 @@ func checkErr(t *testing.T, err error, expected string) {
 	}
 }
 
+func TestIP_Placeholder(t *testing.T) {
+	// PLAN v0.2.0 item 7: IP accepts IPv4 AND IPv6, so the field name cannot
+	// teach the shape — the format hint belongs to the type that defines the
+	// format (the precedent rut.go set). A placeholder mirroring the LABEL
+	// would be noise; one teaching the format is not.
+	i := IP()
+	getter, ok := i.(interface{ GetPlaceholder() string })
+	if !ok {
+		t.Fatal("IP() must expose GetPlaceholder")
+	}
+
+	if got := getter.GetPlaceholder(); got != "example: 192.168.1.1" {
+		t.Errorf("expected IP placeholder 'example: 192.168.1.1', got %q", got)
+	}
+
+	// GetPlaceholder resolves translation live (not cached at construction), so
+	// switching the active language must change the "example:" word without a
+	// new IP() instance — this is the whole point of lazy resolution. The
+	// dictionary itself is a consumer concern, not something input/ hardcodes:
+	// registered here, in the test, rather than in production code.
+	lang.RegisterWords([]lang.DictEntry{
+		{EN: "example:", ES: "ejemplo:"},
+	})
+	defer lang.OutLang(lang.EN)
+	lang.OutLang(lang.ES)
+	if got := getter.GetPlaceholder(); got != "ejemplo: 192.168.1.1" {
+		t.Errorf("expected translated IP placeholder 'ejemplo: 192.168.1.1', got %q", got)
+	}
+}
+
 func TestClone_Preservation(t *testing.T) {
 	// Create a prototype with custom configuration
 	proto := Text()
-	if setter, ok := proto.(interface{ SetPlaceholder(string) }); ok {
+	if setter, ok := proto.(interface{ SetPlaceholder(...string) }); ok {
 		setter.SetPlaceholder("Custom Placeholder")
 	}
 	if setter, ok := proto.(interface{ SetTitle(string) }); ok {

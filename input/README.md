@@ -96,7 +96,7 @@ func MyInput() input.Input {
     m.Minimum = 1
     m.Maximum = 40
     m.InitBase("", "", "text")
-    m.SetPlaceholder("e.g. 3f4a1b")
+    m.SetPlaceholder("example:", "3f4a1b")
     m.SetTitle("Lowercase hex only")
     return m
 }
