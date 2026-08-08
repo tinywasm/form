@@ -10,5 +10,5 @@ github.com/tinywasm/font v0.0.4 h1:dugQHev1xk2YzA01xpqV4WLCHxEmk6JEu2GkDbPxlfE=
 github.com/tinywasm/font v0.0.4/go.mod h1:mc8y0jI0VWgsSNEk5f0G3x61Xah4xyfOf9/ds3YaLD8=
 github.com/tinywasm/model v0.1.0 h1:Y33DNQ6ZRzORo5vYplWI/1Swp6TpmXBZCO3pjaosfPU=
 github.com/tinywasm/model v0.1.0/go.mod h1:wkYZLW6CWVrlx5TiLEBL71KgDxhjUcFtY3KXZKpkCXA=
-github.com/tinywasm/widget v0.6.2 h1:TjDflCVomTbWTNpDNvShG2QYctfeT6sLPW6FSbbR2Tg=
-github.com/tinywasm/widget v0.6.2/go.mod h1:HKY0YT+1ccwRBIf7F0MmTO/YL/Z6Lj3Z/yNys3Ma/rU=
+github.com/tinywasm/widget v0.6.3 h1:+0WTQqC8BzfZVHcxjdvszSacKjm9AuMp6kFR0u8VqH0=
+github.com/tinywasm/widget v0.6.3/go.mod h1:U9WxsjKBJW5S4hCnvU5pJCjHU3g0cRMLm4JpHOc/9HQ=
