@@ -3,7 +3,21 @@ package form
 import (
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/model"
+	"github.com/tinywasm/unixid"
 )
+
+// idGen backs the hidden-PK auto-assignment below. NewUnixID() only errors
+// on a nil/malformed Config, never on the zero-arg call this package makes —
+// see unixid_back.go's createUnixID, which always fills a default Session.
+var idGen = mustUnixID()
+
+func mustUnixID() *unixid.UnixID {
+	id, err := unixid.NewUnixID()
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
 
 // SyncValues copies all input values back into the bound struct
 // via the Fielder's Pointers() method.
@@ -44,6 +58,27 @@ func (f *Form) SyncValues(data model.Fielder) error {
 
 		writeField(ptr, field.Type.Storage(), values)
 	}
+
+	// A hidden PK (New skipped it — see that function's comment) has no
+	// Input and so is untouched by the loop above. An EXISTING record
+	// already carries its real id here (Presenter.Select loaded it before
+	// the form ever rendered); only a brand-new record's id is still the
+	// zero value at this point, and it must not reach the backend that
+	// way — model.ValidateFields (deeper in orm.Create) rejects an empty
+	// PK outright. Only text PKs are assigned here: an int PK is normally
+	// auto-increment, the DB's job (see orm.Create), not this form's.
+	for _, idx := range f.hiddenPKIndices {
+		field := schema[idx]
+		if field.Type.Storage() != model.FieldText {
+			continue
+		}
+		ptr := pointers[idx]
+		if val, _ := model.ReadStringPtr(ptr); val != "" {
+			continue
+		}
+		writeField(ptr, model.FieldText, []string{idGen.NewID()})
+	}
+
 	return nil
 }
 

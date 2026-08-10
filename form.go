@@ -32,6 +32,29 @@ type Form struct {
 	locked             *dom.SignalBool                  // Whole-form read-only gate (see SetLocked)
 	focused            string                           // id Focus() last targeted (see FocusedFieldID)
 	baseline           []string                         // last loaded/reset value per input — see IsDirty
+	showFields         map[string]bool                  // PK field names opted back in via ShowField — see New
+	hiddenPKIndices    []int                            // schema indices of PK fields New skipped — see sync.go
+}
+
+// Option configures New. The only kind today is ShowField.
+type Option func(*Form)
+
+// ShowField keeps the given primary-key field(s) in the rendered form
+// despite New's default of hiding every PK (see the skip in New's loop) — an
+// id is normally system-assigned and opaque, and an editable box for it
+// invites a user to "fix" a value that isn't theirs to change. Use this for
+// the rare PK that genuinely is user-facing (a vanity slug, a manually
+// assigned code). A no-op for a name that isn't a PK — there is nothing to
+// opt back INTO.
+func ShowField(names ...string) Option {
+	return func(f *Form) {
+		if f.showFields == nil {
+			f.showFields = make(map[string]bool, len(names))
+		}
+		for _, n := range names {
+			f.showFields[n] = true
+		}
+	}
 }
 
 // Children returns the form's input fields as dom components (O(1), zero-alloc).
@@ -179,10 +202,11 @@ func resolveStructName(data model.Fielder) string {
 	return "form"
 }
 
-// New creates a new Form from a Fielder.
+// New creates a new Form from a Fielder. opts is typically ShowField(...) to
+// opt a primary key back into the render — see that function.
 // parentID: ID of the parent DOM element where the form will be mounted.
 // Returns an error if any exported field has no matching registered input.
-func New(parentID string, data model.Fielder) (*Form, error) {
+func New(parentID string, data model.Fielder, opts ...Option) (*Form, error) {
 	schema := data.Schema()
 	values := model.ReadValues(schema, data.Pointers())
 
@@ -205,10 +229,17 @@ func New(parentID string, data model.Fielder) (*Form, error) {
 		locked:       dom.NewBool(false),
 		baseline:     make([]string, 0, len(schema)),
 	}
+	for _, opt := range opts {
+		opt(f)
+	}
 
 	for i, field := range schema {
-		// Skip auto-increment PKs (not editable)
-		if field.IsPK() && field.IsAutoInc() {
+		// Skip primary keys by default, auto-increment or not: an id is
+		// normally system-assigned/opaque, and rendering an editable box for
+		// it invites a user to "fix" a value that isn't theirs to change.
+		// ShowField(name) (passed to New) opts a specific one back in.
+		if field.IsPK() && !f.showFields[field.Name] {
+			f.hiddenPKIndices = append(f.hiddenPKIndices, i)
 			continue
 		}
 
