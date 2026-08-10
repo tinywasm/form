@@ -6,5 +6,8 @@ require (
 	github.com/tinywasm/dom v0.13.5
 	github.com/tinywasm/fmt v0.25.5
 	github.com/tinywasm/model v0.1.0
-	github.com/tinywasm/widget v0.6.3
+	github.com/tinywasm/unixid v0.2.26
+	github.com/tinywasm/widget v0.6.5
 )
+
+require github.com/tinywasm/time v0.5.0 // indirect
