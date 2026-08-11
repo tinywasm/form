@@ -8,5 +8,5 @@ github.com/tinywasm/time v0.5.0 h1:M17DNgKrMYfkCK42V6miL9AcwfN/FHghbKOSTXJrkMo=
 github.com/tinywasm/time v0.5.0/go.mod h1:vxGAkKA40im4ObiTS6hcsJYiIsVVLSz/A63JC/+TwvA=
 github.com/tinywasm/unixid v0.2.26 h1:eU5VLSegyf9Np6dtbQssI5MVkU914cZyfTI4KnmAyOw=
 github.com/tinywasm/unixid v0.2.26/go.mod h1:wh1FAR4GDFpPoVcMiUQH2VYsIdxByEN44Rge3vTCo7k=
-github.com/tinywasm/widget v0.6.5 h1:6ETSP7OjYTK3WiHj4xCPeooP9e2fPD/BoiZtgGBy6Hw=
-github.com/tinywasm/widget v0.6.5/go.mod h1:GOzkKd027O244d0MeYItQ2IJ8ehinM5Cb/Oq75pbnSY=
+github.com/tinywasm/widget v0.6.6 h1:wWioBf+wCv3LSm7nF5NueAC0kM5pRO5vh1zbTOGJLvE=
+github.com/tinywasm/widget v0.6.6/go.mod h1:GOzkKd027O244d0MeYItQ2IJ8ehinM5Cb/Oq75pbnSY=
