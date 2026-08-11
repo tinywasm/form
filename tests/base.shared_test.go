@@ -7,7 +7,7 @@ import (
 
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 )
 
 func TestForm_NewAndBinding_Shared(t *testing.T) {

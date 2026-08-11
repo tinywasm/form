@@ -4,7 +4,7 @@ import "github.com/tinywasm/model"
 
 import (
 	"github.com/tinywasm/form"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 )
 
 // User is a sample struct for testing data binding.

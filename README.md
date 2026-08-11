@@ -30,7 +30,7 @@ validation; `model.*` = validation only (never rendered).
 ```go
 import (
     "github.com/tinywasm/model"
-    "github.com/tinywasm/form/input"
+    "github.com/tinywasm/input"
 )
 
 var UserModel = model.Definition{

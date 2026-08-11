@@ -2,7 +2,7 @@ package form_test
 
 import (
 	"github.com/tinywasm/form"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 	"github.com/tinywasm/model"
 	"testing"
 )

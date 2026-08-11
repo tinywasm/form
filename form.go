@@ -5,7 +5,7 @@ import "github.com/tinywasm/model"
 import (
 	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 )
 
 // Form represents a form instance.

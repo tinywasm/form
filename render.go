@@ -1,6 +1,9 @@
 package form
 
-import "github.com/tinywasm/dom"
+import (
+	"github.com/tinywasm/dom"
+	"github.com/tinywasm/widget"
+)
 
 // SetSSR enables or disables SSR mode for this form.
 func (f *Form) SetSSR(enabled bool) *Form {
@@ -34,6 +37,7 @@ func (f *Form) Render() *dom.Element {
 	if !f.noSubmit {
 		btn := dom.NewElement("button").
 			Attr("type", "submit").
+			Class(widget.NameField.Class(widget.PartSubmit).String()).
 			ID(f.id + ".submit")
 
 		btn.BindAttrBool("disabled", f.submitting)
@@ -49,7 +53,16 @@ func (f *Form) Render() *dom.Element {
 			return f.resolveSubmitLabel()
 		})
 
-		el.Child(btn)
+		// Wrapped in the same tw-field box every field gets, not appended
+		// bare: the <form> carries no class, so a field's own inset IS its
+		// spacing (fieldset's Root pads by Space2 for exactly that reason).
+		// A bare button skips that inset and comes out wider than the inputs
+		// above it on both edges — the one misaligned edge in an otherwise
+		// squared-off stack. Sharing the wrapper aligns it by construction
+		// rather than by a margin tuned to match fieldset's padding.
+		el.Child(dom.NewElement("div").
+			Class(widget.NameField.Root().String()).
+			Child(btn))
 	}
 
 	// Bind submit event

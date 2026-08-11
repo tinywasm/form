@@ -6,7 +6,7 @@ import (
 	"github.com/tinywasm/dom"
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 )
 
 type customInput struct {

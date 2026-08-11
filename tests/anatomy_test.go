@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/tinywasm/form"
-	"github.com/tinywasm/form/input"
+	"github.com/tinywasm/input"
 	"github.com/tinywasm/model"
 )
 
