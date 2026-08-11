@@ -3,21 +3,7 @@ package form
 import (
 	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/model"
-	"github.com/tinywasm/unixid"
 )
-
-// idGen backs the hidden-PK auto-assignment below. NewUnixID() only errors
-// on a nil/malformed Config, never on the zero-arg call this package makes —
-// see unixid_back.go's createUnixID, which always fills a default Session.
-var idGen = mustUnixID()
-
-func mustUnixID() *unixid.UnixID {
-	id, err := unixid.NewUnixID()
-	if err != nil {
-		panic(err)
-	}
-	return id
-}
 
 // SyncValues copies all input values back into the bound struct
 // via the Fielder's Pointers() method.
@@ -76,7 +62,7 @@ func (f *Form) SyncValues(data model.Fielder) error {
 		if val, _ := model.ReadStringPtr(ptr); val != "" {
 			continue
 		}
-		writeField(ptr, model.FieldText, []string{idGen.NewID()})
+		writeField(ptr, model.FieldText, []string{f.idGen.NewID()})
 	}
 
 	return nil

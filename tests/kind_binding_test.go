@@ -39,7 +39,7 @@ func (m *mixedKindRecord) FormName() string {
 
 func TestForm_New_BindsOnlyInputKinds(t *testing.T) {
 	rec := &mixedKindRecord{Name: "Jane", Note: "internal note", Age: 30}
-	f, err := form.New("test-parent", rec)
+	f, err := form.New("test-parent", rec, &testIDGen{})
 	if err != nil {
 		t.Fatalf("form.New() error = %v", err)
 	}

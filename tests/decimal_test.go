@@ -36,7 +36,7 @@ func (m *priceRecord) Pointers() []any { return []any{&m.Price} }
 // TestDecimal_RoundTripsFractionalValue is the consumer-shaped test: a fractional
 // value survives New -> LoadValues -> SyncValues without truncation.
 func TestDecimal_RoundTripsFractionalValue(t *testing.T) {
-	f, err := form.New("parent", &priceRecord{})
+	f, err := form.New("parent", &priceRecord{}, &testIDGen{})
 	if err != nil {
 		t.Fatalf("form.New: %v", err)
 	}

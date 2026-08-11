@@ -26,7 +26,7 @@ func (s *renderStruct) Values() []any   { return []any{s.Nombre} }
 func runRenderTests(t *testing.T) {
 	t.Run("TestRenderInput_EmitsErrorSpan", func(t *testing.T) {
 		s := &renderStruct{}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		html := f.String()
 
 		// Note: html.Span().String() uses single quotes for attributes
@@ -38,7 +38,7 @@ func runRenderTests(t *testing.T) {
 
 	t.Run("TestRender_SubmitButtonHasID", func(t *testing.T) {
 		s := &renderStruct{}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		html := f.String()
 
 		expectedID := `id='app.form.submit'`
@@ -49,7 +49,7 @@ func runRenderTests(t *testing.T) {
 
 	t.Run("TestRender_ErrorIDMethod", func(t *testing.T) {
 		s := &renderStruct{}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		inp := f.Input("nombre")
 
 		expectedErrorID := "app.form.nombre.error"

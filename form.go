@@ -13,6 +13,7 @@ type Form struct {
 	id                 string
 	parentID           string // Parent element ID where the form is mounted
 	data               model.Fielder
+	idGen              model.IDGenerator // hidden-PK auto-assignment on submit — see sync.go
 	Inputs             []input.Input
 	fieldIndices       []int                            // Pre-computed struct field index per Input (-1 if not found)
 	class              string                           // CSS class(es)
@@ -32,7 +33,7 @@ type Form struct {
 	locked             *dom.SignalBool                  // Whole-form read-only gate (see SetLocked)
 	focused            string                           // id Focus() last targeted (see FocusedFieldID)
 	baseline           []string                         // last loaded/reset value per input — see IsDirty
-	showFields         map[string]bool                  // PK field names opted back in via ShowField — see New
+	showFields         []fmt.KeyValue                  // PK field names opted back in via ShowField — see New
 	hiddenPKIndices    []int                            // schema indices of PK fields New skipped — see sync.go
 }
 
@@ -48,11 +49,8 @@ type Option func(*Form)
 // opt back INTO.
 func ShowField(names ...string) Option {
 	return func(f *Form) {
-		if f.showFields == nil {
-			f.showFields = make(map[string]bool, len(names))
-		}
 		for _, n := range names {
-			f.showFields[n] = true
+			f.showFields = append(f.showFields, fmt.KeyValue{Key: n})
 		}
 	}
 }
@@ -202,11 +200,28 @@ func resolveStructName(data model.Fielder) string {
 	return "form"
 }
 
-// New creates a new Form from a Fielder. opts is typically ShowField(...) to
-// opt a primary key back into the render — see that function.
+func hasShowField(showFields []fmt.KeyValue, name string) bool {
+	for _, kv := range showFields {
+		if kv.Key == name {
+			return true
+		}
+	}
+	return false
+}
+
+// New creates a new Form from a Fielder. idGen is REQUIRED — form never
+// constructs its own ID generator (see model.IDGenerator's doc comment); pass
+// unixid.NewUnixID() at your composition root, or a test double in tests.
+// opts is typically ShowField(...) to opt a primary key back into the render
+// — see that function.
 // parentID: ID of the parent DOM element where the form will be mounted.
 // Returns an error if any exported field has no matching registered input.
-func New(parentID string, data model.Fielder, opts ...Option) (*Form, error) {
+func New(parentID string, data model.Fielder, idGen model.IDGenerator, opts ...Option) (*Form, error) {
+	if idGen == nil {
+		return nil, fmt.Errf("form.New: idGen is required (got nil model.IDGenerator) — pass "+
+			"unixid.NewUnixID() at your composition root, or a test double in tests; form must "+
+			"never construct its own generator (see model.IDGenerator's doc comment)")
+	}
 	schema := data.Schema()
 	values := model.ReadValues(schema, data.Pointers())
 
@@ -217,6 +232,7 @@ func New(parentID string, data model.Fielder, opts ...Option) (*Form, error) {
 		id:           formID,
 		parentID:     parentID,
 		data:         data,
+		idGen:        idGen,
 		Inputs:       make([]input.Input, 0, len(schema)),
 		class:        globalClass,
 		method:       "POST",
@@ -238,7 +254,7 @@ func New(parentID string, data model.Fielder, opts ...Option) (*Form, error) {
 		// normally system-assigned/opaque, and rendering an editable box for
 		// it invites a user to "fix" a value that isn't theirs to change.
 		// ShowField(name) (passed to New) opts a specific one back in.
-		if field.IsPK() && !f.showFields[field.Name] {
+		if field.IsPK() && !hasShowField(f.showFields, field.Name) {
 			f.hiddenPKIndices = append(f.hiddenPKIndices, i)
 			continue
 		}

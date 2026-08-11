@@ -9,7 +9,7 @@ import (
 
 func TestForm_SetClass(t *testing.T) {
 	s := &submitStruct{}
-	f, _ := form.New("app", s)
+	f, _ := form.New("app", s, &testIDGen{})
 
 	f.SetClass("cms-form")
 
@@ -25,7 +25,7 @@ func TestForm_SetClass_Append(t *testing.T) {
 	defer form.SetGlobalClass("") // Reset global state
 
 	s := &submitStruct{}
-	f, _ := form.New("app", s)
+	f, _ := form.New("app", s, &testIDGen{})
 	f.SetClass("local-class")
 
 	html := f.String()

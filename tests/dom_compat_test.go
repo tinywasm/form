@@ -24,7 +24,7 @@ func (m *mockFielder) Values() []any {
 }
 
 func TestForm_DomComponent(t *testing.T) {
-	f, _ := form.New("parent", &mockFielder{})
+	f, _ := form.New("parent", &mockFielder{}, &testIDGen{})
 
 	// This assignment will fail to compile if *Form does not implement dom.Component
 	var _ dom.Component = f

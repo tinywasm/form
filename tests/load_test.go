@@ -79,7 +79,7 @@ func (m *WidgetsModel) EncodeFields(w model.FieldWriter) {}
 func TestLoadValues(t *testing.T) {
 	// 1. Rellena: New → LoadValues(&X{Name: "ACME", Price: 1500}) → los valueSignals correspondientes valen "ACME" y "1500"
 	u := &WidgetsModel{Name: "Original", Price: 100}
-	f, err := form.New("parent-id", u)
+	f, err := form.New("parent-id", u, &testIDGen{})
 	if err != nil {
 		t.Fatalf("unexpected error creating form: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestLoadValues(t *testing.T) {
 func TestNewFailures(t *testing.T) {
 	// 7. New con un modelo sin widgets falla: un Fielder cuyos Field.Type sean todos model.Text()/model.Int() → New devuelve err != nil (no un form vacío).
 	noWidgets := &NoWidgetsModel{Name: "Test", Price: 10}
-	f, err := form.New("parent-id", noWidgets)
+	f, err := form.New("parent-id", noWidgets, &testIDGen{})
 	if err == nil {
 		t.Fatal("expected form.New to fail when model has no widgets, but got no error")
 	}
@@ -202,7 +202,7 @@ func TestNewFailures(t *testing.T) {
 
 	// 8. New con widgets funciona: el mismo modelo con input.Text()/input.Number() → err == nil y len(f.Inputs) > 0.
 	withWidgets := &WidgetsModel{Name: "Test", Price: 10}
-	f2, err2 := form.New("parent-id", withWidgets)
+	f2, err2 := form.New("parent-id", withWidgets, &testIDGen{})
 	if err2 != nil {
 		t.Fatalf("unexpected error: %v", err2)
 	}

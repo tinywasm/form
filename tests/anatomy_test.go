@@ -27,7 +27,7 @@ func (s *anatomyStruct) Values() []any   { return []any{s.Nombre, s.Gender} }
 
 func TestForm_Anatomy(t *testing.T) {
 	s := &anatomyStruct{}
-	f, _ := form.New("app", s)
+	f, _ := form.New("app", s, &testIDGen{})
 	html := f.String()
 
 	// 1. Root container class should be 'tw-field'

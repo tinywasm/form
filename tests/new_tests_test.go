@@ -28,7 +28,7 @@ func (u *testUser) FormName() string { return "user" }
 
 func TestNewWithFielder(t *testing.T) {
 	u := &testUser{id: "1", name: "John", email: "john@example.com"}
-	f, err := form.New("parent", u)
+	f, err := form.New("parent", u, &testIDGen{})
 	if err != nil {
 		t.Fatalf("New failed: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestNewWithFielder(t *testing.T) {
 
 func TestNewShowFieldRevealsPK(t *testing.T) {
 	u := &testUser{id: "1", name: "John", email: "john@example.com"}
-	f, err := form.New("parent", u, form.ShowField("id"))
+	f, err := form.New("parent", u, &testIDGen{}, form.ShowField("id"))
 	if err != nil {
 		t.Fatalf("New failed: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestNewShowFieldRevealsPK(t *testing.T) {
 // outright — SyncValues must fill it before the record ever gets there.
 func TestSyncValuesAssignsHiddenPK(t *testing.T) {
 	u := &testUser{name: "Old"} // id left zero-value, like a fresh composing record
-	f, err := form.New("p", u)
+	f, err := form.New("p", u, &testIDGen{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestSyncValuesAssignsHiddenPK(t *testing.T) {
 // survive SyncValues untouched — only an EMPTY hidden PK gets a new one.
 func TestSyncValuesPreservesExistingHiddenPK(t *testing.T) {
 	u := &testUser{id: "existing-id", name: "Old"}
-	f, err := form.New("p", u)
+	f, err := form.New("p", u, &testIDGen{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func (u *autoUser) FormName() string { return "auto" }
 
 func TestNewAutoIncPKExcludedReal(t *testing.T) {
 	u := &autoUser{id: 1, name: "test"}
-	f, err := form.New("parent", u)
+	f, err := form.New("parent", u, &testIDGen{})
 	if err != nil {
 		t.Fatalf("New failed: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestNewAutoIncPKExcludedReal(t *testing.T) {
 
 func TestSyncValuesText(t *testing.T) {
 	u := &testUser{id: "1", name: "Old"}
-	f, err := form.New("p", u)
+	f, err := form.New("p", u, &testIDGen{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -148,7 +148,7 @@ func TestSyncValuesText(t *testing.T) {
 
 func TestValidateDataValid(t *testing.T) {
 	u := &testUser{id: "100", name: "John Doe", email: "john@example.com"}
-	f, err := form.New("p", u)
+	f, err := form.New("p", u, &testIDGen{})
 	if err != nil {
 		t.Fatal(err)
 	}

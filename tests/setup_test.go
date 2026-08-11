@@ -3,9 +3,19 @@ package form_test
 import "github.com/tinywasm/model"
 
 import (
+	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/form"
 	"github.com/tinywasm/input"
 )
+
+// testIDGen is a deterministic test double for model.IDGenerator — form must
+// never construct its own generator, so every test passes one explicitly.
+type testIDGen struct{ n int }
+
+func (g *testIDGen) NewID() string {
+	g.n++
+	return "test-id-" + fmt.Convert(g.n).String()
+}
 
 // User is a sample struct for testing data binding.
 type User struct {
@@ -50,7 +60,7 @@ func createTestForm() *form.Form {
 		Role:     "admin",
 		Address:  "123 Main St",
 	}
-	f, err := form.New("test-parent", u)
+	f, err := form.New("test-parent", u, &testIDGen{})
 	if err != nil {
 		panic(err)
 	}

@@ -104,7 +104,7 @@ values back into it. The schema travels along anyway: the generated
 ```go
 import "github.com/tinywasm/form"
 
-f, err := form.New("parent-id", &User{Name: "John"})  // "John" pre-fills the name input
+f, err := form.New("parent-id", &User{Name: "John"}, ids)  // ids: model.IDGenerator (e.g. unixid.NewUnixID())
 html := f.String()          // SSR: render to HTML string
 ```
 
@@ -183,11 +183,13 @@ Full pattern: [input/README.md](input/README.md).
 
 ## API Reference
 
-### `form.New(parentID string, data model.Fielder) (*Form, error)`
+### `form.New(parentID string, data model.Fielder, idGen model.IDGenerator) (*Form, error)`
 
-Creates a `Form` from any `Fielder`. Form `id` = `parentID + "." + name`,
-where the name comes from the optional `Namer` interface
-(`FormName() string`, default `"form"`).
+Creates a `Form` from any `Fielder`. `idGen` is required — form never
+constructs its own ID generator (see `model.IDGenerator`); pass
+`unixid.NewUnixID()` at your composition root, or a test double in tests.
+Form `id` = `parentID + "." + name`, where the name comes from the optional
+`Namer` interface (`FormName() string`, default `"form"`).
 
 ### Form Methods
 

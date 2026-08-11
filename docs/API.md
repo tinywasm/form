@@ -5,7 +5,7 @@ See `README.md` for the consolidated API. This file contains additional detail.
 ## `form.New` — Widget Resolution Detail
 
 ```go
-f, err := form.New("content", data) // data implements model.Fielder
+f, err := form.New("content", data, ids) // data implements model.Fielder; ids is a model.IDGenerator (e.g. unixid.NewUnixID())
 // -> f.GetID() == "content." + resolveStructName(data)
 // -> f.String() renders all fields that have a Widget in data.Schema()
 ```

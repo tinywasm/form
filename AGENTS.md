@@ -44,6 +44,15 @@ Zero generic functions (follow `tinywasm/fmt` codec rule "cero any, cero map"). 
 signals: `SignalString`/`SignalBool`/`SignalNodes`, `DeriveString`/`DeriveBool`, and the `Bind*`
 methods. Never `Signal[T]`.
 
+## No Go `map` — no exceptions
+
+**Never use a built-in `map[K]V`, in any file.** TinyGo's map runtime is heavy and this package
+compiles into every WASM app that renders a form — a map here is a size tax every one of them
+pays. Use `fmt.KeyValue{Key, Value string}` for a string pair (see `showFields`), or a small
+slice-of-structs scanned linearly for anything else — every collection in this package (fields on
+one form, one form's inputs) is small enough that a linear scan costs nothing measurable. Not a
+"just this once" exception.
+
 ## Minimal Public Surface
 
 Export only the form's user-facing API (`Bind`-based construction, config, `OnSubmit`). Unexport
@@ -54,7 +63,7 @@ helpers, the per-field model, and anything only this package uses. Struct fields
 - `//go:build wasm` for reactive code (`mount.go`); keep the `!wasm` stub (`mount_stub.go`) method
   set in sync (it shrinks — no `OnMount`/`OnUnmount`).
 - No Go stdlib: use `github.com/tinywasm/fmt`. DOM only via `github.com/tinywasm/dom`, never
-  `syscall/js`. `switch` not `map`. No `defer/recover`.
+  `syscall/js`. No `defer/recover`.
 
 ## Testing
 

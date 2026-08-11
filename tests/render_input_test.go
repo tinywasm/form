@@ -148,7 +148,7 @@ func Test_Render_BlackBox(t *testing.T) {
 			}
 
 			fx := &kindFixture{inp: inp}
-			f, err := form.New("app", fx)
+			f, err := form.New("app", fx, &testIDGen{})
 			if err != nil {
 				t.Fatalf("failed to create form: %v", err)
 			}

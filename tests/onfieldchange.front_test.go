@@ -35,7 +35,7 @@ func TestOnFieldChange_FiresOnBlur(t *testing.T) {
 	doc.Get("body").Call("appendChild", mount)
 
 	rec := &ofcRecord{Name: "initial"}
-	f, err := form.New("ofc-mount", rec)
+	f, err := form.New("ofc-mount", rec, &testIDGen{})
 	if err != nil {
 		t.Fatalf("form.New: %v", err)
 	}

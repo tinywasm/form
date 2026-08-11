@@ -11,7 +11,7 @@ import (
 // the record was loaded?" WidgetsModel is the same model.Fielder load_test.go
 // already declares in this package.
 func TestIsDirty(t *testing.T) {
-	f, err := form.New("parent-id", &WidgetsModel{Name: "Original", Price: 100})
+	f, err := form.New("parent-id", &WidgetsModel{Name: "Original", Price: 100}, &testIDGen{})
 	if err != nil {
 		t.Fatalf("unexpected error creating form: %v", err)
 	}

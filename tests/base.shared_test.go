@@ -112,7 +112,7 @@ func (u *CustomUser) FormName() string { return "customuser" }
 
 func TestForm_CustomInput_Shared(t *testing.T) {
 	// Struct with a field that has a Widget
-	f, err := form.New("parent", &CustomUser{})
+	f, err := form.New("parent", &CustomUser{}, &testIDGen{})
 	if err != nil {
 		t.Fatalf("Failed to create form with widget: %v", err)
 	}

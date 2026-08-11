@@ -19,6 +19,7 @@ Input constructors take zero arguments and act as prototypes. `Clone(parentID, n
 - **Fielder-based**: `New()` uses `data.Schema()` and `data.Pointers()`.
 - **Pointer-based sync**: `SyncValues(data)` uses `data.Pointers()` to write back values without reflection.
 - Supports `model.FieldText`, `model.FieldInt`, `model.FieldFloat`, `model.FieldBool`.
+- **Identity is injected, never constructed**: hidden text-PK auto-assignment on submit uses the `model.IDGenerator` passed to `New()` — form never builds its own generator (same principle as `model.IDGenerator`'s doc comment and `user.Config.IDs`).
 
 ### 3. Validation (`validate.go`, `validate_struct.go`)
 - `Form.Validate()` iterates `f.Inputs`, calls `inp.Validate(GetSelectedValue())`.

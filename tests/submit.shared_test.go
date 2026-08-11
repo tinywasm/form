@@ -24,7 +24,7 @@ func (s *submitStruct) Values() []any   { return []any{s.Nombre} }
 func runSubmitTests(t *testing.T) {
 	t.Run("TestSubmit_CallbackReceivesDataAndDone", func(t *testing.T) {
 		s := &submitStruct{Nombre: "Jules"}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 
 		called := false
 		var receivedData model.Fielder
@@ -55,7 +55,7 @@ func runSubmitTests(t *testing.T) {
 
 	t.Run("TestSubmit_ValidationFailureReturnsError", func(t *testing.T) {
 		s := &submitStruct{Nombre: ""}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 
 		called := false
 		f.OnSubmit(func(data model.Fielder, done func(error)) {
@@ -77,7 +77,7 @@ func runSubmitTests(t *testing.T) {
 
 	t.Run("TestSubmit_NoResetOnSuccess", func(t *testing.T) {
 		s := &submitStruct{Nombre: "Jules"}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		f.NoResetOnSuccess()
 		f.SetValues("nombre", "Valor Original")
 
@@ -98,7 +98,7 @@ func runSubmitTests(t *testing.T) {
 
 	t.Run("TestSubmit_DefaultResetOnSuccess", func(t *testing.T) {
 		s := &submitStruct{Nombre: "Jules"}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		f.SetValues("nombre", "To Be Reset")
 
 		f.OnSubmit(func(data model.Fielder, done func(error)) {
@@ -118,7 +118,7 @@ func runSubmitTests(t *testing.T) {
 
 	t.Run("TestSubmit_ResetClearsValues", func(t *testing.T) {
 		s := &submitStruct{Nombre: "Jules"}
-		f, _ := form.New("app", s)
+		f, _ := form.New("app", s, &testIDGen{})
 		f.SetValues("nombre", "New Value")
 
 		f.Reset()

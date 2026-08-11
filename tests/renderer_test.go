@@ -27,7 +27,7 @@ func TestForm_Renderer(t *testing.T) {
 	ci := &customInput{}
 	fx := &kindFixture{inp: ci}
 
-	f, _ := form.New("app", fx)
+	f, _ := form.New("app", fx, &testIDGen{})
 	html := f.String()
 
 	// Must contain custom markup
@@ -47,7 +47,7 @@ func TestForm_Renderer_Validation(t *testing.T) {
 	ci := &customInputWithValidation{}
 	fx := &kindFixture{inp: ci}
 
-	f, _ := form.New("app", fx)
+	f, _ := form.New("app", fx, &testIDGen{})
 
 	f.SetValues("tfield", "invalid")
 	err := f.Validate()

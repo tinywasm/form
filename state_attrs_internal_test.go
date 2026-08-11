@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/tinywasm/fmt"
 	"github.com/tinywasm/input"
 	"github.com/tinywasm/model"
 )
@@ -22,9 +23,18 @@ func (s *stateAttrsStruct) Schema() []model.Field {
 func (s *stateAttrsStruct) Pointers() []any { return []any{&s.Nombre} }
 func (s *stateAttrsStruct) Values() []any   { return []any{s.Nombre} }
 
+// testIDGen is the internal-package double for model.IDGenerator — form never
+// constructs its own generator, so even internal tests inject one.
+type testIDGen struct{ n int }
+
+func (g *testIDGen) NewID() string {
+	g.n++
+	return "test-id-" + fmt.Convert(g.n).String()
+}
+
 func TestForm_StateAttrs(t *testing.T) {
 	s := &stateAttrsStruct{}
-	f, _ := New("app", s)
+	f, _ := New("app", s, &testIDGen{})
 
 	// Case 1: Valid and unlocked field -> should NOT have data-invalid='true' or data-locked='true'
 	html := f.String()
