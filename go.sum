@@ -6,5 +6,5 @@ github.com/tinywasm/input v0.0.2 h1:ZGgXxCAHk7eiRWIU0hqN42xMGPxPlEumZY+YjSzNrTA=
 github.com/tinywasm/input v0.0.2/go.mod h1:i4FkLD0sAlVqo+aF/DKqlhHa0wVeQ5WOoIUV/34rtI4=
 github.com/tinywasm/model v0.1.4 h1:ZXz/LB9bUVzfiPO3R8iMDbZ6j2DCdR+rOV67zDaE7VE=
 github.com/tinywasm/model v0.1.4/go.mod h1:Cx/RTzSOH/DM2DtP6JqdhIRTDlf31EstTV5Y0RSp/dg=
-github.com/tinywasm/widget v0.6.9 h1:4IbdpEEuacIL2/ywKyWlgFUo9UgWb+dm/Fow7IP9mqc=
-github.com/tinywasm/widget v0.6.9/go.mod h1:vo28dejXTMTZ5WjvowIa72Xxuf75QtqSG14NC1wgLHA=
+github.com/tinywasm/widget v0.6.10 h1:nR+AcqRhW5TCYMwpwMZuDP1J118qoMdgKrHoeh6zqkQ=
+github.com/tinywasm/widget v0.6.10/go.mod h1:vo28dejXTMTZ5WjvowIa72Xxuf75QtqSG14NC1wgLHA=
