@@ -7,7 +7,7 @@ require (
 	github.com/tinywasm/fmt v0.25.5
 	github.com/tinywasm/input v0.0.2
 	github.com/tinywasm/model v0.1.4
-	github.com/tinywasm/widget v0.6.10
+	github.com/tinywasm/widget v0.6.11
 )
 
 // widget.PartSubmit (submit button styling hook) — not published yet.
