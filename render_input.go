@@ -42,7 +42,7 @@ func (fc *fieldComponent) String() string {
 }
 
 // GetID must differ from the input's own id. The framework injects a component's
-// id onto its root element (here the .tw-field wrapper div); if that equalled the
+// id onto its root element (here the field wrapper div); if that equalled the
 // input's id, getElementById would resolve the wrapper instead of the input and
 // the value binding would write to the div, leaving the input empty.
 func (fc *fieldComponent) GetID() string {
@@ -58,7 +58,7 @@ func (fc *fieldComponent) Children() []dom.Component {
 }
 
 // Renderer is an optional capability for custom inputs that own their markup.
-// The form still owns the field wrapper (div.tw-field), the error span, and
+// The form still owns the field wrapper (the field wrapper div), the error span, and
 // validation: the widget must call onInput with the new value on user input —
 // the form updates the value signal and runs live validation. The value
 // signal carries the initial value and programmatic updates (SetValues).
@@ -308,6 +308,6 @@ func RenderInput(inp input.Input) *dom.Element {
 		value: dom.NewString(""),
 		err:   dom.NewString(""),
 	}
-	// Note: this Render() returns a div.tw-field containing the input + error span.
+	// Note: this Render() returns the field wrapper div containing the input + error span.
 	return fc.Render()
 }

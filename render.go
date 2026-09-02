@@ -18,7 +18,13 @@ func (f *Form) String() string {
 
 // Render returns a reactive dom.Element tree for the form.
 func (f *Form) Render() *dom.Element {
-	el := dom.NewElement("form").ID(f.GetID())
+	// The vy-field__form anatomy hook is the fieldset skin styles: it owns the
+	// inter-field rhythm (a gap on this container, so the ends do not double
+	// the way each field's own margin would). Any app classes from
+	// SetClass/SetGlobalClass are layered on top.
+	el := dom.NewElement("form").
+		ID(f.GetID()).
+		Class(widget.NameField.Class(widget.PartForm).String())
 
 	if f.class != "" {
 		el.Class(f.class)
@@ -53,13 +59,12 @@ func (f *Form) Render() *dom.Element {
 			return f.resolveSubmitLabel()
 		})
 
-		// Wrapped in the same tw-field box every field gets, not appended
-		// bare: the <form> carries no class, so a field's own inset IS its
-		// spacing (fieldset's Root pads by Space2 for exactly that reason).
-		// A bare button skips that inset and comes out wider than the inputs
-		// above it on both edges — the one misaligned edge in an otherwise
-		// squared-off stack. Sharing the wrapper aligns it by construction
-		// rather than by a margin tuned to match fieldset's padding.
+		// Wrapped in the same field box every field gets, not appended
+		// bare: a bare button skips the field's own inline inset and comes out
+		// wider than the inputs above it on both edges — the one misaligned
+		// edge in an otherwise squared-off stack. Sharing the wrapper aligns it
+		// by construction, and the form's gap spaces it from the last field
+		// like any other row.
 		el.Child(dom.NewElement("div").
 			Class(widget.NameField.Root().String()).
 			Child(btn))

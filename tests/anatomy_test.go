@@ -30,23 +30,23 @@ func TestForm_Anatomy(t *testing.T) {
 	f, _ := form.New("app", s, &testIDGen{})
 	html := f.String()
 
-	// 1. Root container class should be 'tw-field'
-	if !strings.Contains(html, "class='tw-field'") {
-		t.Errorf("Expected html to contain root class 'tw-field', got: %s", html)
+	// 1. Root container class should be the field root class
+	if !strings.Contains(html, "class='"+clsField+"'") {
+		t.Errorf("Expected html to contain root class the field root class, got: %s", html)
 	}
 
-	// 2. Label class should be 'tw-field__label'
-	if !strings.Contains(html, "class='tw-field__label'") {
-		t.Errorf("Expected html to contain label class 'tw-field__label', got: %s", html)
+	// 2. Label class should be the field label class
+	if !strings.Contains(html, "class='"+clsFieldLabel+"'") {
+		t.Errorf("Expected html to contain label class the field label class, got: %s", html)
 	}
 
-	// 3. Error span class should be 'tw-field__error'
-	if !strings.Contains(html, "class='tw-field__error'") {
-		t.Errorf("Expected html to contain error class 'tw-field__error', got: %s", html)
+	// 3. Error span class should be the field error class
+	if !strings.Contains(html, "class='"+clsFieldError+"'") {
+		t.Errorf("Expected html to contain error class the field error class, got: %s", html)
 	}
 
-	// 4. Radio group should contain 'tw-field__radio-group'
-	if !strings.Contains(html, "class='tw-field__radio-group'") {
-		t.Errorf("Expected html to contain radio-group class 'tw-field__radio-group', got: %s", html)
+	// 4. Radio group should contain the field radio-group class
+	if !strings.Contains(html, "class='"+clsFieldRadios+"'") {
+		t.Errorf("Expected html to contain radio-group class the field radio-group class, got: %s", html)
 	}
 }
