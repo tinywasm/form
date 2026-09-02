@@ -134,6 +134,11 @@ to the submitting state, and IME-safe reactive updates. Detail:
 Runtime tweaks: `f.Input("Field").SetPlaceholder(...)`,
 `f.SetOptions("Field", ...)`, `f.SetValues("Field", ...)`.
 
+### Dirty State & Bulk Edit
+
+- `IsDirty()` reports whether *any* field's current value differs from the baseline captured at creation or last load/reset (`LoadValues`, `Reset`, `MarkPristine`). Use this to gate persistence (e.g. auto-save).
+- `DirtyFields()` returns the names of fields (in schema order) whose value differs from baseline, or `nil` when pristine. Use this for bulk edit to write *only* the fields the user actually changed, preventing untouched columns from being overwritten.
+
 ## Styling
 
 The library ships structure, the project owns the look (CSS-first doctrine).
@@ -206,6 +211,8 @@ Form `id` = `parentID + "." + name`, where the name comes from the optional
 | `Input(fieldName string) input.Input` | Returns the input for a field name |
 | `SetOptions(fieldName, ...fmt.KeyValue) *Form` | Options for select/radio/datalist |
 | `SetValues(fieldName, ...string) *Form` | Sets a value programmatically |
+| `IsDirty() bool` | Reports whether any field's value differs from baseline |
+| `DirtyFields() []string` | Returns names of fields differing from baseline (nil if none) |
 | `Submit() error` | Runs sync + validate + OnSubmit callback programmatically; returns first validation error |
 | `Reset()` | Clears all values and error messages |
 | `NoResetOnSuccess() *Form` | Keeps values after a successful submit |
