@@ -3,6 +3,8 @@ PLAN: "feat: DirtyFields reports which fields the user actually changed"
 TAG: v0.4.0
 EXECUTOR: jules
 REVIEWER: none
+STATUS: running
+SESSION: 2585114900977056736
 ---
 
 > Este plan se despacha con el flujo CodeJob. Ver skill: agents-workflow.
