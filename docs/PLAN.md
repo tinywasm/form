@@ -3,8 +3,9 @@ PLAN: "feat: DirtyFields reports which fields the user actually changed"
 TAG: v0.4.0
 EXECUTOR: jules
 REVIEWER: none
-STATUS: running
+STATUS: review
 SESSION: 2585114900977056736
+PR: https://github.com/tinywasm/form/pull/22
 ---
 
 > Este plan se despacha con el flujo CodeJob. Ver skill: agents-workflow.

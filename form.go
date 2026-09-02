@@ -141,6 +141,18 @@ func (f *Form) Focus() *Form {
 // field" clause to assert against without a live DOM.
 func (f *Form) FocusedFieldID() string { return f.focused }
 
+// isDirtyAt is the ONE place that compares a field against its baseline.
+// IsDirty and DirtyFields both loop over it, so the two can never drift into
+// disagreeing about what "dirty" means.
+//
+// An index predicate rather than a []int of dirty indexes: IsDirty runs on
+// every field commit (crudview auto-saves on blur), and returning a slice made
+// the common answer — "nothing changed" — allocate on a path that used to
+// short-circuit on the first hit and allocate nothing.
+func (f *Form) isDirtyAt(i int) bool {
+	return f.valueSignals[i].Get() != f.baseline[i]
+}
+
 // IsDirty reports whether any field's current value differs from the
 // baseline captured at the last load/reset (New, LoadValues, Reset). A host
 // uses this to gate persistence — e.g. crudview's auto-save on field commit
@@ -149,12 +161,32 @@ func (f *Form) FocusedFieldID() string { return f.focused }
 // exact and dependency-free: the signals are already the form's single
 // source of truth for "current value" everywhere else in this package.
 func (f *Form) IsDirty() bool {
-	for i, sig := range f.valueSignals {
-		if sig.Get() != f.baseline[i] {
+	for i := range f.valueSignals {
+		if f.isDirtyAt(i) {
 			return true
 		}
 	}
 	return false
+}
+
+// DirtyFields names the fields whose value differs from the baseline captured
+// at the last load/reset — the per-field counterpart of IsDirty, which only
+// answers whether ANY of them does.
+//
+// It exists for bulk edit: a host that applies one form to many records must
+// write ONLY the fields the user actually touched, or it silently reverts
+// every other column to whatever this form happened to be holding. Returns
+// the names in schema order, and nil (not an empty non-nil slice) when
+// nothing is dirty, so `len(f.DirtyFields()) == 0` and `!f.IsDirty()` always
+// agree.
+func (f *Form) DirtyFields() []string {
+	var names []string
+	for i := range f.valueSignals {
+		if f.isDirtyAt(i) {
+			names = append(names, f.Inputs[i].FieldName())
+		}
+	}
+	return names
 }
 
 // MarkPristine re-snapshots the baseline to the form's CURRENT values. A host

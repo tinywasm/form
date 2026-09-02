@@ -33,6 +33,12 @@ Supports `model.FieldText`, `model.FieldInt`, `model.FieldFloat`, and `model.Fie
 
 Validates the provided `data` using the form's input rules. Satisfies `crudp.DataValidator`.
 
+## `(*Form).IsDirty()` and `(*Form).DirtyFields()` — Dirty State & Bulk Edit
+
+- `f.IsDirty() bool`: Reports whether any field's current value differs from the baseline captured at creation or the last `LoadValues`/`Reset`/`MarkPristine`.
+- `f.DirtyFields() []string`: Returns the field names (in schema order) whose current value differs from baseline. Returns `nil` (not an empty slice) when nothing is dirty, so `len(f.DirtyFields()) > 0` and `f.IsDirty()` always agree.
+- **Bulk Edit Note**: A host applying a form to multiple records must write ONLY the fields returned by `DirtyFields()`. Writing all fields would silently revert untouched columns on other records to whatever the form was holding.
+
 ## `(*Form).Submit()`
 
 Runs the full submit pipeline programmatically:
